@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../styles/app_colors.dart';
 import 'login_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -15,7 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         title: Text(
           'My Profile',
@@ -23,8 +24,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.white,
+        foregroundColor: AppColors.black,
       ),
       body: Consumer<AuthService>(
         builder: (context, authService, child) {
@@ -44,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 50,
-                          backgroundColor: Colors.deepPurple.shade100,
+                          backgroundColor: AppColors.purple.withOpacity(0.2),
                           child: Text(
                             (user.name?.isNotEmpty ?? false)
                                 ? user.name![0].toUpperCase()
@@ -52,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: GoogleFonts.outfit(
                               fontSize: 32,
                               fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple,
+                              color: AppColors.purple,
                             ),
                           ),
                         ),
@@ -65,13 +66,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(8),
                               decoration: const BoxDecoration(
-                                color: Colors.deepPurple,
+                                color: AppColors.purple,
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.edit,
                                 size: 16,
-                                color: Colors.white,
+                                color: AppColors.white,
                               ),
                             ),
                           ),
@@ -91,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         user.email!,
                         style: GoogleFonts.outfit(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: AppColors.gray600,
                         ),
                       ),
                     if (user.phone != null)
@@ -99,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         '+91 ${user.phone}',
                         style: GoogleFonts.outfit(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: AppColors.gray600,
                         ),
                       ),
                   ],
@@ -147,8 +148,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
+                      foregroundColor: AppColors.error,
+                      side: const BorderSide(color: AppColors.error),
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -180,11 +181,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: AppColors.blackOpacity(0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -195,10 +196,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.deepPurple.shade50,
+            color: AppColors.purple.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: Colors.deepPurple),
+          child: Icon(icon, color: AppColors.purple),
         ),
         title: Text(
           title,
@@ -206,12 +207,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         subtitle: Text(
           subtitle,
-          style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey[600]),
+          style: GoogleFonts.outfit(fontSize: 12, color: AppColors.gray600),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey,
+          color: AppColors.gray500,
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
@@ -258,7 +259,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: GoogleFonts.outfit(color: Colors.grey),
+              style: GoogleFonts.outfit(color: AppColors.gray500),
             ),
           ),
           ElevatedButton(
@@ -287,8 +288,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-            child: Text('Save', style: GoogleFonts.outfit(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.purple),
+            child: Text(
+              'Save',
+              style: GoogleFonts.outfit(color: AppColors.white),
+            ),
           ),
         ],
       ),

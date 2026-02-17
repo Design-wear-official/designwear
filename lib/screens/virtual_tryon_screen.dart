@@ -11,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/product.dart';
 import '../services/virtual_tryon_service.dart';
+import '../styles/app_colors.dart';
 
 class VirtualTryOnScreen extends StatefulWidget {
   final Product product;
@@ -85,7 +86,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: const BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
@@ -96,7 +97,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppColors.gray300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -117,7 +118,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                     child: _buildSourceOption(
                       icon: Icons.camera_alt_rounded,
                       label: 'Camera',
-                      color: Colors.deepPurple,
+                      color: AppColors.purple,
                       onTap: () {
                         Navigator.pop(context);
                         _pickImage(ImageSource.camera);
@@ -129,7 +130,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                   child: _buildSourceOption(
                     icon: Icons.photo_library_rounded,
                     label: 'Gallery',
-                    color: Colors.indigo,
+                    color: AppColors.purple,
                     onTap: () {
                       Navigator.pop(context);
                       _pickImage(ImageSource.gallery);
@@ -268,18 +269,18 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back, color: AppColors.black),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Virtual Try-On',
           style: GoogleFonts.outfit(
-            color: Colors.black,
+            color: AppColors.black,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -319,11 +320,11 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppColors.blackOpacity(0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -343,7 +344,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                 : Container(
                     width: 80,
                     height: 80,
-                    color: Colors.grey.shade200,
+                    color: AppColors.gray200,
                     child: const Icon(Icons.image_not_supported),
                   ),
           ),
@@ -367,7 +368,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple,
+                    color: AppColors.purple,
                   ),
                 ),
               ],
@@ -389,7 +390,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
         const SizedBox(height: 4),
         Text(
           'Upload a full-body photo for best results',
-          style: GoogleFonts.outfit(fontSize: 14, color: Colors.grey.shade600),
+          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.gray600),
         ),
         const SizedBox(height: 16),
         GestureDetector(
@@ -398,18 +399,18 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             width: double.infinity,
             height: 300,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _userPhotoBytes != null
-                    ? Colors.deepPurple.withValues(alpha: 0.5)
-                    : Colors.grey.shade300,
+                    ? AppColors.purple.withOpacity(0.5)
+                    : AppColors.gray300,
                 width: 2,
                 strokeAlign: BorderSide.strokeAlignCenter,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.05),
+                  color: AppColors.blackOpacity(0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -432,11 +433,11 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         top: 12,
                         right: 12,
                         child: CircleAvatar(
-                          backgroundColor: Colors.white,
+                          backgroundColor: AppColors.white,
                           child: IconButton(
                             icon: const Icon(
                               Icons.edit,
-                              color: Colors.deepPurple,
+                              color: AppColors.purple,
                             ),
                             onPressed: _showImageSourceDialog,
                           ),
@@ -450,13 +451,13 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.deepPurple.withValues(alpha: 0.1),
+                          color: AppColors.purple.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.add_a_photo_rounded,
                           size: 48,
-                          color: Colors.deepPurple,
+                          color: AppColors.purple,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -465,7 +466,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.deepPurple,
+                          color: AppColors.purple,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -475,7 +476,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                             : 'Take a selfie or choose from gallery',
                         style: GoogleFonts.outfit(
                           fontSize: 14,
-                          color: Colors.grey.shade500,
+                          color: AppColors.gray500,
                         ),
                       ),
                     ],
@@ -492,19 +493,19 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.red.shade50,
+        color: AppColors.errorLight,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.red.shade200),
+        border: Border.all(color: AppColors.error),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: Colors.red.shade700),
+          Icon(Icons.error_outline, color: AppColors.errorDark),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               _errorMessage!,
               style: GoogleFonts.outfit(
-                color: Colors.red.shade700,
+                color: AppColors.errorDark,
                 fontSize: 14,
               ),
             ),
@@ -531,7 +532,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             IconButton(
               onPressed: _shareResult,
               icon: const Icon(Icons.share_rounded),
-              color: Colors.deepPurple,
+              color: AppColors.purple,
             ),
           ],
         ),
@@ -542,7 +543,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.deepPurple.withValues(alpha: 0.2),
+                color: AppColors.purple.withOpacity(0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -561,10 +562,10 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: AppColors.blackOpacity(0.08),
             offset: const Offset(0, -5),
             blurRadius: 15,
           ),
@@ -577,8 +578,8 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
           child: ElevatedButton(
             onPressed: _isLoading ? null : _generateTryOn,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.deepPurple,
-              foregroundColor: Colors.white,
+              backgroundColor: AppColors.purple,
+              foregroundColor: AppColors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -592,7 +593,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         width: 24,
                         height: 24,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.white,
                           strokeWidth: 2.5,
                         ),
                       ),

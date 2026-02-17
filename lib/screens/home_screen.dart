@@ -8,6 +8,10 @@ import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../models/product.dart';
 import '../models/category.dart';
+import '../patterns/responsive_grid_pattern.dart';
+import '../patterns/responsive_typography_pattern.dart';
+import '../utils/responsive_utils.dart';
+import '../styles/app_colors.dart';
 import 'product_detail_screen.dart';
 import 'cart_screen.dart';
 import 'login_screen.dart';
@@ -40,10 +44,7 @@ class _HomeScreenState extends State<HomeScreen> {
         titleSpacing: 20,
         title: Text(
           'Design Wear',
-          style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         actions: [
           // Login/Profile Button
@@ -65,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 icon: Icon(
                   authService.isLoggedIn ? Icons.person : Icons.person_outline,
-                  color: const Color(0xFF1A1A1A),
+                  color: AppColors.black,
                 ),
               );
             },
@@ -84,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     icon: const Icon(
                       Icons.shopping_bag_outlined,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.black,
                     ),
                   ),
                   if (cartService.itemCount > 0)
@@ -94,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: const BoxDecoration(
-                          color: Color(0xFFD4AF37), // Gold badge
+                          color: AppColors.gold,
                           shape: BoxShape.circle,
                         ),
                         child: Text(
@@ -136,7 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 240,
       margin: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: AppColors.black,
         borderRadius: BorderRadius.circular(
           0,
         ), // Sharp edges or minimal radius for modern look
@@ -171,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 12,
                     letterSpacing: 2,
                     fontWeight: FontWeight.bold,
-                    color: const Color(0xFFD4AF37), // Gold
+                    color: AppColors.gold,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -256,12 +257,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFD4AF37), width: 2),
+                  border: Border.all(color: AppColors.gold, width: 2),
                 ),
                 child: Text(
                   'START CREATING',
                   style: GoogleFonts.outfit(
-                    color: const Color(0xFFD4AF37),
+                    color: AppColors.gold,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                     letterSpacing: 1.5,
@@ -295,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFFD4AF37),
+              color: AppColors.gold,
               decoration: TextDecoration.underline,
             ),
           ),
@@ -365,17 +366,24 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No products found'));
         }
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: _getCrossAxisCount(context),
-            childAspectRatio: _getChildAspectRatio(context),
+        return ResponsiveGridBuilder(
+          itemCount: snapshot.data!.length,
+          config: ResponsiveGridConfig(
+            mobileColumns: 2,
+            tabletColumns: 3,
+            desktopColumns:
+                ResponsiveUtils.isWidthGreaterThan(
+                  context,
+                  ResponsiveBreakpoints.largeDesktop,
+                )
+                ? 5
+                : 4,
+            mobileAspectRatio: 0.75,
+            tabletAspectRatio: 0.65,
+            desktopAspectRatio: 0.60,
             crossAxisSpacing: 20,
             mainAxisSpacing: 32,
           ),
-          itemCount: snapshot.data!.length,
           itemBuilder: (context, index) {
             final product = snapshot.data![index];
             return GestureDetector(
@@ -410,21 +418,16 @@ class _HomeScreenState extends State<HomeScreen> {
                     product.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.outfit(
+                    style: ResponsiveTypography.body(
+                      context,
                       fontWeight: FontWeight.w500,
-                      fontSize: 16,
                       color: Colors.black87,
-                      height: 1.3,
-                    ),
+                    ).copyWith(height: 1.3),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     '₹${product.price.toStringAsFixed(2)}',
-                    style: GoogleFonts.outfit(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: ResponsiveTypography.price(context),
                   ),
                 ],
               ),
@@ -433,23 +436,5 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-  }
-  int _getCrossAxisCount(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    if (width > 1400) return 5;
-    if (width > 1024) return 4;
-    if (width > 768) return 3;
-    if (width > 480) return 2;
-    return 1;
-  }
-
-  double _getChildAspectRatio(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    // Adjusted for better card proportions with new typography
-    if (width > 1400) return 0.65;
-    if (width > 1024) return 0.60;
-    if (width > 768) return 0.58;
-    if (width > 480) return 0.65;
-    return 0.75;
   }
 }

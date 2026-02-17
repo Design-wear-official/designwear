@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../styles/app_colors.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -51,12 +52,12 @@ class _LoginScreenState extends State<LoginScreen>
 
     try {
       await context.read<AuthService>().sendOtp(_phoneController.text);
-      
+
       if (mounted) {
         setState(() {
           _showOtpField = true;
         });
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('OTP sent to your phone!'),
@@ -67,8 +68,9 @@ class _LoginScreenState extends State<LoginScreen>
     } catch (e) {
       setState(() => _error = e.toString());
     } finally {
-      if (mounted && !_showOtpField) { // Only stop loading if we didn't switch to OTP view (error case)
-         setState(() => _isLoading = false);
+      if (mounted && !_showOtpField) {
+        // Only stop loading if we didn't switch to OTP view (error case)
+        setState(() => _isLoading = false);
       }
     }
   }
@@ -85,9 +87,7 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      await context.read<AuthService>().loginWithPhone(
-        _otpController.text,
-      );
+      await context.read<AuthService>().loginWithPhone(_otpController.text);
 
       if (mounted) {
         Navigator.pop(context, true);
@@ -146,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen>
         iconTheme: const IconThemeData(color: Colors.black87),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: const Color(0xFFD4AF37), // Gold indicator
+          indicatorColor: AppColors.gold,
           labelColor: Colors.black,
           unselectedLabelColor: Colors.grey,
           labelStyle: GoogleFonts.outfit(fontWeight: FontWeight.bold),
@@ -221,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen>
               onPressed: () => setState(() => _showOtpField = false),
               child: Text(
                 'Change phone number',
-                style: GoogleFonts.outfit(color: const Color(0xFFD4AF37)),
+                style: GoogleFonts.outfit(color: AppColors.gold),
               ),
             ),
           ],
@@ -295,7 +295,7 @@ class _LoginScreenState extends State<LoginScreen>
               },
               child: Text(
                 "Don't have an account? Sign Up",
-                style: GoogleFonts.outfit(color: const Color(0xFFD4AF37)),
+                style: GoogleFonts.outfit(color: AppColors.gold),
               ),
             ),
           ),

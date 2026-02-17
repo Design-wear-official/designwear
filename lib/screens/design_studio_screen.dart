@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/custom_design.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../styles/app_colors.dart';
 
 import '../widgets/agent_chat_widget.dart';
 
@@ -74,7 +75,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
               'ADD TO CART',
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
-                color: const Color(0xFFD4AF37), // Gold
+                color: AppColors.gold,
               ),
             ),
           ),
@@ -189,7 +190,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: isSelected
-                                          ? const Color(0xFFD4AF37)
+                                          ? AppColors.gold
                                           : Colors.grey.shade300,
                                       width: isSelected ? 3 : 1,
                                     ),

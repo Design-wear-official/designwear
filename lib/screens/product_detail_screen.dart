@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import '../widgets/safe_network_image.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../utils/responsive_utils.dart';
+import '../patterns/responsive_typography_pattern.dart';
+import '../styles/app_colors.dart';
 import 'cart_screen.dart';
 import 'virtual_tryon_screen.dart';
 
@@ -44,8 +47,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               tag: widget.product.id,
               child: Container(
                 width: double.infinity,
-                height:
-                    MediaQuery.of(context).size.height * 0.55, // Larger image
+                height: ResponsiveUtils.getResponsiveValue<double>(
+                  context,
+                  mobile: MediaQuery.of(context).size.height * 0.50,
+                  tablet: MediaQuery.of(context).size.height * 0.55,
+                  desktop: MediaQuery.of(context).size.height * 0.60,
+                ),
                 decoration: BoxDecoration(color: Colors.grey.shade50),
                 child: widget.product.imageUrl != null
                     ? SafeNetworkImage(
@@ -76,7 +83,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   },
                   icon: const Icon(
                     Icons.auto_awesome,
-                    color: Color(0xFFD4AF37),
+                    color: AppColors.gold,
                   ), // Gold
                   label: Text(
                     'Try It On Virtually ✨',
@@ -89,7 +96,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: const BorderSide(
-                      color: Color(0xFFD4AF37),
+                      color: AppColors.gold,
                       width: 1,
                     ), // Gold border
                     shape: RoundedRectangleBorder(
@@ -110,21 +117,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     children: [
                       Text(
                         widget.product.title.toUpperCase(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w300, // Thinner, elegant font
-                          letterSpacing: 1.1,
+                        style: ResponsiveTypography.h3(
+                          context,
+                          fontWeight: FontWeight.w300,
                           color: Colors.black87,
-                        ),
+                        ).copyWith(letterSpacing: 1.1),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '₹${widget.product.price.toStringAsFixed(2)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF1A1A1A),
-                        ),
+                        style: ResponsiveTypography.price(context),
                       ),
                     ],
                   ),
@@ -152,13 +154,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 24),
 
                   // Size Selection
-                  Text(
-                    'Select Size',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Select Size', style: ResponsiveTypography.h4(context)),
                   const SizedBox(height: 12),
                   Wrap(
                     spacing: 16,
@@ -199,21 +195,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  Text(
-                    'Description',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Description', style: ResponsiveTypography.h4(context)),
                   const SizedBox(height: 8),
                   Text(
                     widget.product.description,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
+                    style: ResponsiveTypography.body(
+                      context,
                       color: Colors.grey.shade700,
-                      height: 1.5,
-                    ),
+                    ).copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 40),
                 ],

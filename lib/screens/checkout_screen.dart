@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
+import '../styles/app_colors.dart';
 import 'login_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -78,13 +79,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: AppColors.successLight,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.check_circle,
                     size: 60,
-                    color: Colors.green[600],
+                    color: AppColors.successDark,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -99,7 +100,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Text(
                   'Your order has been placed successfully.\nYou will receive a confirmation shortly.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: Colors.grey[600]),
+                  style: GoogleFonts.poppins(color: AppColors.gray600),
                 ),
               ],
             ),
@@ -111,8 +112,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.purple,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -133,7 +134,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Payment failed: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppColors.error,
           ),
         );
       }
@@ -147,7 +148,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.backgroundLight,
       appBar: AppBar(
         title: Text(
           'CHECKOUT',
@@ -158,8 +159,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: AppColors.white,
+        foregroundColor: AppColors.black,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -191,7 +192,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   '₹${item.total.toStringAsFixed(2)}',
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+                                    color: AppColors.black,
                                   ),
                                 ),
                               ],
@@ -206,7 +207,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Subtotal',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: AppColors.gray600,
                               ),
                             ),
                             Text(
@@ -226,7 +227,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Tax (${cartService.currentTaxRate}% GST)',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: AppColors.gray600,
                               ),
                             ),
                             Text(
@@ -255,7 +256,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
-                                color: Colors.black,
+                                color: AppColors.black,
                               ),
                             ),
                           ],
@@ -325,8 +326,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _processPayment,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppColors.black,
+                    foregroundColor: AppColors.white,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0),
@@ -339,7 +340,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                            valueColor: AlwaysStoppedAnimation(AppColors.white),
                           ),
                         )
                       : Text(
@@ -360,27 +361,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock, size: 16, color: Colors.grey[600]),
+                    Icon(Icons.lock, size: 16, color: AppColors.gray600),
                     const SizedBox(width: 4),
                     Text(
                       'Secure Payment',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: AppColors.gray600,
                       ),
                     ),
                     const SizedBox(width: 16),
                     Icon(
                       Icons.verified_user,
                       size: 16,
-                      color: Colors.grey[600],
+                      color: AppColors.gray600,
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '100% Safe',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: AppColors.gray600,
                       ),
                     ),
                   ],
@@ -398,8 +399,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(bottom: BorderSide(color: Colors.black12)),
+        color: AppColors.white,
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +411,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fontWeight: FontWeight.bold,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: Colors.grey[800],
+              color: AppColors.gray800,
             ),
           ),
           const SizedBox(height: 20),
@@ -435,22 +436,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       style: GoogleFonts.outfit(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.outfit(color: Colors.grey[600]),
+        labelStyle: GoogleFonts.outfit(color: AppColors.gray600),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: AppColors.gray300),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: AppColors.gray300),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(color: Colors.black, width: 1.5),
+          borderSide: const BorderSide(color: AppColors.black, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(color: Colors.red),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
       ),
     );

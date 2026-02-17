@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/safe_network_image.dart';
 import '../services/cart_service.dart';
 import '../models/cart.dart';
+import '../styles/app_colors.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -172,17 +173,14 @@ class CartScreen extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFD4AF37).withOpacity(0.1),
+                          color: AppColors.goldOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: const Color(0xFFD4AF37),
-                            width: 0.5,
-                          ),
+                          border: Border.all(color: AppColors.gold, width: 0.5),
                         ),
                         child: Text(
                           'CUSTOM DESIGN',
                           style: GoogleFonts.outfit(
-                            color: const Color(0xFFD4AF37),
+                            color: AppColors.gold,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
