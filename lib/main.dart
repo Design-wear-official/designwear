@@ -19,6 +19,9 @@ Future<void> mainCommon(Flavor flavor) async {
 
   // Load environment variables from .env (fallback for mobile)
   await dotenv.load(fileName: "assets/.env");
+  print(
+    "Sanity Config - ProjectID: ${ConfigLoader.get('SANITY_PROJECT_ID')}, Dataset: ${ConfigLoader.get('SANITY_DATASET')}",
+  );
 
   // Initialize Firebase with error handling for duplicate initialization
   try {
