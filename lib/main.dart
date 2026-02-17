@@ -9,7 +9,9 @@ import 'services/cart_service.dart';
 import 'services/auth_service.dart';
 import 'config/gokwik_config.dart';
 
-Future<void> main() async {
+enum Flavor { internal, external }
+
+Future<void> mainCommon(Flavor flavor) async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize config loader (loads env.json for web)
@@ -30,11 +32,17 @@ Future<void> main() async {
     }
   }
 
-  runApp(const DesignWearApp());
+  runApp(DesignWearApp(flavor: flavor));
+}
+
+Future<void> main() async {
+  await mainCommon(Flavor.external);
 }
 
 class DesignWearApp extends StatelessWidget {
-  const DesignWearApp({super.key});
+  final Flavor? flavor;
+
+  const DesignWearApp({super.key, this.flavor});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +59,7 @@ class DesignWearApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'Design Wear',
-        debugShowCheckedModeBanner: false,
+        debugShowCheckedModeBanner: flavor == Flavor.internal,
         theme: ThemeData(
           useMaterial3: true,
           brightness: Brightness.light,

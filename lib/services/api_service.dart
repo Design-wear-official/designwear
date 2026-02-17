@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
 import '../models/category.dart';
-import '../config/gokwik_config.dart';
 import '../services/sanity_service.dart';
 
 /// Enhanced API service that can work with both Sanity directly and Next.js API
@@ -10,24 +9,16 @@ class ApiService {
   final String? webApiBaseUrl;
   final bool useWebApi;
 
-  ApiService({
-    this.webApiBaseUrl,
-    this.useWebApi = false,
-  });
+  ApiService({this.webApiBaseUrl, this.useWebApi = false});
 
   /// Factory constructor for web API mode
   factory ApiService.webApi(String baseUrl) {
-    return ApiService(
-      webApiBaseUrl: baseUrl,
-      useWebApi: true,
-    );
+    return ApiService(webApiBaseUrl: baseUrl, useWebApi: true);
   }
 
   /// Factory constructor for direct Sanity mode (default)
   factory ApiService.sanity() {
-    return ApiService(
-      useWebApi: false,
-    );
+    return ApiService(useWebApi: false);
   }
 
   Future<List<Product>> fetchProducts() async {
@@ -115,7 +106,9 @@ class ApiService {
     }
   }
 
-  Future<List<Product>> _fetchProductsByCategoryFromWeb(String categoryId) async {
+  Future<List<Product>> _fetchProductsByCategoryFromWeb(
+    String categoryId,
+  ) async {
     try {
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/categories/$categoryId/products'),
@@ -191,7 +184,9 @@ class ApiService {
     return await sanityService.fetchCategories();
   }
 
-  Future<List<Product>> _fetchProductsByCategoryFromSanity(String categoryId) async {
+  Future<List<Product>> _fetchProductsByCategoryFromSanity(
+    String categoryId,
+  ) async {
     final sanityService = SanityService();
     return await sanityService.fetchProductsByCategory(categoryId);
   }

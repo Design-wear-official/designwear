@@ -46,6 +46,19 @@ android {
             )
         }
     }
+
+    flavorDimensions += "default"
+
+    productFlavors {
+        create("internal") {
+            dimension = "default"
+            applicationIdSuffix = ".internal"
+            versionNameSuffix = "-internal"
+        }
+        create("external") {
+            dimension = "default"
+        }
+    }
 }
 
 flutter {
