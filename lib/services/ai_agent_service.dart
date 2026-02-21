@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../models/custom_design.dart';
@@ -125,7 +126,7 @@ INSTRUCTIONS:
                   }
                 }
               } catch (e) {
-                print('JSON Parse Error: $e');
+                debugPrint('JSON Parse Error: $e');
               }
             } else {
               // Fallback: try to find just a raw JSON object if code blocks were omitted
@@ -155,7 +156,7 @@ INSTRUCTIONS:
                   }
                 }
               } catch (e) {
-                print('Fallback JSON Parse Error: $e');
+                debugPrint('Fallback JSON Parse Error: $e');
               }
             }
 
@@ -163,7 +164,7 @@ INSTRUCTIONS:
           }
         }
       } else {
-        print('API Error: ${response.statusCode} - ${response.body}');
+        debugPrint('API Error: ${response.statusCode} - ${response.body}');
         return AgentResponse(
           text: "API Error (${response.statusCode}): ${response.body}",
         );
@@ -173,7 +174,7 @@ INSTRUCTIONS:
         text: "Sorry, I couldn't understand that (Empty Response).",
       );
     } catch (e, stackTrace) {
-      print('Exception: $e\n$stackTrace');
+      debugPrint('Exception: $e\n$stackTrace');
       return AgentResponse(text: "Error: $e");
     }
   }

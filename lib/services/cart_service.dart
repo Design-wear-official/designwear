@@ -39,7 +39,7 @@ class CartService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       if (kDebugMode) {
-        print('Error fetching tax rate: $e');
+        debugPrint('Error fetching tax rate: $e');
       }
     }
   }

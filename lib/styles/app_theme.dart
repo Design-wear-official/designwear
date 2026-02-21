@@ -16,6 +16,250 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
+
+      // Color Scheme
+      primaryColor: AppColors.white,
+      scaffoldBackgroundColor: AppColors.white,
+      colorScheme: const ColorScheme.light(
+        primary: AppColors.accentBlue,
+        secondary: AppColors.gold,
+        surface: AppColors.white,
+        error: AppColors.error,
+        onPrimary: AppColors.black,
+        onSecondary: AppColors.textOnGold,
+        onSurface: AppColors.black,
+        onError: AppColors.white,
+      ),
+
+      // Text Theme
+      textTheme: GoogleFonts.outfitTextTheme().copyWith(
+        displayLarge: AppTextStyles.displayLarge,
+        displayMedium: AppTextStyles.displayMedium,
+        displaySmall: AppTextStyles.displaySmall,
+        headlineLarge: AppTextStyles.h1,
+        headlineMedium: AppTextStyles.h2,
+        headlineSmall: AppTextStyles.h3,
+        titleLarge: AppTextStyles.h4,
+        titleMedium: AppTextStyles.h5,
+        titleSmall: AppTextStyles.h6,
+        bodyLarge: AppTextStyles.bodyLarge,
+        bodyMedium: AppTextStyles.bodyMedium,
+        bodySmall: AppTextStyles.bodySmall,
+        labelLarge: AppTextStyles.button,
+        labelMedium: AppTextStyles.label,
+        labelSmall: AppTextStyles.labelSmall,
+      ),
+
+      // App Bar Theme
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.black,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: AppTextStyles.h4,
+        iconTheme: const IconThemeData(
+          color: AppColors.black,
+          size: AppDimensions.iconSizeMd,
+        ),
+      ),
+
+      // Elevated Button Theme
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.black,
+          foregroundColor: AppColors.white,
+          elevation: 0,
+          padding: AppDimensions.buttonPadding,
+          minimumSize: const Size(0, AppDimensions.buttonHeight),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppDimensions.borderRadiusLgBR,
+          ),
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+
+      // Outlined Button Theme
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.black,
+          side: const BorderSide(
+            color: AppColors.black,
+            width: AppDimensions.borderWidthMd,
+          ),
+          padding: AppDimensions.buttonPadding,
+          minimumSize: const Size(0, AppDimensions.buttonHeight),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppDimensions.borderRadiusLgBR,
+          ),
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+
+      // Text Button Theme
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.gold,
+          padding: AppDimensions.buttonPadding,
+          textStyle: AppTextStyles.button,
+        ),
+      ),
+
+      // Input Decoration Theme
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.white,
+        contentPadding: AppDimensions.inputPadding,
+        border: OutlineInputBorder(
+          borderRadius: AppDimensions.borderRadiusMdBR,
+          borderSide: const BorderSide(
+            color: AppColors.border,
+            width: AppDimensions.borderWidthThin,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: AppDimensions.borderRadiusMdBR,
+          borderSide: const BorderSide(
+            color: AppColors.border,
+            width: AppDimensions.borderWidthThin,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: AppDimensions.borderRadiusMdBR,
+          borderSide: const BorderSide(
+            color: AppColors.borderFocus,
+            width: AppDimensions.borderWidthMd,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: AppDimensions.borderRadiusMdBR,
+          borderSide: const BorderSide(
+            color: AppColors.error,
+            width: AppDimensions.borderWidthThin,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AppDimensions.borderRadiusMdBR,
+          borderSide: const BorderSide(
+            color: AppColors.error,
+            width: AppDimensions.borderWidthMd,
+          ),
+        ),
+        labelStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textSecondary,
+        ),
+        hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+        errorStyle: AppTextStyles.error,
+      ),
+
+      // Card Theme
+      cardTheme: CardThemeData(
+        color: AppColors.white,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppDimensions.borderRadiusLgBR,
+          side: const BorderSide(color: AppColors.border, width: 1),
+        ),
+        margin: const EdgeInsets.all(AppDimensions.spacingMd),
+      ),
+
+      // Divider Theme
+      dividerTheme: const DividerThemeData(
+        color: AppColors.divider,
+        thickness: AppDimensions.dividerThickness,
+        space: AppDimensions.spacingMd,
+      ),
+
+      // Icon Theme
+      iconTheme: const IconThemeData(
+        color: AppColors.black,
+        size: AppDimensions.iconSizeMd,
+      ),
+
+      // Chip Theme
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.gray900,
+        selectedColor: AppColors.gold,
+        disabledColor: AppColors.gray800,
+        labelStyle: AppTextStyles.bodySmall,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacingMd,
+          vertical: AppDimensions.spacingSm,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.borderRadiusRound),
+        ),
+      ),
+
+      // Floating Action Button Theme
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: AppColors.gold,
+        foregroundColor: AppColors.textOnGold,
+        elevation: 6,
+      ),
+
+      // Bottom Navigation Bar Theme
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.white,
+        selectedItemColor: AppColors.accentBlue,
+        unselectedItemColor: AppColors.textSecondary,
+        selectedLabelStyle: AppTextStyles.caption,
+        unselectedLabelStyle: AppTextStyles.caption,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+      ),
+
+      // Snackbar Theme
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.black,
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.white,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: AppDimensions.borderRadiusMdBR,
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // Dialog Theme
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppDimensions.borderRadiusLgBR,
+        ),
+        titleTextStyle: AppTextStyles.h3,
+        contentTextStyle: AppTextStyles.bodyMedium,
+      ),
+
+      // Progress Indicator Theme
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.gold,
+      ),
+
+      // Tab Bar Theme
+      tabBarTheme: TabBarThemeData(
+        labelColor: AppColors.gold,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: AppTextStyles.button,
+        unselectedLabelStyle: AppTextStyles.button,
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(
+            color: AppColors.gold,
+            width: AppDimensions.borderWidthThick,
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ============================================================================
+  // DARK THEME (Optional - for future dark mode support)
+  // ============================================================================
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
       brightness: Brightness.dark,
 
       // Color Scheme
@@ -251,14 +495,5 @@ class AppTheme {
         ),
       ),
     );
-  }
-
-  // ============================================================================
-  // DARK THEME (Optional - for future dark mode support)
-  // ============================================================================
-
-  static ThemeData get darkTheme {
-    // TODO: Implement dark theme when needed
-    return lightTheme;
   }
 }

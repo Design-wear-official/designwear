@@ -19,7 +19,7 @@ Future<void> mainCommon(Flavor flavor) async {
 
   // Load environment variables from .env (fallback for mobile)
   await dotenv.load(fileName: "assets/.env");
-  print(
+  debugPrint(
     "Sanity Config - ProjectID: ${ConfigLoader.get('SANITY_PROJECT_ID')}, Dataset: ${ConfigLoader.get('SANITY_DATASET')}",
   );
 
@@ -64,6 +64,8 @@ class DesignWearApp extends StatelessWidget {
         title: 'Design Wear',
         debugShowCheckedModeBanner: flavor == Flavor.internal,
         theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.system,
         home: const HomeScreen(),
       ),
     );

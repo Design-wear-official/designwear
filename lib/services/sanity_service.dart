@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_sanity/flutter_sanity.dart';
 import '../models/product.dart';
 import '../models/category.dart';
@@ -17,7 +18,7 @@ class SanityService {
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
-      print('Sanity fetch failed: $e');
+      debugPrint('Sanity fetch failed: $e');
       return [];
     }
   }
@@ -29,7 +30,7 @@ class SanityService {
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Category.fromMap(item)).toList();
     } catch (e) {
-      print('Sanity fetch failed: $e');
+      debugPrint('Sanity fetch failed: $e');
       return [];
     }
   }
@@ -41,7 +42,7 @@ class SanityService {
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
-      print('Sanity fetch failed: $e');
+      debugPrint('Sanity fetch failed: $e');
       return [];
     }
   }
@@ -52,7 +53,7 @@ class SanityService {
       final result = await client.fetch(query);
       return (result as num?)?.toDouble() ?? 18.0;
     } catch (e) {
-      print('Sanity fetch failed: $e. Returning default tax rate.');
+      debugPrint('Sanity fetch failed: $e. Returning default tax rate.');
       return 18.0;
     }
   }

@@ -1,5 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/services.dart' show rootBundle;
 import 'dart:convert';
 
@@ -10,18 +10,18 @@ class ConfigLoader {
 
   static Future<void> init() async {
     if (_initialized) return;
-    
+
     // For web, try to load env.json first (dotfiles don't deploy well)
     if (kIsWeb) {
       try {
         final jsonString = await rootBundle.loadString('assets/env.json');
         _jsonConfig = json.decode(jsonString);
-        print('Loaded configuration from env.json');
+        debugPrint('Loaded configuration from env.json');
       } catch (e) {
-        print('Failed to load env.json: $e');
+        debugPrint('Failed to load env.json: $e');
       }
     }
-    
+
     _initialized = true;
   }
 
@@ -61,7 +61,8 @@ class SanityConfig {
   static String get projectId => ConfigLoader.get('SANITY_PROJECT_ID') ?? '';
 
   /// Sanity dataset
-  static String get dataset => ConfigLoader.get('SANITY_DATASET') ?? 'production';
+  static String get dataset =>
+      ConfigLoader.get('SANITY_DATASET') ?? 'production';
 }
 
 /// Web API Configuration
@@ -74,8 +75,9 @@ class WebApiConfig {
   static bool get useWebApi => ConfigLoader.get('USE_WEB_API') == 'true';
 
   /// API timeout duration
-  static Duration get timeout =>
-      Duration(seconds: int.parse(ConfigLoader.get('API_TIMEOUT_SECONDS') ?? '30'));
+  static Duration get timeout => Duration(
+    seconds: int.parse(ConfigLoader.get('API_TIMEOUT_SECONDS') ?? '30'),
+  );
 }
 
 /// App Configuration
@@ -90,6 +92,6 @@ class AppConfig {
   static String get dataSource => ConfigLoader.get('DATA_SOURCE') ?? 'sanity';
 
   /// Whether to fallback to alternative data source on failure
-  static bool get enableFallback => ConfigLoader.get('ENABLE_FALLBACK') == 'true';
+  static bool get enableFallback =>
+      ConfigLoader.get('ENABLE_FALLBACK') == 'true';
 }
-

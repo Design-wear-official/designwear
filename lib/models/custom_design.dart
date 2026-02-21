@@ -5,8 +5,10 @@ class CustomDesign {
   final double textY;
   final double fontSize;
   final String textColor; // Hex string
-
-  // Future: Stickers list
+  final String sticker; // Emoji string
+  final double stickerX;
+  final double stickerY;
+  final double stickerSize;
 
   CustomDesign({
     this.baseColor = "0xFFFFFFFF", // Default white
@@ -15,6 +17,10 @@ class CustomDesign {
     this.textY = 0,
     this.fontSize = 20,
     this.textColor = "0xFF000000",
+    this.sticker = "",
+    this.stickerX = 0,
+    this.stickerY = 0,
+    this.stickerSize = 60,
   });
 
   CustomDesign copyWith({
@@ -24,6 +30,10 @@ class CustomDesign {
     double? textY,
     double? fontSize,
     String? textColor,
+    String? sticker,
+    double? stickerX,
+    double? stickerY,
+    double? stickerSize,
   }) {
     return CustomDesign(
       baseColor: baseColor ?? this.baseColor,
@@ -32,6 +42,10 @@ class CustomDesign {
       textY: textY ?? this.textY,
       fontSize: fontSize ?? this.fontSize,
       textColor: textColor ?? this.textColor,
+      sticker: sticker ?? this.sticker,
+      stickerX: stickerX ?? this.stickerX,
+      stickerY: stickerY ?? this.stickerY,
+      stickerSize: stickerSize ?? this.stickerSize,
     );
   }
 
@@ -43,6 +57,10 @@ class CustomDesign {
       'textY': textY,
       'fontSize': fontSize,
       'textColor': textColor,
+      'sticker': sticker,
+      'stickerX': stickerX,
+      'stickerY': stickerY,
+      'stickerSize': stickerSize,
     };
   }
 
@@ -54,6 +72,10 @@ class CustomDesign {
       textY: (json['textY'] as num?)?.toDouble() ?? 0,
       fontSize: (json['fontSize'] as num?)?.toDouble() ?? 20,
       textColor: json['textColor'] ?? "0xFF000000",
+      sticker: json['sticker'] ?? "",
+      stickerX: (json['stickerX'] as num?)?.toDouble() ?? 0,
+      stickerY: (json['stickerY'] as num?)?.toDouble() ?? 0,
+      stickerSize: (json['stickerSize'] as num?)?.toDouble() ?? 60,
     );
   }
 }

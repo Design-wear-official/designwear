@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
 import '../models/category.dart';
@@ -76,10 +77,10 @@ class ApiService {
           return products.map((item) => Product.fromApiMap(item)).toList();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return [];
     }
   }
@@ -98,10 +99,10 @@ class ApiService {
           return categories.map((item) => Category.fromApiMap(item)).toList();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return [];
     }
   }
@@ -122,10 +123,10 @@ class ApiService {
           return products.map((item) => Product.fromApiMap(item)).toList();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return [];
     }
   }
@@ -143,10 +144,10 @@ class ApiService {
           return Product.fromApiMap(data['data']);
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return null;
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return null;
     }
   }
@@ -164,10 +165,10 @@ class ApiService {
           return (data['data']['taxRate'] ?? 18.0).toDouble();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return 18.0;
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return 18.0;
     }
   }

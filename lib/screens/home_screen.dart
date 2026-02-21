@@ -8,15 +8,14 @@ import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../models/product.dart';
 import '../models/category.dart';
-import '../patterns/responsive_grid_pattern.dart';
 import '../patterns/responsive_typography_pattern.dart';
-import '../utils/responsive_utils.dart';
 import '../styles/app_colors.dart';
 import 'product_detail_screen.dart';
 import 'cart_screen.dart';
 import 'login_screen.dart';
 import 'design_studio_screen.dart';
 import 'profile_screen.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
   final SanityService _sanityService = SanityService();
   late Future<List<Category>> _categoriesFuture;
   late Future<List<Product>> _productsFuture;
+  final CarouselSliderController _carouselController =
+      CarouselSliderController();
 
   @override
   void initState() {
@@ -443,95 +444,161 @@ class _HomeScreenState extends State<HomeScreen> {
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return const Center(child: Text('No products found'));
         }
-        return ResponsiveGridBuilder(
-          itemCount: snapshot.data!.length,
-          config: ResponsiveGridConfig(
-            mobileColumns: 2,
-            tabletColumns: 3,
-            desktopColumns:
-                ResponsiveUtils.isWidthGreaterThan(
-                  context,
-                  ResponsiveBreakpoints.largeDesktop,
-                )
-                ? 5
-                : 4,
-            mobileAspectRatio: 0.75,
-            tabletAspectRatio: 0.65,
-            desktopAspectRatio: 0.60,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 32,
-          ),
-          itemBuilder: (context, index) {
-            final product = snapshot.data![index];
-            return GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ProductDetailScreen(product: product),
-                  ),
-                );
-              },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Column(
+            children: [
+              CarouselSlider.builder(
+                carouselController: _carouselController,
+                itemCount: snapshot.data!.length,
+                options: CarouselOptions(
+                  height: 400.0,
+                  enlargeCenterPage: true,
+                  viewportFraction: 0.8,
+                  enableInfiniteScroll: snapshot.data!.length > 1,
+                  autoPlay: true,
+                  autoPlayInterval: const Duration(seconds: 5),
+                ),
+                itemBuilder: (context, index, realIndex) {
+                  final product = snapshot.data![index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              ProductDetailScreen(product: product),
+                        ),
+                      );
+                    },
                     child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 5.0,
+                        vertical: 10.0,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: AppColors.border),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, 5),
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Hero(
-                          tag: product.id,
-                          child: Container(
-                            width: double.infinity,
-                            color: AppColors.backgroundLight,
-                            child: product.imageUrl != null
-                                ? SafeNetworkImage(
-                                    imageUrl: product.imageUrl!,
-                                    fit: BoxFit.cover,
-                                  )
-                                : Icon(
-                                    Icons.image_not_supported,
-                                    color: AppColors.textSecondary,
+                        borderRadius: BorderRadius.circular(24),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Hero(
+                                tag: product.id,
+                                child: Container(
+                                  color: AppColors.backgroundLight,
+                                  child: product.imageUrl != null
+                                      ? SafeNetworkImage(
+                                          imageUrl: product.imageUrl!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : const Icon(
+                                          Icons.image_not_supported,
+                                          color: AppColors.textSecondary,
+                                          size: 50,
+                                        ),
+                                ),
+                              ),
+                            ),
+                            // Gradient overlay and details at the bottom
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.9),
+                                      Colors.transparent,
+                                    ],
                                   ),
-                          ),
+                                ),
+                                padding: const EdgeInsets.all(20.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      product.title,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: ResponsiveTypography.h4(
+                                        context,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '₹${product.price.toStringAsFixed(2)}',
+                                      style: ResponsiveTypography.price(context)
+                                          .copyWith(
+                                            color: AppColors.accentBlue,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              // Navigation controls
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.surface,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.chevron_left,
+                        color: AppColors.textPrimary,
+                      ),
+                      onPressed: () => _carouselController.previousPage(),
+                    ),
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    product.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ResponsiveTypography.body(
-                      context,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ).copyWith(height: 1.3),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '₹${product.price.toStringAsFixed(2)}',
-                    style: ResponsiveTypography.price(
-                      context,
-                    ).copyWith(color: AppColors.accentBlue, fontSize: 16),
+                  const SizedBox(width: 24),
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.surface,
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.textPrimary,
+                      ),
+                      onPressed: () => _carouselController.nextPage(),
+                    ),
                   ),
                 ],
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );

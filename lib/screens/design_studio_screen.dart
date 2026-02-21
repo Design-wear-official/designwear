@@ -120,10 +120,24 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                 child: _buildTextOverlay(),
                               ),
                               childWhenDragging: Container(),
-                              onDragEnd: (details) {
-                                // In a real app, convert global position to local relative to container
-                              },
+                              onDragEnd: (details) {},
                               child: _buildTextOverlay(),
+                            ),
+                          ),
+
+                        // Design Overlay (Sticker)
+                        if (_design.sticker.isNotEmpty)
+                          Positioned(
+                            left: 100 + _design.stickerX,
+                            top: 150 + _design.stickerY,
+                            child: Draggable(
+                              feedback: Material(
+                                color: Colors.transparent,
+                                child: _buildStickerOverlay(),
+                              ),
+                              childWhenDragging: Container(),
+                              onDragEnd: (details) {},
+                              child: _buildStickerOverlay(),
                             ),
                           ),
                       ],
@@ -245,9 +259,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                             const SizedBox(width: 16),
                             Expanded(
                               child: OutlinedButton.icon(
-                                onPressed: () {
-                                  // TODO: Implement sticker picker
-                                },
+                                onPressed: _showStickerPicker,
                                 icon: const Icon(
                                   Icons.emoji_emotions_outlined,
                                   color: AppColors.textPrimary,
@@ -371,6 +383,78 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
               ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStickerOverlay() {
+    return Text(
+      _design.sticker,
+      style: TextStyle(fontSize: _design.stickerSize),
+    );
+  }
+
+  void _showStickerPicker() {
+    final List<String> stickers = [
+      '⭐',
+      '🔥',
+      '❤️',
+      '🎸',
+      '👑',
+      '😎',
+      '💀',
+      '🍕',
+      '🎉',
+      '⚽',
+      '🚀',
+      '🌈',
+    ];
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Select Sticker',
+              style: GoogleFonts.outfit(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: stickers.map((sticker) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _design = _design.copyWith(sticker: sticker);
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.backgroundLight,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(sticker, style: const TextStyle(fontSize: 32)),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 24),
           ],
