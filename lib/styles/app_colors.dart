@@ -10,14 +10,15 @@ class AppColors {
   // BRAND COLORS
   // ============================================================================
 
-  /// Primary brand color - Deep Black
-  static const Color black = Color(0xFF1A1A1A);
+  /// Primary brand color - Deep Charcoal
+  static const Color black = Color(0xFF0D0D12);
 
-  /// Secondary brand color - Muted Gold
-  static const Color gold = Color(0xFFD4AF37);
+  /// Secondary brand color - Vibrant Gold
+  static const Color gold = Color(0xFFFFD700);
 
-  /// Accent color - Deep Purple (for special features like Virtual Try-On)
-  static const Color purple = Colors.deepPurple;
+  /// Accent color - Neon Purple/Blue
+  static const Color purple = Color(0xFF8A2BE2);
+  static const Color accentBlue = Color(0xFF00F0FF);
 
   // ============================================================================
   // NEUTRAL COLORS
@@ -26,26 +27,26 @@ class AppColors {
   /// Pure white
   static const Color white = Colors.white;
 
-  /// Background color for the app
-  static const Color background = Colors.white;
+  /// Background color for the app (Dark)
+  static const Color background = Color(0xFF0D0D12);
 
-  /// Surface color for cards and elevated elements
-  static const Color surface = Colors.white;
+  /// Surface color for cards and elevated elements (Glass)
+  static const Color surface = Color(0x1AFFFFFF); // 10% white for glass
 
   /// Light gray background (for subtle backgrounds)
-  static const Color backgroundLight = Color(0xFFFAFAFA);
+  static const Color backgroundLight = Color(0xFF1A1A24);
 
-  /// Gray shades
-  static const Color gray50 = Color(0xFFFAFAFA);
-  static const Color gray100 = Color(0xFFF5F5F5);
-  static const Color gray200 = Color(0xFFEEEEEE);
-  static const Color gray300 = Color(0xFFE0E0E0);
-  static const Color gray400 = Color(0xFFBDBDBD);
-  static const Color gray500 = Color(0xFF9E9E9E);
-  static const Color gray600 = Color(0xFF757575);
-  static const Color gray700 = Color(0xFF616161);
-  static const Color gray800 = Color(0xFF424242);
-  static const Color gray900 = Color(0xFF212121);
+  /// Gray shades (adapted for dark mode)
+  static const Color gray50 = Color(0xFF1E1E2A);
+  static const Color gray100 = Color(0xFF252533);
+  static const Color gray200 = Color(0xFF2C2C3D);
+  static const Color gray300 = Color(0xFF38384D);
+  static const Color gray400 = Color(0xFF4B4B63);
+  static const Color gray500 = Color(0xFF62627A);
+  static const Color gray600 = Color(0xFF7D7D95);
+  static const Color gray700 = Color(0xFF9E9EB3);
+  static const Color gray800 = Color(0xFFC3C3D1);
+  static const Color gray900 = Color(0xFFE6E6EE);
 
   // ============================================================================
   // SEMANTIC COLORS
@@ -75,39 +76,39 @@ class AppColors {
   // TEXT COLORS
   // ============================================================================
 
-  /// Primary text color (dark)
-  static const Color textPrimary = Color(0xFF1A1A1A);
+  /// Primary text color (white for dark mode)
+  static const Color textPrimary = Color(0xFFFFFFFF);
 
-  /// Secondary text color (medium gray)
-  static const Color textSecondary = Color(0xFF757575);
+  /// Secondary text color (light gray)
+  static const Color textSecondary = Color(0xFFAAAAAA);
 
-  /// Disabled text color (light gray)
-  static const Color textDisabled = Color(0xFFBDBDBD);
+  /// Disabled text color (dark gray)
+  static const Color textDisabled = Color(0xFF62627A);
 
   /// Hint text color
-  static const Color textHint = Color(0xFF9E9E9E);
+  static const Color textHint = Color(0xFF62627A);
 
   /// Text on dark backgrounds
   static const Color textOnDark = Colors.white;
 
   /// Text on gold/accent backgrounds
-  static const Color textOnGold = Color(0xFF1A1A1A);
+  static const Color textOnGold = Color(0xFF0D0D12);
 
   // ============================================================================
   // BORDER COLORS
   // ============================================================================
 
-  /// Default border color
-  static const Color border = Color(0xFFE0E0E0);
+  /// Default border color (Glass border)
+  static const Color border = Color(0x33FFFFFF); // 20% white
 
   /// Light border color
-  static const Color borderLight = Color(0xFFF5F5F5);
+  static const Color borderLight = Color(0x1AFFFFFF); // 10% white
 
   /// Dark border color
-  static const Color borderDark = Color(0xFFBDBDBD);
+  static const Color borderDark = Color(0x4DFFFFFF); // 30% white
 
   /// Focus/Active border color
-  static const Color borderFocus = gold;
+  static const Color borderFocus = accentBlue;
 
   // ============================================================================
   // SPECIAL COLORS
@@ -139,12 +140,17 @@ class AppColors {
   static LinearGradient heroGradient = LinearGradient(
     begin: Alignment.bottomCenter,
     end: Alignment.topCenter,
-    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+    colors: [Color(0xFF0D0D12), Colors.transparent],
   );
 
   /// Gold gradient (for premium features)
   static const LinearGradient goldGradient = LinearGradient(
-    colors: [Color(0xFFD4AF37), Color(0xFFF4E5A0)],
+    colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+  );
+
+  /// Accent gradient (neon)
+  static const LinearGradient neonGradient = LinearGradient(
+    colors: [Color(0xFF8A2BE2), Color(0xFF00F0FF)],
   );
 
   // ============================================================================

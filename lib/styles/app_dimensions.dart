@@ -76,16 +76,16 @@ class AppDimensions {
   static const double borderRadiusNone = 0.0;
 
   /// Small border radius
-  static const double borderRadiusSm = 4.0;
+  static const double borderRadiusSm = 8.0;
 
   /// Medium border radius
-  static const double borderRadiusMd = 8.0;
+  static const double borderRadiusMd = 16.0;
 
   /// Large border radius
-  static const double borderRadiusLg = 12.0;
+  static const double borderRadiusLg = 24.0;
 
   /// Extra large border radius
-  static const double borderRadiusXl = 16.0;
+  static const double borderRadiusXl = 32.0;
 
   /// Round border radius (circular)
   static const double borderRadiusRound = 999.0;

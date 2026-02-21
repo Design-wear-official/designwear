@@ -45,19 +45,20 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
           'DESIGN STUDIO',
           style: GoogleFonts.outfit(
-            fontWeight: FontWeight.bold,
+            fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
             fontSize: 16,
+            color: AppColors.textPrimary,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: AppColors.textPrimary,
         elevation: 0,
         actions: [
           TextButton(
@@ -75,7 +76,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
               'ADD TO CART',
               style: GoogleFonts.outfit(
                 fontWeight: FontWeight.bold,
-                color: AppColors.gold,
+                color: AppColors.accentBlue,
               ),
             ),
           ),
@@ -90,7 +91,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 flex: 3,
                 child: Container(
                   width: double.infinity,
-                  color: Colors.grey.shade50,
+                  color: AppColors.backgroundLight,
                   child: Center(
                     child: Stack(
                       alignment: Alignment.center,
@@ -137,10 +138,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surface,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withOpacity(0.2),
                         offset: const Offset(0, -5),
                         blurRadius: 20,
                       ),
@@ -153,6 +154,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                         Text(
                           'CUSTOMIZE',
                           style: GoogleFonts.outfit(
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                             letterSpacing: 1,
@@ -217,15 +219,25 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: _showTextEditor,
-                                icon: const Icon(Icons.text_fields),
-                                label: const Text('ADD TEXT'),
+                                icon: const Icon(
+                                  Icons.text_fields,
+                                  color: AppColors.textPrimary,
+                                ),
+                                label: const Text(
+                                  'ADD TEXT',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
-                                  side: const BorderSide(color: Colors.black),
+                                  side: const BorderSide(
+                                    color: AppColors.borderFocus,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(0),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
                               ),
@@ -236,15 +248,25 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                 onPressed: () {
                                   // TODO: Implement sticker picker
                                 },
-                                icon: const Icon(Icons.emoji_emotions_outlined),
-                                label: const Text('STICKER'),
+                                icon: const Icon(
+                                  Icons.emoji_emotions_outlined,
+                                  color: AppColors.textPrimary,
+                                ),
+                                label: const Text(
+                                  'STICKER',
+                                  style: TextStyle(
+                                    color: AppColors.textPrimary,
+                                  ),
+                                ),
                                 style: OutlinedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
-                                  side: const BorderSide(color: Colors.black),
+                                  side: const BorderSide(
+                                    color: AppColors.borderFocus,
+                                  ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(0),
+                                    borderRadius: BorderRadius.circular(16),
                                   ),
                                 ),
                               ),
@@ -289,6 +311,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: AppColors.surface,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -303,6 +326,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             Text(
               'Add Text',
               style: GoogleFonts.outfit(
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -310,9 +334,17 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: textController,
+              style: const TextStyle(color: AppColors.textPrimary),
               decoration: const InputDecoration(
                 hintText: 'Enter your text',
+                hintStyle: TextStyle(color: AppColors.textHint),
                 border: OutlineInputBorder(),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: AppColors.borderFocus),
+                ),
               ),
               autofocus: true,
             ),
@@ -327,13 +359,17 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
+                  backgroundColor: AppColors.accentBlue,
+                  foregroundColor: Colors.black,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(0),
+                    borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text('APPLY'),
+                child: const Text(
+                  'APPLY',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             const SizedBox(height: 24),

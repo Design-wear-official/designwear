@@ -16,17 +16,17 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: Brightness.dark,
 
       // Color Scheme
-      primaryColor: AppColors.black,
+      primaryColor: AppColors.background,
       scaffoldBackgroundColor: AppColors.background,
-      colorScheme: const ColorScheme.light(
-        primary: AppColors.black,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.accentBlue,
         secondary: AppColors.gold,
         surface: AppColors.surface,
         error: AppColors.error,
-        onPrimary: AppColors.white,
+        onPrimary: AppColors.textPrimary,
         onSecondary: AppColors.textOnGold,
         onSurface: AppColors.textPrimary,
         onError: AppColors.white,
@@ -53,7 +53,7 @@ class AppTheme {
 
       // App Bar Theme
       appBarTheme: AppBarTheme(
-        backgroundColor: AppColors.white,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -156,9 +156,10 @@ class AppTheme {
       // Card Theme
       cardTheme: CardThemeData(
         color: AppColors.surface,
-        elevation: AppDimensions.cardElevation,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: AppDimensions.borderRadiusMdBR,
+          borderRadius: AppDimensions.borderRadiusLgBR,
+          side: const BorderSide(color: AppColors.border, width: 1),
         ),
         margin: const EdgeInsets.all(AppDimensions.spacingMd),
       ),
@@ -200,13 +201,13 @@ class AppTheme {
 
       // Bottom Navigation Bar Theme
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: AppColors.white,
-        selectedItemColor: AppColors.gold,
+        backgroundColor: AppColors.surface,
+        selectedItemColor: AppColors.accentBlue,
         unselectedItemColor: AppColors.textSecondary,
         selectedLabelStyle: AppTextStyles.caption,
         unselectedLabelStyle: AppTextStyles.caption,
         type: BottomNavigationBarType.fixed,
-        elevation: 8,
+        elevation: 0,
       ),
 
       // Snackbar Theme

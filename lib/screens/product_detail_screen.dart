@@ -27,14 +27,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: CircleAvatar(
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.surface,
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -53,13 +54,29 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   tablet: MediaQuery.of(context).size.height * 0.55,
                   desktop: MediaQuery.of(context).size.height * 0.60,
                 ),
-                decoration: BoxDecoration(color: Colors.grey.shade50),
-                child: widget.product.imageUrl != null
-                    ? SafeNetworkImage(
-                        imageUrl: widget.product.imageUrl!,
-                        fit: BoxFit.cover,
-                      )
-                    : const Icon(Icons.image_not_supported, size: 100),
+                decoration: const BoxDecoration(
+                  color: AppColors.backgroundLight,
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
+                  child: widget.product.imageUrl != null
+                      ? SafeNetworkImage(
+                          imageUrl: widget.product.imageUrl!,
+                          fit: BoxFit.cover,
+                        )
+                      : const Icon(
+                          Icons.image_not_supported,
+                          size: 100,
+                          color: AppColors.textSecondary,
+                        ),
+                ),
               ),
             ),
 
@@ -83,26 +100,26 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   },
                   icon: const Icon(
                     Icons.auto_awesome,
-                    color: AppColors.gold,
-                  ), // Gold
+                    color: AppColors.accentBlue,
+                  ),
                   label: Text(
                     'Try It On Virtually ✨',
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     side: const BorderSide(
-                      color: AppColors.gold,
-                      width: 1,
-                    ), // Gold border
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0), // Sharp edges
+                      color: AppColors.accentBlue,
+                      width: 1.5,
                     ),
-                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    backgroundColor: AppColors.surface,
                   ),
                 ),
               ),
@@ -119,14 +136,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         widget.product.title.toUpperCase(),
                         style: ResponsiveTypography.h3(
                           context,
-                          fontWeight: FontWeight.w300,
-                          color: Colors.black87,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textPrimary,
                         ).copyWith(letterSpacing: 1.1),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '₹${widget.product.price.toStringAsFixed(2)}',
-                        style: ResponsiveTypography.price(context),
+                        style: ResponsiveTypography.price(
+                          context,
+                        ).copyWith(color: AppColors.accentBlue),
                       ),
                     ],
                   ),
@@ -173,20 +192,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isSelected
-                                  ? Colors.black
-                                  : Colors.grey.shade300,
+                                  ? AppColors.accentBlue
+                                  : AppColors.border,
                               width: 1.5,
                             ),
                             color: isSelected
-                                ? Colors.black
+                                ? AppColors.accentBlue
                                 : Colors.transparent,
                           ),
                           alignment: Alignment.center,
                           child: Text(
                             size,
                             style: GoogleFonts.outfit(
-                              color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.black
+                                  : AppColors.textPrimary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
@@ -195,13 +216,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
 
                   const SizedBox(height: 24),
-                  Text('Description', style: ResponsiveTypography.h4(context)),
+                  Text(
+                    'Description',
+                    style: ResponsiveTypography.h4(
+                      context,
+                    ).copyWith(color: AppColors.textPrimary),
+                  ),
                   const SizedBox(height: 8),
                   Text(
                     widget.product.description,
                     style: ResponsiveTypography.body(
                       context,
-                      color: Colors.grey.shade700,
+                      color: AppColors.textSecondary,
                     ).copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 40),
@@ -214,8 +240,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          border: Border(top: BorderSide(color: Colors.grey.shade100)),
+          color: AppColors.surface,
+          border: const Border(top: BorderSide(color: AppColors.border)),
         ),
         child: SafeArea(
           child: Row(
@@ -228,9 +254,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       : () => _addToCart(context),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 56),
-                    side: const BorderSide(color: Colors.black, width: 1.5),
+                    side: const BorderSide(
+                      color: AppColors.accentBlue,
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
                   child: Text(
@@ -239,7 +268,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
-                      color: Colors.black,
+                      color: AppColors.accentBlue,
                     ),
                   ),
                 ),
@@ -247,27 +276,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               const SizedBox(width: 16),
               // Buy Now Button
               Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.product.stockStatus == 'outOfStock'
-                      ? null
-                      : () => _buyNow(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(0, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0),
-                    ),
-                    elevation: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    gradient: AppColors.neonGradient,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentBlue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    widget.product.stockStatus == 'outOfStock'
-                        ? 'OUT OF STOCK'
-                        : 'BUY NOW',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+                  child: ElevatedButton(
+                    onPressed: widget.product.stockStatus == 'outOfStock'
+                        ? null
+                        : () => _buyNow(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: Text(
+                      widget.product.stockStatus == 'outOfStock'
+                          ? 'OUT OF STOCK'
+                          : 'BUY NOW',
+                      style: GoogleFonts.outfit(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
                     ),
                   ),
                 ),
