@@ -7,11 +7,12 @@
 
 ## ✨ Key Features
 
--   **🎨 Design Studio**: Customize t-shirts with colors, text, and graphics.
+-   **🎨 Design Studio**: Customize t-shirts with colors, text, graphics, and emojis using the built-in **Sticker Picker**.
 -   **🤖 Agentic AI Assistant**: Meet **DesignBot**, your personal fashion assistant powered by **Google Gemini 2.0**.
     -   *Conversational Design*: Ask the bot to "Design a spooky shirt" or "Make it blue", and watch the design update instantly.
 -   **👗 Virtual Try-On**: Visualize how clothes look on you before buying using our AI-powered Virtual Try-On feature (Gemini API).
 -   **🛒 Seamless Shopping**: Complete e-commerce flow with Cart, Checkout, and Order management.
+-   **🌗 Dark/Bright Mode Toggle**: Switch between system, light, or dark themes with user preference persistence.
 -   **⚡ High Performance**: Built with Flutter for smooth, native performance on Android and iOS.
 -   **☁️ Cloud Powered**:
     -   **Firebase**: Authentication (Email/Password, Phone) and Backend services.

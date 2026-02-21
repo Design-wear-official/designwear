@@ -16,6 +16,7 @@ import 'login_screen.dart';
 import 'design_studio_screen.dart';
 import 'profile_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import '../services/theme_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,9 +52,24 @@ class _HomeScreenState extends State<HomeScreen> {
             fontWeight: FontWeight.w800,
             fontSize: 22,
             letterSpacing: 0.5,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         actions: [
+          // Theme Toggle Button
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              return IconButton(
+                onPressed: () {
+                  themeProvider.toggleTheme(!themeProvider.isDarkMode);
+                },
+                icon: Icon(
+                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              );
+            },
+          ),
           // Login/Profile Button
           Consumer<AuthService>(
             builder: (context, authService, child) {
@@ -73,7 +89,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
                 icon: Icon(
                   authService.isLoggedIn ? Icons.person : Icons.person_outline,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               );
             },
@@ -90,9 +106,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         MaterialPageRoute(builder: (_) => const CartScreen()),
                       );
                     },
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.shopping_bag_outlined,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   if (cartService.itemCount > 0)
@@ -144,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
       height: 260,
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border),
         image: const DecorationImage(
@@ -189,7 +205,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.border),
                     ),
@@ -273,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.border),
-          color: AppColors.surface,
+          color: Theme.of(context).colorScheme.surface,
           image: const DecorationImage(
             image: NetworkImage(
               'https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=2069&auto=format&fit=crop',
@@ -297,7 +313,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.background.withOpacity(0.4),
+                      Theme.of(context).colorScheme.surface.withOpacity(0.4),
                       AppColors.purple.withOpacity(0.2),
                     ],
                   ),
@@ -310,7 +326,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'DESIGN YOUR OWN',
                       style: GoogleFonts.outfit(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w800,
                         fontSize: 22,
                         letterSpacing: 2,
@@ -323,7 +339,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 10,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(30),
                         border: Border.all(color: AppColors.borderFocus),
                         boxShadow: [
@@ -336,7 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         'START CREATING',
                         style: GoogleFonts.outfit(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
                           fontSize: 12,
                           letterSpacing: 1.5,
@@ -364,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
               fontSize: 16,
               fontWeight: FontWeight.w800,
               letterSpacing: 1.2,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(width: 16),
@@ -373,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
             style: GoogleFonts.outfit(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
               decoration: TextDecoration.underline,
             ),
           ),
@@ -414,7 +430,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
+                  color: Theme.of(context).colorScheme.surface,
                   border: Border.all(color: AppColors.border),
                   borderRadius: BorderRadius.circular(30),
                 ),
@@ -423,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.outfit(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               );
@@ -455,7 +471,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 400.0,
                   enlargeCenterPage: true,
                   viewportFraction: 0.8,
-                  enableInfiniteScroll: snapshot.data!.length > 1,
+                  enableInfiniteScroll:
+                      false, // Disabled to prevent duplicate Hero tags
                   autoPlay: true,
                   autoPlayInterval: const Duration(seconds: 5),
                 ),
@@ -477,7 +494,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         vertical: 10.0,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(24),
                         border: Border.all(color: AppColors.border),
                         boxShadow: [
@@ -502,9 +519,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                           imageUrl: product.imageUrl!,
                                           fit: BoxFit.cover,
                                         )
-                                      : const Icon(
+                                      : Icon(
                                           Icons.image_not_supported,
-                                          color: AppColors.textSecondary,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.7),
                                           size: 50,
                                         ),
                                 ),
@@ -569,13 +589,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.surface,
+                      color: Theme.of(context).colorScheme.surface,
                       border: Border.all(color: AppColors.border),
                     ),
                     child: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.chevron_left,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onPressed: () => _carouselController.previousPage(),
                     ),
@@ -584,13 +604,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: AppColors.surface,
+                      color: Theme.of(context).colorScheme.surface,
                       border: Border.all(color: AppColors.border),
                     ),
                     child: IconButton(
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.chevron_right,
-                        color: AppColors.textPrimary,
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       onPressed: () => _carouselController.nextPage(),
                     ),

@@ -53,12 +53,12 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
             fontSize: 16,
-            color: AppColors.textPrimary,
+            color: Theme.of(context).colorScheme.onSurface,
           ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
-        foregroundColor: AppColors.textPrimary,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         actions: [
           TextButton(
@@ -152,7 +152,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: Theme.of(context).colorScheme.surface,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.2),
@@ -168,7 +168,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                         Text(
                           'CUSTOMIZE',
                           style: GoogleFonts.outfit(
-                            color: AppColors.textPrimary,
+                            color: Theme.of(context).colorScheme.onSurface,
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                             letterSpacing: 1,
@@ -233,14 +233,18 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: _showTextEditor,
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.text_fields,
-                                  color: AppColors.textPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
-                                label: const Text(
+                                label: Text(
                                   'ADD TEXT',
                                   style: TextStyle(
-                                    color: AppColors.textPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                                 style: OutlinedButton.styleFrom(
@@ -260,14 +264,18 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                             Expanded(
                               child: OutlinedButton.icon(
                                 onPressed: _showStickerPicker,
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.emoji_emotions_outlined,
-                                  color: AppColors.textPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
-                                label: const Text(
+                                label: Text(
                                   'STICKER',
                                   style: TextStyle(
-                                    color: AppColors.textPrimary,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                                 style: OutlinedButton.styleFrom(
@@ -323,7 +331,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       builder: (context) => Padding(
         padding: EdgeInsets.only(
           bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -338,7 +346,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             Text(
               'Add Text',
               style: GoogleFonts.outfit(
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),
@@ -346,11 +354,15 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             const SizedBox(height: 16),
             TextField(
               controller: textController,
-              style: const TextStyle(color: AppColors.textPrimary),
-              decoration: const InputDecoration(
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              decoration: InputDecoration(
                 hintText: 'Enter your text',
-                hintStyle: TextStyle(color: AppColors.textHint),
-                border: OutlineInputBorder(),
+                hintStyle: TextStyle(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.5),
+                ),
+                border: const OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: AppColors.border),
                 ),
@@ -415,7 +427,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     ];
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -428,7 +440,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             Text(
               'Select Sticker',
               style: GoogleFonts.outfit(
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
               ),

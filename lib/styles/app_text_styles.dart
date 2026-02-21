@@ -16,7 +16,6 @@ class AppTextStyles {
   static TextStyle get displayLarge => GoogleFonts.outfit(
     fontSize: 48,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
     height: 1.2,
   );
 
@@ -24,7 +23,6 @@ class AppTextStyles {
   static TextStyle get displayMedium => GoogleFonts.outfit(
     fontSize: 40,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
     height: 1.2,
   );
 
@@ -32,7 +30,6 @@ class AppTextStyles {
   static TextStyle get displaySmall => GoogleFonts.outfit(
     fontSize: 32,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
     height: 1.2,
   );
 
@@ -44,7 +41,6 @@ class AppTextStyles {
   static TextStyle get h1 => GoogleFonts.outfit(
     fontSize: 28,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
     height: 1.3,
   );
 
@@ -52,7 +48,6 @@ class AppTextStyles {
   static TextStyle get h2 => GoogleFonts.outfit(
     fontSize: 24,
     fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
     height: 1.3,
   );
 
@@ -60,7 +55,6 @@ class AppTextStyles {
   static TextStyle get h3 => GoogleFonts.outfit(
     fontSize: 20,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
     height: 1.4,
   );
 
@@ -68,7 +62,6 @@ class AppTextStyles {
   static TextStyle get h4 => GoogleFonts.outfit(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
     height: 1.4,
   );
 
@@ -76,7 +69,6 @@ class AppTextStyles {
   static TextStyle get h5 => GoogleFonts.outfit(
     fontSize: 16,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
     height: 1.5,
   );
 
@@ -84,7 +76,6 @@ class AppTextStyles {
   static TextStyle get h6 => GoogleFonts.outfit(
     fontSize: 14,
     fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
     height: 1.5,
   );
 
@@ -96,7 +87,6 @@ class AppTextStyles {
   static TextStyle get bodyLarge => GoogleFonts.outfit(
     fontSize: 18,
     fontWeight: FontWeight.normal,
-    color: AppColors.textPrimary,
     height: 1.6,
   );
 
@@ -104,7 +94,6 @@ class AppTextStyles {
   static TextStyle get bodyMedium => GoogleFonts.outfit(
     fontSize: 16,
     fontWeight: FontWeight.normal,
-    color: AppColors.textPrimary,
     height: 1.6,
   );
 
@@ -112,7 +101,6 @@ class AppTextStyles {
   static TextStyle get bodySmall => GoogleFonts.outfit(
     fontSize: 14,
     fontWeight: FontWeight.normal,
-    color: AppColors.textPrimary,
     height: 1.6,
   );
 
@@ -125,7 +113,6 @@ class AppTextStyles {
     fontSize: 16,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.0,
-    color: AppColors.textPrimary,
   );
 
   /// Button small text - 14px, bold, uppercase
@@ -133,7 +120,6 @@ class AppTextStyles {
     fontSize: 14,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.0,
-    color: AppColors.textPrimary,
   );
 
   /// Label text - 14px, bold, spaced
@@ -141,7 +127,6 @@ class AppTextStyles {
     fontSize: 14,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.5,
-    color: AppColors.textPrimary,
   );
 
   /// Label small - 12px, bold, spaced
@@ -149,14 +134,12 @@ class AppTextStyles {
     fontSize: 12,
     fontWeight: FontWeight.bold,
     letterSpacing: 1.5,
-    color: AppColors.textPrimary,
   );
 
   /// Caption - 12px
   static TextStyle get caption => GoogleFonts.outfit(
     fontSize: 12,
     fontWeight: FontWeight.normal,
-    color: AppColors.textSecondary,
     height: 1.4,
   );
 
@@ -173,25 +156,16 @@ class AppTextStyles {
   // ============================================================================
 
   /// Price large - 24px, bold
-  static TextStyle get priceLarge => GoogleFonts.outfit(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle get priceLarge =>
+      GoogleFonts.outfit(fontSize: 24, fontWeight: FontWeight.bold);
 
   /// Price medium - 20px, bold
-  static TextStyle get priceMedium => GoogleFonts.outfit(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle get priceMedium =>
+      GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.bold);
 
   /// Price small - 18px, bold
-  static TextStyle get priceSmall => GoogleFonts.outfit(
-    fontSize: 18,
-    fontWeight: FontWeight.bold,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle get priceSmall =>
+      GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.bold);
 
   // ============================================================================
   // LINK STYLES
