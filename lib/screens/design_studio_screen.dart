@@ -45,7 +45,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'DESIGN STUDIO',
@@ -91,7 +91,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 flex: 3,
                 child: Container(
                   width: double.infinity,
-                  color: AppColors.backgroundLight,
+                  color: Theme.of(context).colorScheme.surface,
                   child: Center(
                     child: Stack(
                       alignment: Alignment.center,
@@ -251,8 +251,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
-                                  side: const BorderSide(
-                                    color: AppColors.borderFocus,
+                                  side: BorderSide(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.2),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -282,8 +284,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                   padding: const EdgeInsets.symmetric(
                                     vertical: 16,
                                   ),
-                                  side: const BorderSide(
-                                    color: AppColors.borderFocus,
+                                  side: BorderSide(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.2),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -364,10 +368,16 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 ),
                 border: const OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.border),
+                  borderSide: BorderSide(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.3),
+                  ),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: AppColors.borderFocus),
+                  borderSide: BorderSide(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
               autofocus: true,
@@ -383,8 +393,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
-                  foregroundColor: Colors.black,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -460,7 +470,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppColors.backgroundLight,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(sticker, style: const TextStyle(fontSize: 32)),

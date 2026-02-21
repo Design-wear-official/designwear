@@ -27,15 +27,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: CircleAvatar(
-          backgroundColor: AppColors.surface,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surface.withOpacity(0.8),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(
+              Icons.arrow_back,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -54,9 +59,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   tablet: MediaQuery.of(context).size.height * 0.55,
                   desktop: MediaQuery.of(context).size.height * 0.60,
                 ),
-                decoration: const BoxDecoration(
-                  color: AppColors.backgroundLight,
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(40),
                     bottomRight: Radius.circular(40),
                   ),
@@ -71,10 +76,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           imageUrl: widget.product.imageUrl!,
                           fit: BoxFit.cover,
                         )
-                      : const Icon(
+                      : Icon(
                           Icons.image_not_supported,
                           size: 100,
-                          color: AppColors.textSecondary,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.5),
                         ),
                 ),
               ),
@@ -107,7 +114,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -119,7 +126,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    backgroundColor: AppColors.surface,
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                   ),
                 ),
               ),
@@ -137,7 +144,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         style: ResponsiveTypography.h3(
                           context,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: Theme.of(context).colorScheme.onSurface,
                         ).copyWith(letterSpacing: 1.1),
                       ),
                       const SizedBox(height: 8),
@@ -193,7 +200,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.accentBlue
-                                  : AppColors.border,
+                                  : Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface.withOpacity(0.2),
                               width: 1.5,
                             ),
                             color: isSelected
@@ -205,8 +214,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             size,
                             style: GoogleFonts.outfit(
                               color: isSelected
-                                  ? Colors.black
-                                  : AppColors.textPrimary,
+                                  ? Colors
+                                        .black // keep black when selected for contrast
+                                  : Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -220,14 +230,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     'Description',
                     style: ResponsiveTypography.h4(
                       context,
-                    ).copyWith(color: AppColors.textPrimary),
+                    ).copyWith(color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     widget.product.description,
                     style: ResponsiveTypography.body(
                       context,
-                      color: AppColors.textSecondary,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
                     ).copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 40),
@@ -240,8 +252,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: const Border(top: BorderSide(color: AppColors.border)),
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            ),
+          ),
         ),
         child: SafeArea(
           child: Row(

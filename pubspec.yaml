@@ -53,6 +53,7 @@ dependencies:
   permission_handler: ^12.0.1
   firebase_vertexai: ^2.2.0
   carousel_slider: ^5.1.2
+  firebase_crashlytics: ^5.0.7
 
 dev_dependencies:
   flutter_test:
@@ -91,8 +92,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/.env
-    - assets/env.json
     - assets/images/
 
   # To add assets to your application, add an assets section, like this:

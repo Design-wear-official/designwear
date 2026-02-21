@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
-import '../styles/app_colors.dart';
 import 'login_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -79,13 +78,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.successLight,
+                    color: Colors.green.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check_circle,
                     size: 60,
-                    color: AppColors.successDark,
+                    color: Colors.green,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -100,7 +99,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Text(
                   'Your order has been placed successfully.\nYou will receive a confirmation shortly.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: AppColors.gray600),
+                  style: GoogleFonts.poppins(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
               ],
             ),
@@ -112,8 +115,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.purple,
-                    foregroundColor: AppColors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -133,8 +136,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment failed: $e'),
-            backgroundColor: AppColors.error,
+            content: Text(
+              'Payment failed: $e',
+              style: GoogleFonts.poppins(
+                color: Theme.of(context).colorScheme.onError,
+              ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -148,7 +156,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'CHECKOUT',
@@ -159,8 +167,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: AppColors.white,
-        foregroundColor: AppColors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -192,7 +200,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   '₹${item.total.toStringAsFixed(2)}',
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.black,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                               ],
@@ -207,7 +217,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Subtotal',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
-                                color: AppColors.gray600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
                             Text(
@@ -227,7 +239,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Tax (${cartService.currentTaxRate}% GST)',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
-                                color: AppColors.gray600,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
                             Text(
@@ -256,7 +270,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
-                                color: AppColors.black,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ],
@@ -326,8 +340,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _processPayment,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.black,
-                    foregroundColor: AppColors.white,
+                    backgroundColor: Theme.of(context).colorScheme.onSurface,
+                    foregroundColor: Theme.of(context).colorScheme.surface,
                     padding: const EdgeInsets.symmetric(vertical: 20),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0),
@@ -335,12 +349,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     elevation: 0,
                   ),
                   child: _isProcessing
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(AppColors.white),
+                            valueColor: AlwaysStoppedAnimation(
+                              Theme.of(context).colorScheme.surface,
+                            ),
                           ),
                         )
                       : Text(
@@ -361,27 +377,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock, size: 16, color: AppColors.gray600),
+                    Icon(
+                      Icons.lock,
+                      size: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Secure Payment',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: AppColors.gray600,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Icon(
                       Icons.verified_user,
                       size: 16,
-                      color: AppColors.gray600,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '100% Safe',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: AppColors.gray600,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -399,8 +427,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        border: Border(bottom: BorderSide(color: AppColors.divider)),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -411,7 +443,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fontWeight: FontWeight.bold,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: AppColors.gray800,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 20),
@@ -436,22 +468,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       style: GoogleFonts.outfit(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.outfit(color: AppColors.gray600),
+        labelStyle: GoogleFonts.outfit(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: BorderSide(color: AppColors.gray300),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: BorderSide(color: AppColors.gray300),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(color: AppColors.black, width: 1.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
         ),
       ),
     );

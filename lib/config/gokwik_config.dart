@@ -1,7 +1,5 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
+import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Configuration loader that supports both .env and env.json
 class ConfigLoader {
@@ -11,26 +9,25 @@ class ConfigLoader {
   static Future<void> init() async {
     if (_initialized) return;
 
-    // For web, try to load env.json first (dotfiles don't deploy well)
-    if (kIsWeb) {
-      try {
-        final jsonString = await rootBundle.loadString('assets/env.json');
-        _jsonConfig = json.decode(jsonString);
-        debugPrint('Loaded configuration from env.json');
-      } catch (e) {
-        debugPrint('Failed to load env.json: $e');
-      }
-    }
+    // We don't load env.json anymore due to security risks.
+    // Web configs are injected via --dart-define.
 
     _initialized = true;
   }
 
   static String? get(String key) {
-    // Try JSON config first (for web)
+    // 1. Try injected build variables first (Best for Web & CI/CD)
+    // hasEnvironment is used to check if dart-define was passed for this key.
+    if (bool.hasEnvironment(key)) {
+      return String.fromEnvironment(key);
+    }
+
+    // 2. Try JSON fallback if somehow populated
     if (_jsonConfig != null && _jsonConfig!.containsKey(key)) {
       return _jsonConfig![key]?.toString();
     }
-    // Fall back to dotenv
+
+    // 3. Fall back to dotenv (Used during local mobile development)
     return dotenv.env[key];
   }
 }

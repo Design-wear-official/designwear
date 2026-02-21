@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widgets/safe_network_image.dart';
 import '../services/cart_service.dart';
 import '../models/cart.dart';
-import '../styles/app_colors.dart';
 import 'checkout_screen.dart';
 
 class CartScreen extends StatelessWidget {
@@ -13,7 +12,7 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'YOUR CART',
@@ -24,8 +23,8 @@ class CartScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
       ),
       body: Consumer<CartService>(
@@ -53,7 +52,7 @@ class CartScreen extends StatelessWidget {
           Icon(
             Icons.shopping_cart_outlined,
             size: 100,
-            color: Colors.grey[300],
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
           ),
           const SizedBox(height: 24),
           Text(
@@ -61,20 +60,20 @@ class CartScreen extends StatelessWidget {
             style: GoogleFonts.poppins(
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Add some products to get started!',
-            style: GoogleFonts.poppins(color: Colors.grey[500]),
+            style: GoogleFonts.poppins(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+            ),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(0),
@@ -111,10 +110,12 @@ class CartScreen extends StatelessWidget {
   ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
         border: Border(
-          bottom: BorderSide(color: Colors.black12),
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
+          ),
         ), // Minimal separator
       ),
       child: Padding(
@@ -134,8 +135,15 @@ class CartScreen extends StatelessWidget {
                   : Container(
                       width: 80,
                       height: 80,
-                      color: Colors.grey[200],
-                      child: Icon(Icons.image, color: Colors.grey[400]),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.2),
+                      child: Icon(
+                        Icons.image,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.4),
+                      ),
                     ),
             ),
             const SizedBox(width: 16),
@@ -159,7 +167,9 @@ class CartScreen extends StatelessWidget {
                       child: Text(
                         'Size: ${item.selectedSize}',
                         style: GoogleFonts.outfit(
-                          color: Colors.grey[600],
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -173,14 +183,19 @@ class CartScreen extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: AppColors.goldOpacity(0.1),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.secondary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(4),
-                          border: Border.all(color: AppColors.gold, width: 0.5),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.secondary,
+                            width: 0.5,
+                          ),
                         ),
                         child: Text(
                           'CUSTOM DESIGN',
                           style: GoogleFonts.outfit(
-                            color: AppColors.gold,
+                            color: Theme.of(context).colorScheme.secondary,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -193,7 +208,7 @@ class CartScreen extends StatelessWidget {
                     style: GoogleFonts.outfit(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -212,7 +227,11 @@ class CartScreen extends StatelessWidget {
                 ),
                 Container(
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey[300]!),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.3),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -262,10 +281,10 @@ class CartScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
+            color: Colors.black.withOpacity(0.1),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -281,7 +300,11 @@ class CartScreen extends StatelessWidget {
               children: [
                 Text(
                   'Subtotal',
-                  style: GoogleFonts.outfit(color: Colors.grey[600]),
+                  style: GoogleFonts.outfit(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
                 Text(
                   '₹${cartService.subtotal.toStringAsFixed(2)}',
@@ -297,7 +320,9 @@ class CartScreen extends StatelessWidget {
                   'Tax (${cartService.currentTaxRate}% GST)',
                   style: GoogleFonts.outfit(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
                   ),
                 ),
                 Text(
@@ -322,7 +347,7 @@ class CartScreen extends StatelessWidget {
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.bold,
                     fontSize: 20,
-                    color: Colors.black,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
               ],
@@ -341,8 +366,6 @@ class CartScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 18),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(0),
