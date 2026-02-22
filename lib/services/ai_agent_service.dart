@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../models/custom_design.dart';
 
 class AIAgentService {
   static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent';
 
-  String? get _apiKey => dotenv.env['GEMINI_API_KEY'];
+  String? get _apiKey => kIsWeb
+      ? const String.fromEnvironment('GEMINI_API_KEY')
+      : dotenv.env['GEMINI_API_KEY'];
 
   // Current conversation history
   final List<Map<String, dynamic>> _history = [];
@@ -33,30 +36,11 @@ class AIAgentService {
       });
 
       // Construct the system prompt and context
-      final systemPrompt =
-          '''
-You are "DesignBot", an expert fashion AI assistant for the Designwear app.
-Your goal is to help users design t-shirts in the Design Studio.
-
-You have direct control over the t-shirt design. You can change:
-- Base Color (hex code, e.g., "0xFF00FF00")
-- Text content
-- Text color (hex code, e.g., "0xFF000000")
-- Text position (X, Y coordinates)
-- Font Size
-
-Current State:
-${jsonEncode(currentDesign.toJson())}
-
-INSTRUCTIONS:
-1. If the user asks to change the design (e.g., "Make it blue", "Add text 'Hello'"), generate a JSON object representing the NEW full design state.
-2. If the user just wants to chat, reply with normal text.
-3. BE CREATIVE! If the user says "Make a spooky shirt", choose appropriate colors (black/orange) and text (e.g., "Boo!").
-4. ALWAYS return a JSON object if you are changing the design. Format: {"design": {...}}
-5. COLORS MUST BE IN "0xFFRRGGBB" FORMAT. Do not use "#".
-6. If just chatting, return plain text.
-7. **IMPORTANT**: You CANNOT generate new images/graphics. You can ONLY change color, text, and text position. If a user asks for a specific graphic (like "sunrise"), politely explain you can only change colors/text, and try to match the VIBE with colors (e.g., "I can't print a sunrise image, but I've set the shirt to a nice sunrise orange and yellow for you!").
-''';
+      final rawPrompt = await rootBundle.loadString('assets/system_prompt.txt');
+      final systemPrompt = rawPrompt.replaceAll(
+        '{{CURRENT_STATE}}',
+        jsonEncode(currentDesign.toJson()),
+      );
 
       final requestBody = {
         'systemInstruction': {

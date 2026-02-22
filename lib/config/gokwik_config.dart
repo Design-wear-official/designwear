@@ -1,8 +1,23 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
 
 /// Configuration loader that supports both .env and env.json
 class ConfigLoader {
+  // Dart enforces compile-time constants for environment variable injection.
+  static const Map<String, String> _dartDefines = {
+    'GOKWIK_MERCHANT_ID': String.fromEnvironment('GOKWIK_MERCHANT_ID'),
+    'GOKWIK_API_KEY': String.fromEnvironment('GOKWIK_API_KEY'),
+    'GOKWIK_ENVIRONMENT': String.fromEnvironment('GOKWIK_ENVIRONMENT'),
+    'SANITY_PROJECT_ID': String.fromEnvironment('SANITY_PROJECT_ID'),
+    'SANITY_DATASET': String.fromEnvironment('SANITY_DATASET'),
+    'APP_NAME': String.fromEnvironment('APP_NAME'),
+    'DEBUG_MODE': String.fromEnvironment('DEBUG_MODE'),
+    'DATA_SOURCE': String.fromEnvironment('DATA_SOURCE'),
+    'ENABLE_FALLBACK': String.fromEnvironment('ENABLE_FALLBACK'),
+    'WEB_API_BASE_URL': String.fromEnvironment('WEB_API_BASE_URL'),
+    'API_TIMEOUT_SECONDS': String.fromEnvironment('API_TIMEOUT_SECONDS'),
+    'USE_WEB_API': String.fromEnvironment('USE_WEB_API'),
+  };
+
   static Map<String, dynamic>? _jsonConfig;
   static bool _initialized = false;
 
@@ -17,9 +32,9 @@ class ConfigLoader {
 
   static String? get(String key) {
     // 1. Try injected build variables first (Best for Web & CI/CD)
-    // hasEnvironment is used to check if dart-define was passed for this key.
-    if (bool.hasEnvironment(key)) {
-      return String.fromEnvironment(key);
+    final injectedValue = _dartDefines[key];
+    if (injectedValue != null && injectedValue.isNotEmpty) {
+      return injectedValue;
     }
 
     // 2. Try JSON fallback if somehow populated
@@ -28,7 +43,10 @@ class ConfigLoader {
     }
 
     // 3. Fall back to dotenv (Used during local mobile development)
-    return dotenv.env[key];
+    if (dotenv.isInitialized) {
+      return dotenv.env[key];
+    }
+    return null;
   }
 }
 

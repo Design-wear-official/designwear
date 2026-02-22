@@ -35,13 +35,22 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static FirebaseOptions get web => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ?? '',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+  static FirebaseOptions get web => const FirebaseOptions(
+    apiKey: String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: ''),
+    appId: String.fromEnvironment('FIREBASE_WEB_APP_ID', defaultValue: ''),
+    messagingSenderId: String.fromEnvironment(
+      'FIREBASE_MESSAGING_SENDER_ID',
+      defaultValue: '',
+    ),
+    projectId: String.fromEnvironment('FIREBASE_PROJECT_ID', defaultValue: ''),
+    authDomain: String.fromEnvironment(
+      'FIREBASE_AUTH_DOMAIN',
+      defaultValue: '',
+    ),
+    storageBucket: String.fromEnvironment(
+      'FIREBASE_STORAGE_BUCKET',
+      defaultValue: '',
+    ),
   );
 
   static FirebaseOptions get android => FirebaseOptions(
@@ -69,5 +78,4 @@ class DefaultFirebaseOptions {
     storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID'] ?? '',
   );
-
 }

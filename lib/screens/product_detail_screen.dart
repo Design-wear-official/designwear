@@ -114,13 +114,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.onSurface,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(
-                      color: AppColors.accentBlue,
+                    side: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
@@ -214,8 +218,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                             size,
                             style: GoogleFonts.outfit(
                               color: isSelected
-                                  ? Colors
-                                        .black // keep black when selected for contrast
+                                  ? (Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.black
+                                        : Colors.white)
                                   : Theme.of(context).colorScheme.onSurface,
                               fontWeight: FontWeight.bold,
                             ),
@@ -270,8 +276,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       : () => _addToCart(context),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 56),
-                    side: const BorderSide(
-                      color: AppColors.accentBlue,
+                    side: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
                       width: 1.5,
                     ),
                     shape: RoundedRectangleBorder(
@@ -284,7 +292,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
-                      color: AppColors.accentBlue,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
                     ),
                   ),
                 ),

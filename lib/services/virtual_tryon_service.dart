@@ -12,7 +12,9 @@ class VirtualTryOnService {
   static const String _baseUrl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent';
 
-  String? get _apiKey => dotenv.env['GEMINI_API_KEY'];
+  String? get _apiKey => kIsWeb
+      ? const String.fromEnvironment('GEMINI_API_KEY')
+      : dotenv.env['GEMINI_API_KEY'];
 
   /// Generate a virtual try-on image
   /// [personImageBytes] - Image of the person (user's photo)
