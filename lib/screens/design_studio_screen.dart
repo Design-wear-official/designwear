@@ -99,7 +99,12 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                         // Base T-Shirt Image (Using a color filter for tinting)
                         ColorFiltered(
                           colorFilter: ColorFilter.mode(
-                            Color(int.parse(_design.baseColor)),
+                            Color(
+                              int.parse(
+                                _design.baseColor.replaceFirst('0x', ''),
+                                radix: 16,
+                              ),
+                            ),
                             BlendMode.modulate,
                           ),
                           child: Image.asset(
@@ -120,7 +125,24 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                 child: _buildTextOverlay(),
                               ),
                               childWhenDragging: Container(),
-                              onDragEnd: (details) {},
+                              onDragEnd: (details) {
+                                // Calculate position relative to center of the stack roughly
+                                // We subtract a constant to account for app bar / offsets
+                                final RenderBox renderBox =
+                                    context.findRenderObject() as RenderBox;
+                                final localPosition = renderBox.globalToLocal(
+                                  details.offset,
+                                );
+
+                                setState(() {
+                                  _design = _design.copyWith(
+                                    textX: localPosition.dx - 100,
+                                    textY:
+                                        localPosition.dy -
+                                        200, // Approximate offset
+                                  );
+                                });
+                              },
                               child: _buildTextOverlay(),
                             ),
                           ),
@@ -136,7 +158,20 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                 child: _buildStickerOverlay(),
                               ),
                               childWhenDragging: Container(),
-                              onDragEnd: (details) {},
+                              onDragEnd: (details) {
+                                final RenderBox renderBox =
+                                    context.findRenderObject() as RenderBox;
+                                final localPosition = renderBox.globalToLocal(
+                                  details.offset,
+                                );
+
+                                setState(() {
+                                  _design = _design.copyWith(
+                                    stickerX: localPosition.dx - 100,
+                                    stickerY: localPosition.dy - 250,
+                                  );
+                                });
+                              },
                               child: _buildStickerOverlay(),
                             ),
                           ),
@@ -155,7 +190,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                     color: Theme.of(context).colorScheme.surface,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         offset: const Offset(0, -5),
                         blurRadius: 20,
                       ),
@@ -187,7 +222,12 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                             itemBuilder: (context, index) {
                               final color = _tShirtColors[index];
                               final isSelected =
-                                  Color(int.parse(_design.baseColor)).value ==
+                                  Color(
+                                    int.parse(
+                                      _design.baseColor.replaceFirst('0x', ''),
+                                      radix: 16,
+                                    ),
+                                  ).value ==
                                   color.value;
                               return GestureDetector(
                                 onTap: () {
@@ -213,7 +253,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                     boxShadow: [
                                       if (isSelected)
                                         BoxShadow(
-                                          color: color.withOpacity(0.4),
+                                          color: color.withValues(alpha: 0.4),
                                           blurRadius: 8,
                                           offset: const Offset(0, 4),
                                         ),
@@ -252,9 +292,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                     vertical: 16,
                                   ),
                                   side: BorderSide(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.2),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.2),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -285,9 +326,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                                     vertical: 16,
                                   ),
                                   side: BorderSide(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.2),
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurface
+                                        .withValues(alpha: 0.2),
                                   ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -297,6 +339,71 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                             ),
                           ],
                         ),
+
+                        // Size Sliders (Visible if text or sticker exists)
+                        if (_design.text.isNotEmpty ||
+                            _design.sticker.isNotEmpty) ...[
+                          const SizedBox(height: 24),
+                          Text(
+                            'SIZE CONTROLS',
+                            style: GoogleFonts.outfit(
+                              color: Theme.of(context).colorScheme.onSurface,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          if (_design.text.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                const Icon(Icons.text_format, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Slider(
+                                    value: _design.fontSize,
+                                    min: 10,
+                                    max: 80,
+                                    activeColor: AppColors.accentBlue,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _design = _design.copyWith(
+                                          fontSize: value,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (_design.sticker.isNotEmpty) ...[
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.emoji_emotions_outlined,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Slider(
+                                    value: _design.stickerSize,
+                                    min: 20,
+                                    max: 150,
+                                    activeColor: AppColors.gold,
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _design = _design.copyWith(
+                                          stickerSize: value,
+                                        );
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ],
                     ),
                   ),
@@ -325,7 +432,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       style: GoogleFonts.outfit(
         fontSize: _design.fontSize,
         fontWeight: FontWeight.bold,
-        color: Color(int.parse(_design.textColor)),
+        color: Color(
+          int.parse(_design.textColor.replaceFirst('0x', ''), radix: 16),
+        ),
       ),
     );
   }
@@ -364,14 +473,14 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 hintStyle: TextStyle(
                   color: Theme.of(
                     context,
-                  ).colorScheme.onSurface.withOpacity(0.5),
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
                 border: const OutlineInputBorder(),
                 enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(

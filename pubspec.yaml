@@ -72,7 +72,11 @@ dependency_overrides:
   flutter_bloc: ^9.1.1
   rxdart: ^0.28.0
   test_api: ^0.7.9
-  win32_registry: ^2.1.0
+  win32_registry: ^3.0.1
+  flutter_platform_widgets: ^10.0.1
+  package_info_plus: ^9.0.0
+  pin_code_fields: ^9.1.0
+  win32: ^6.0.0
   characters: ^1.4.1
   matcher: ^0.12.18
   material_color_utilities: ^0.13.0

@@ -52,9 +52,11 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
       if (response.updatedDesign != null) {
         widget.onDesignUpdate(response.updatedDesign!);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Design updated by AI! ✨')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Design updated by AI! ✨')),
+          );
+        }
       }
     } catch (e) {
       setState(() {
@@ -78,6 +80,9 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Positioned(
       bottom: 20,
       right: 20,
@@ -92,11 +97,14 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
               height: 400,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.2),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -106,10 +114,13 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                 children: [
                   // Header
                   Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.vertical(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(20),
                       ),
                     ),
@@ -119,14 +130,14 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                         Text(
                           'DesignBot AI',
                           style: GoogleFonts.outfit(
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                             size: 20,
                           ),
                           onPressed: () => setState(() => _isOpen = false),
@@ -158,8 +169,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                             ),
                             decoration: BoxDecoration(
                               color: isUser
-                                  ? Colors.black
-                                  : Colors.grey.shade100,
+                                  ? colorScheme.primary
+                                  : colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12).copyWith(
                                 bottomLeft: isUser
                                     ? const Radius.circular(12)
@@ -172,7 +183,9 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                             child: Text(
                               msg['text']!,
                               style: TextStyle(
-                                color: isUser ? Colors.white : Colors.black,
+                                color: isUser
+                                    ? colorScheme.onPrimary
+                                    : colorScheme.onSurface,
                                 fontSize: 13,
                               ),
                             ),
@@ -187,12 +200,12 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                     Container(
                       padding: const EdgeInsets.only(left: 16, bottom: 8),
                       alignment: Alignment.centerLeft,
-                      child: const SizedBox(
+                      child: SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: colorScheme.primary,
                         ),
                       ),
                     ),
@@ -205,35 +218,40 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                         Expanded(
                           child: TextField(
                             controller: _textController,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colorScheme.onSurface,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Type a message...',
                               hintStyle: TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey.shade400,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.4,
+                                ),
                               ),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(25),
                                 borderSide: BorderSide.none,
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor: colorScheme.surfaceContainerHighest,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 16,
                                 vertical: 8,
                               ),
                             ),
-                            style: const TextStyle(fontSize: 13),
                             onSubmitted: _handleSubmitted,
                           ),
                         ),
                         const SizedBox(width: 8),
                         CircleAvatar(
-                          backgroundColor: Colors.black,
+                          backgroundColor: colorScheme.primary,
                           radius: 18,
                           child: IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.send,
-                              color: Colors.white,
+                              color: colorScheme.onPrimary,
                               size: 16,
                             ),
                             onPressed: () =>
@@ -250,8 +268,9 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           // Floating Button
           FloatingActionButton(
             onPressed: () => setState(() => _isOpen = !_isOpen),
-            backgroundColor: Colors.black,
-            child: const Icon(Icons.auto_awesome, color: Colors.white),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            child: const Icon(Icons.auto_awesome),
           ),
         ],
       ),
