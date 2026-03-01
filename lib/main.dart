@@ -22,7 +22,7 @@ Future<void> mainCommon(Flavor flavor) async {
 
   // Load environment variables from .env (fallback for mobile)
   if (!kIsWeb) {
-    await dotenv.load(fileName: "assets/.env");
+    await dotenv.load(fileName: ".env");
   }
 
   // Initialize Firebase with error handling for duplicate initialization
