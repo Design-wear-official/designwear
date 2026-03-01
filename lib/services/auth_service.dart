@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class User {
   final String? id;
@@ -14,7 +17,6 @@ class User {
 }
 
 class AuthService extends ChangeNotifier {
-  final fb.FirebaseAuth _auth = fb.FirebaseAuth.instance;
   User? _currentUser;
   bool _isLoading = false;
 
@@ -22,33 +24,68 @@ class AuthService extends ChangeNotifier {
   bool get isLoggedIn => _currentUser?.isLoggedIn ?? false;
   bool get isLoading => _isLoading;
 
+  String get _baseUrl =>
+      dotenv.env['WEB_API_BASE_URL'] ?? 'http://10.0.2.2:3001/api';
+
   AuthService() {
-    _auth.authStateChanges().listen(_onAuthStateChanged);
+    _loadUserFromStorage();
   }
 
   void init() {
-    // Initialized in constructor listener
+    // Handled in constructor
   }
 
-  Future<void> _onAuthStateChanged(fb.User? firebaseUser) async {
-    if (firebaseUser == null) {
-      _currentUser = null;
-    } else {
+  Future<void> _loadUserFromStorage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final uid = prefs.getString('auth_uid');
+
+    if (token != null && uid != null) {
       _currentUser = User(
-        id: firebaseUser.uid,
-        email: firebaseUser.email,
-        name: firebaseUser.displayName,
-        phone: firebaseUser.phoneNumber,
+        id: uid,
+        email: prefs.getString('auth_email'),
+        name: prefs.getString('auth_name'),
+        isGuest: prefs.getBool('auth_isGuest') ?? false,
       );
+    } else {
+      _currentUser = null;
     }
     notifyListeners();
+  }
+
+  Future<void> _saveSession(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    if (data['token'] != null) {
+      await prefs.setString('auth_token', data['token']);
+    }
+    await prefs.setString('auth_uid', data['uid'] ?? '');
+
+    if (data['email'] != null)
+      await prefs.setString('auth_email', data['email']);
+    if (data['name'] != null) await prefs.setString('auth_name', data['name']);
+    if (data['isGuest'] != null)
+      await prefs.setBool('auth_isGuest', data['isGuest']);
+
+    await _loadUserFromStorage();
   }
 
   Future<void> signInWithEmail(String email, String password) async {
     _isLoading = true;
     notifyListeners();
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password}),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success']) {
+        await _saveSession(data['data']);
+      } else {
+        throw Exception(data['error'] ?? 'Login failed');
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -63,68 +100,25 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      fb.UserCredential result = await _auth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
+      // 1. Register User
+      final regResponse = await http.post(
+        Uri.parse('$_baseUrl/auth/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email, 'password': password, 'name': name}),
       );
-      await result.user?.updateDisplayName(name);
-      await _onAuthStateChanged(result.user);
+
+      final regData = jsonDecode(regResponse.body);
+      if (regResponse.statusCode != 200 || !regData['success']) {
+        throw Exception(regData['error'] ?? 'Registration failed');
+      }
+
+      // 2. Immediately Login to get Token
+      await signInWithEmail(email, password);
     } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  String? _verificationId;
-
-  Future<void> sendOtp(String phoneNumber) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      await _auth.verifyPhoneNumber(
-        phoneNumber: '+91$phoneNumber', // Assuming +91 for now as per UI
-        verificationCompleted: (fb.PhoneAuthCredential credential) async {
-          // Auto-resolution on Android
-          await _auth.signInWithCredential(credential);
-        },
-        verificationFailed: (fb.FirebaseAuthException e) {
-          _isLoading = false;
-          notifyListeners();
-          throw e;
-        },
-        codeSent: (String verificationId, int? resendToken) {
-          _verificationId = verificationId;
-          _isLoading = false;
-          notifyListeners();
-        },
-        codeAutoRetrievalTimeout: (String verificationId) {
-          _verificationId = verificationId;
-        },
-      );
-    } catch (e) {
-      _isLoading = false;
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  Future<void> loginWithPhone(String otp) async {
-    if (_verificationId == null) {
-      // Should not happen if flow is correct, but safe guard
-      throw Exception("Verification ID is missing. Please request OTP first.");
-    }
-    
-    _isLoading = true;
-    notifyListeners();
-    try {
-      final credential = fb.PhoneAuthProvider.credential(
-        verificationId: _verificationId!,
-        smsCode: otp,
-      );
-      await _auth.signInWithCredential(credential);
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      if (_isLoading) {
+        _isLoading = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -132,7 +126,17 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      await _auth.signInAnonymously();
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/guest'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success']) {
+        await _saveSession(data['data']);
+      } else {
+        throw Exception(data['error'] ?? 'Guest login failed');
+      }
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -140,16 +144,36 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> updateProfile({String? name, String? email}) async {
-    final firebaseUser = _auth.currentUser;
-    if (firebaseUser == null) return;
-
-    if (name != null) await firebaseUser.updateDisplayName(name);
-    if (email != null) await firebaseUser.verifyBeforeUpdateEmail(email);
-
-    await _onAuthStateChanged(_auth.currentUser);
+    // To keep it simple, just update local storage for now
+    // A full implementation would PATCH /api/users/profile
+    final prefs = await SharedPreferences.getInstance();
+    if (name != null) await prefs.setString('auth_name', name);
+    if (email != null) await prefs.setString('auth_email', email);
+    await _loadUserFromStorage();
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    await prefs.remove('auth_uid');
+    await prefs.remove('auth_email');
+    await prefs.remove('auth_name');
+    await prefs.remove('auth_isGuest');
+
+    _currentUser = null;
+    notifyListeners();
+  }
+
+  // ---- Phone Auth (Removed during backend migration) ----
+  Future<void> sendOtp(String phoneNumber) async {
+    throw UnimplementedError(
+      'Phone authentication is disabled in this version. Please use Email/Password.',
+    );
+  }
+
+  Future<void> loginWithPhone(String otp) async {
+    throw UnimplementedError(
+      'Phone authentication is disabled in this version. Please use Email/Password.',
+    );
   }
 }

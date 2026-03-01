@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
-import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../config/gokwik_config.dart';
 import 'cart_service.dart';
 
@@ -10,12 +10,11 @@ class OrderService {
 
   Future<Map<String, String>> _getHeaders() async {
     final headers = {'Content-Type': 'application/json'};
-    final user = fb.FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final token = await user.getIdToken();
-      if (token != null) {
-        headers['Authorization'] = 'Bearer $token';
-      }
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
     }
     return headers;
   }

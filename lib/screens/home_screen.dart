@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/safe_network_image.dart';
 import 'package:provider/provider.dart';
-import '../services/sanity_service.dart';
+import '../services/api_service.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../models/product.dart';
@@ -17,6 +17,7 @@ import 'design_studio_screen.dart';
 import 'profile_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../services/theme_provider.dart';
+import '../config/gokwik_config.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,7 +27,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final SanityService _sanityService = SanityService();
+  late ApiService _apiService;
   late Future<List<Category>> _categoriesFuture;
   late Future<List<Product>> _productsFuture;
   final CarouselSliderController _carouselController =
@@ -35,8 +36,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _categoriesFuture = _sanityService.fetchCategories();
-    _productsFuture = _sanityService.fetchProducts();
+    _apiService = WebApiConfig.useWebApi
+        ? ApiService.webApi(WebApiConfig.baseUrl)
+        : ApiService.sanity();
+    _categoriesFuture = _apiService.fetchCategories();
+    _productsFuture = _apiService.fetchProducts();
   }
 
   @override
