@@ -6,68 +6,54 @@ import 'package:http/http.dart' as http;
 import '../models/custom_design.dart';
 
 class AIAgentService {
-  static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent';
+  String get _baseUrl =>
+      dotenv.env['WEB_API_BASE_URL'] ??
+      'https://designwear-backend.vishwamai.com/api';
 
-  String? get _apiKey => kIsWeb
-      ? const String.fromEnvironment('GEMINI_API_KEY')
-      : dotenv.env['GEMINI_API_KEY'];
-
-  // Current conversation history
   final List<Map<String, dynamic>> _history = [];
 
-  /// Sends a message to the agent and returns a response.
-  /// The response can be a text reply or a structured design update.
   Future<AgentResponse> sendMessage(
     String userMessage,
     CustomDesign currentDesign,
   ) async {
-    if (_apiKey == null) {
-      return AgentResponse(text: "Error: API Key not found.");
-    }
-
     try {
-      // Add user message to history
-      _history.add({
-        'role': 'user',
-        'parts': [
-          {'text': userMessage},
-        ],
-      });
-
-      // Construct the system prompt and context
       final rawPrompt = await rootBundle.loadString('assets/system_prompt.txt');
       final systemPrompt = rawPrompt.replaceAll(
         '{{CURRENT_STATE}}',
         jsonEncode(currentDesign.toJson()),
       );
 
-      final requestBody = {
-        'systemInstruction': {
-          'parts': [
-            {'text': systemPrompt},
-          ],
-        },
-        'contents': _history,
-        'generationConfig': {'temperature': 0.7},
-      };
-
       final response = await http.post(
-        Uri.parse('$_baseUrl?key=$_apiKey'),
+        Uri.parse('$_baseUrl/ai/agent'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(requestBody),
+        body: jsonEncode({
+          'systemPrompt': systemPrompt,
+          'history': _history,
+          'userMessage': userMessage,
+        }),
       );
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      final responseData = jsonDecode(response.body);
+
+      if (response.statusCode == 200 && responseData['success'] == true) {
+        // Add user message locally now that request succeeded
+        _history.add({
+          'role': 'user',
+          'parts': [
+            {'text': userMessage},
+          ],
+        });
+
+        final data = responseData['data'];
         final candidates = data['candidates'] as List?;
+
         if (candidates != null && candidates.isNotEmpty) {
           final content = candidates[0]['content'];
           final parts = content['parts'] as List?;
+
           if (parts != null && parts.isNotEmpty) {
             String textResponse = parts[0]['text'];
 
-            // Add model response to history
             _history.add({
               'role': 'model',
               'parts': [
@@ -75,8 +61,7 @@ class AIAgentService {
               ],
             });
 
-            // Try to extract JSON from the response using Regex
-            // Matches content between ```json and ``` or just {...} if possible
+            // Extract JSON from response
             final jsonRegex = RegExp(
               r'```json\s*(\{.*?\})\s*```',
               dotAll: true,
@@ -85,80 +70,36 @@ class AIAgentService {
 
             if (match != null) {
               final jsonString = match.group(1);
-              try {
-                if (jsonString != null) {
-                  final jsonResponse = jsonDecode(jsonString);
-                  if (jsonResponse is Map<String, dynamic> &&
-                      jsonResponse.containsKey('design')) {
-                    final newDesign = CustomDesign.fromJson(
-                      jsonResponse['design'],
-                    );
+              if (jsonString != null) {
+                final jsonResponse = jsonDecode(jsonString);
+                if (jsonResponse is Map<String, dynamic> &&
+                    jsonResponse.containsKey('design')) {
+                  final newDesign = CustomDesign.fromJson(
+                    jsonResponse['design'],
+                  );
+                  final conversationalText = textResponse
+                      .split('```json')
+                      .first
+                      .trim();
 
-                    // Extract the conversational part (everything before the JSON)
-                    // so we don't show the raw JSON to the user
-                    final splitParts = textResponse.split('```json');
-                    final conversationalText = splitParts.isNotEmpty
-                        ? splitParts[0].trim()
-                        : "I've updated the design for you!";
-
-                    return AgentResponse(
-                      text: conversationalText.isNotEmpty
-                          ? conversationalText
-                          : "I've updated the design for you!",
-                      updatedDesign: newDesign,
-                    );
-                  }
+                  return AgentResponse(
+                    text: conversationalText.isNotEmpty
+                        ? conversationalText
+                        : "I've updated the design for you!",
+                    updatedDesign: newDesign,
+                  );
                 }
-              } catch (e) {
-                debugPrint('JSON Parse Error: $e');
-              }
-            } else {
-              // Fallback: try to find just a raw JSON object if code blocks were omitted
-              try {
-                final start = textResponse.indexOf('{');
-                final end = textResponse.lastIndexOf('}');
-                if (start != -1 && end != -1 && end > start) {
-                  final potentialJson = textResponse.substring(start, end + 1);
-                  if (potentialJson.contains('"design"')) {
-                    final jsonResponse = jsonDecode(potentialJson);
-                    if (jsonResponse is Map<String, dynamic> &&
-                        jsonResponse.containsKey('design')) {
-                      final newDesign = CustomDesign.fromJson(
-                        jsonResponse['design'],
-                      );
-                      // Determine conversational text
-                      final conversationalText = textResponse
-                          .substring(0, start)
-                          .trim();
-                      return AgentResponse(
-                        text: conversationalText.isNotEmpty
-                            ? conversationalText
-                            : "I've updated the design for you!",
-                        updatedDesign: newDesign,
-                      );
-                    }
-                  }
-                }
-              } catch (e) {
-                debugPrint('Fallback JSON Parse Error: $e');
               }
             }
-
             return AgentResponse(text: textResponse);
           }
         }
       } else {
-        debugPrint('API Error: ${response.statusCode} - ${response.body}');
-        return AgentResponse(
-          text: "API Error (${response.statusCode}): ${response.body}",
-        );
+        return AgentResponse(text: "API Error: ${responseData['error']}");
       }
-
-      return AgentResponse(
-        text: "Sorry, I couldn't understand that (Empty Response).",
-      );
-    } catch (e, stackTrace) {
-      debugPrint('Exception: $e\n$stackTrace');
+      return AgentResponse(text: "No response from AI API.");
+    } catch (e) {
+      debugPrint('Exception: $e');
       return AgentResponse(text: "Error: $e");
     }
   }
