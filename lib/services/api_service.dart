@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../models/product.dart';
 import '../models/category.dart';
 import '../services/sanity_service.dart';
@@ -62,12 +63,25 @@ class ApiService {
     }
   }
 
+  Future<Map<String, String>> _getHeaders() async {
+    final headers = {'Content-Type': 'application/json'};
+    final user = fb.FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final token = await user.getIdToken();
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+    return headers;
+  }
+
   // Web API implementations
   Future<List<Product>> _fetchProductsFromWeb() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/products'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -87,9 +101,10 @@ class ApiService {
 
   Future<List<Category>> _fetchCategoriesFromWeb() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/categories'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -111,9 +126,10 @@ class ApiService {
     String categoryId,
   ) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/categories/$categoryId/products'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -133,9 +149,10 @@ class ApiService {
 
   Future<Product?> _fetchProductByIdFromWeb(String productId) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/products/$productId'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -154,9 +171,10 @@ class ApiService {
 
   Future<double> _fetchTaxRateFromWeb() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/settings/tax-rate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {

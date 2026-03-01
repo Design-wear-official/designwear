@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
+import '../services/order_service.dart';
 import 'login_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -57,12 +58,28 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 2));
+      final cartService = context.read<CartService>();
+      final shippingAddress = {
+        'name': _nameController.text,
+        'address': _addressController.text,
+        'city': _cityController.text,
+        'pincode': _pincodeController.text,
+      };
+
+      final orderService = OrderService();
+      final success = await orderService.createOrder(
+        cartService,
+        shippingAddress,
+        'Order placed via app',
+      );
+
+      if (!success) {
+        throw Exception('Failed to create order on the server');
+      }
 
       // Clear cart
       if (mounted) {
-        context.read<CartService>().clearCart();
+        cartService.clearCart();
 
         // Show success dialog
         await showDialog(

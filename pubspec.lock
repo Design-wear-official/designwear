@@ -26,13 +26,13 @@ packages:
     source: hosted
     version: "2.13.0"
   bloc:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: bloc
-      sha256: a48653a82055a900b88cd35f92429f068c5a8057ae9b136d197b3d56c57efb81
+      sha256: "106842ad6569f0b60297619e9e0b1885c2fb9bf84812935490e6c5275777804e"
       url: "https://pub.dev"
     source: hosted
-    version: "9.2.0"
+    version: "8.1.4"
   boolean_selector:
     dependency: transitive
     description:
@@ -74,7 +74,7 @@ packages:
     source: hosted
     version: "5.1.2"
   characters:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: characters
       sha256: faf38497bda5ead2a8c7615f4f7939df04333478bf32e4173fcb06d428b5716b
@@ -130,13 +130,13 @@ packages:
     source: hosted
     version: "1.0.8"
   device_info_plus:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: device_info_plus
-      sha256: "4df8babf73058181227e18b08e6ea3520cf5fc5d796888d33b7cb0f33f984b7c"
+      sha256: a7fd703482b391a87d60b6061d04dfdeab07826b96f9abd8f5ed98068acc0074
       url: "https://pub.dev"
     source: hosted
-    version: "12.3.0"
+    version: "10.1.2"
   device_info_plus_platform_interface:
     dependency: transitive
     description:
@@ -185,14 +185,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  ffi_leak_tracker:
-    dependency: transitive
-    description:
-      name: ffi_leak_tracker
-      sha256: "076941187786423291bacbbf19017e3e473cf01c9d96fccc869979494f2156cb"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   file:
     dependency: transitive
     description:
@@ -234,7 +226,7 @@ packages:
     source: hosted
     version: "0.9.3+5"
   firebase_ai:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: firebase_ai
       sha256: "84c94b0cfdaf96af17a5971a618d74b5a996597d9a3a1577c72912d0b393071e"
@@ -329,14 +321,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.8.17"
-  firebase_vertexai:
-    dependency: "direct main"
-    description:
-      name: firebase_vertexai
-      sha256: "67350e68b3738cff99a366c60aeb8d15acdc446848555942ae6f006329690235"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
   fixnum:
     dependency: transitive
     description:
@@ -351,13 +335,13 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_bloc:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: flutter_bloc
-      sha256: cf51747952201a455a1c840f8171d273be009b932c75093020f9af64f2123e38
+      sha256: b594505eac31a0518bdcb4b5b79573b8d9117b193cc80cc12e17d639b10aa27a
       url: "https://pub.dev"
     source: hosted
-    version: "9.1.1"
+    version: "8.1.6"
   flutter_cache_manager:
     dependency: transitive
     description:
@@ -391,13 +375,13 @@ packages:
     source: hosted
     version: "1.5.1+1"
   flutter_platform_widgets:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: flutter_platform_widgets
-      sha256: aa110ef638076831d060047911a62810d02b4695db58e7682b716c4c4eee65bc
+      sha256: "04a373ebf654162791bfce4b7c157f48ec35ea8b0abe2a68de837ceda8bd39ff"
       url: "https://pub.dev"
     source: hosted
-    version: "10.0.1"
+    version: "2.2.6"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -592,15 +576,15 @@ packages:
     source: hosted
     version: "1.3.0"
   matcher:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: matcher
-      sha256: dc0b7dc7651697ea4ff3e69ef44b0407ea32c487a39fff6a4004fa585e901861
+      sha256: "12956d0ad8390bbcc63ca2e1469c0619946ccb52809807067a7020d57e647aa6"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.19"
+    version: "0.12.18"
   material_color_utilities:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: material_color_utilities
       sha256: "9c337007e82b1889149c82ed242ed1cb24a66044e30979c44912381e9be4c48b"
@@ -608,13 +592,13 @@ packages:
     source: hosted
     version: "0.13.0"
   meta:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: meta
-      sha256: "9f29b9bcc8ee287b1a31e0d01be0eae99a930dbffdaecf04b3f3d82a969f296f"
+      sha256: "23f08335362185a5ea2ad3a4e597f1375e78bce8a040df5c600c8d3552ef2394"
       url: "https://pub.dev"
     source: hosted
-    version: "1.18.1"
+    version: "1.17.0"
   mime:
     dependency: transitive
     description:
@@ -656,13 +640,13 @@ packages:
     source: hosted
     version: "2.1.0"
   package_info_plus:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: package_info_plus
-      sha256: f69da0d3189a4b4ceaeb1a3defb0f329b3b352517f52bed4290f83d4f06bc08d
+      sha256: "16eee997588c60225bda0488b6dcfac69280a6b7a3cf02c741895dd370a02968"
       url: "https://pub.dev"
     source: hosted
-    version: "9.0.0"
+    version: "8.3.1"
   package_info_plus_platform_interface:
     dependency: transitive
     description:
@@ -672,7 +656,7 @@ packages:
     source: hosted
     version: "3.2.1"
   path:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: path
       sha256: "75cca69d1490965be98c73ceaea117e8a04dd21217b37b292c9ddbec0d955bc5"
@@ -776,21 +760,21 @@ packages:
     source: hosted
     version: "0.2.1"
   pin_code_fields:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: pin_code_fields
-      sha256: b9c33ef91da2a959dde3eaa0ec90dfca6a90d5b734cb594bb533a01f7f9732fa
+      sha256: "4c0db7fbc889e622e7c71ea54b9ee624bb70c7365b532abea0271b17ea75b729"
       url: "https://pub.dev"
     source: hosted
-    version: "9.1.0"
+    version: "8.0.1"
   pinput:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: pinput
-      sha256: "4c3f1b84768b47a56a1abdaca551bd7cef4ac673b882209039ecdf803a5d6e68"
+      sha256: c41f42ee301505ae2375ec32871c985d3717bf8aee845620465b286e0140aad2
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.2"
+    version: "5.0.2"
   platform:
     dependency: transitive
     description:
@@ -824,7 +808,7 @@ packages:
     source: hosted
     version: "2.2.0"
   rxdart:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: rxdart
       sha256: "5c3004a4a8dbb94bd4bf5412a4def4acdaa12e12f269737a5751369e12d1a962"
@@ -917,13 +901,13 @@ packages:
     source: hosted
     version: "3.2.0"
   snowplow_tracker:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: snowplow_tracker
-      sha256: d240ad1ea086e0e33797e65f2b83cec14b0b5fd083cce663d4c4e6b19f1a7df7
+      sha256: "6719db2e7a1aeacd3bc0d55160234ef600f349bfd51d99f247af1e3676112bb8"
       url: "https://pub.dev"
     source: hosted
-    version: "0.8.0"
+    version: "0.7.1"
   source_span:
     dependency: transitive
     description:
@@ -933,7 +917,7 @@ packages:
     source: hosted
     version: "1.10.2"
   sqflite:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: sqflite
       sha256: e2297b1da52f127bc7a3da11439985d9b536f75070f3325e62ada69a5c585d03
@@ -1013,13 +997,13 @@ packages:
     source: hosted
     version: "1.2.2"
   test_api:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: test_api
-      sha256: "8161c84903fd860b26bfdefb7963b3f0b68fee7adea0f59ef805ecca346f0c7a"
+      sha256: "93167629bfc610f71560ab9312acdda4959de4df6fac7492c89ff0d3886f6636"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.10"
+    version: "0.7.9"
   typed_data:
     dependency: transitive
     description:
@@ -1028,6 +1012,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.0"
+  universal_platform:
+    dependency: transitive
+    description:
+      name: universal_platform
+      sha256: "64e16458a0ea9b99260ceb5467a214c1f298d647c659af1bff6d3bf82536b1ec"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   url_launcher:
     dependency: transitive
     description:
@@ -1168,26 +1160,26 @@ packages:
     dependency: transitive
     description:
       name: webview_flutter_wkwebview
-      sha256: "108bd85d0ff20bff1e8b52a040f5c19b6b9fc4a78fdf3160534ff5a11a82e267"
+      sha256: fc0af89d403e1c053f03d023d97550412fa79f35332e2939514c82e6fe633198
       url: "https://pub.dev"
     source: hosted
-    version: "3.23.7"
+    version: "3.23.8"
   win32:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: win32
-      sha256: e7489db51886360dad710b3bc177108267f0554644dd04102dcb35f23b71c738
+      sha256: d7cb55e04cd34096cd3a79b3330245f54cb96a370a1c27adb3c84b917de8b08e
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.0"
+    version: "5.15.0"
   win32_registry:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: win32_registry
-      sha256: c49d93efd907b50d6ad9bc6d8585dbbee299ab2d18d0f1d33d52ce5dca5aa177
+      sha256: "21ec76dfc731550fd3e2ce7a33a9ea90b828fdf19a5c3bcf556fa992cfa99852"
       url: "https://pub.dev"
     source: hosted
-    version: "3.0.1"
+    version: "1.1.5"
   xdg_directories:
     dependency: transitive
     description:
@@ -1205,5 +1197,5 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.11.0 <4.0.0"
+  dart: ">=3.10.4 <4.0.0"
   flutter: ">=3.38.4"

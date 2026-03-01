@@ -7,9 +7,9 @@ import 'package:path_provider/path_provider.dart';
 
 /// Service to handle Virtual Try-On using Google AI Studio Gemini API
 class VirtualTryOnService {
-  // Use "Nano Banana Pro" (Gemini 3 Pro Image Preview) for professional asset / image generation
+  // Use "Nano Banana 2" (Gemini 3.1 Flash Image Preview) for speed-optimized image generation
   static const String _baseUrl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-image-preview:generateContent';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent';
 
   String? get _apiKey => kIsWeb
       ? const String.fromEnvironment('GEMINI_API_KEY')
