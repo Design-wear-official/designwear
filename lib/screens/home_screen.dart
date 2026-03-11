@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/safe_network_image.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +29,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late ApiService _apiService;
   late Future<List<Category>> _categoriesFuture;
-  late Future<List<Product>> _productsFuture;
+  late Future<List<Product>> _featuredProductsFuture;
   final CarouselSliderController _carouselController =
       CarouselSliderController();
 
@@ -39,8 +39,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _apiService = WebApiConfig.useWebApi
         ? ApiService.webApi(WebApiConfig.baseUrl)
         : ApiService.sanity();
-    _categoriesFuture = _apiService.fetchCategories();
-    _productsFuture = _apiService.fetchProducts();
+    _loadData();
+  }
+
+  void _loadData() {
+    setState(() {
+      _categoriesFuture = _apiService.fetchCategories();
+      _featuredProductsFuture = _apiService.fetchFeaturedProducts();
+    });
   }
 
   @override
@@ -142,17 +148,22 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 12),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeroSection(),
-            _buildDesignStudioBanner(), // New entry point
-            _buildSectionTitle('Categories'),
-            _buildCategoryList(),
-            _buildSectionTitle('Featured Products'),
-            _buildProductGrid(),
-          ],
+      body: RefreshIndicator(
+        onRefresh: () async => _loadData(),
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeroSection(),
+              _buildDesignStudioBanner(),
+              _buildSectionTitle('Categories'),
+              _buildCategoryList(),
+              _buildSectionTitle('Featured Products'),
+              _buildProductGrid(),
+              const SizedBox(height: 32),
+            ],
+          ),
         ),
       ),
     );
@@ -167,12 +178,6 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.border),
-        image: const DecorationImage(
-          image: NetworkImage(
-            'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop',
-          ),
-          fit: BoxFit.cover,
-        ),
         boxShadow: [
           BoxShadow(
             color: AppColors.purple.withOpacity(0.3),
@@ -185,6 +190,18 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(24),
         child: Stack(
           children: [
+            // Background image with offline-safe error handling
+            Positioned.fill(
+              child: CachedNetworkImage(
+                imageUrl:
+                    'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop',
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) =>
+                    Container(color: AppColors.backgroundLight),
+                placeholder: (_, __) =>
+                    Container(color: AppColors.backgroundLight),
+              ),
+            ),
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -294,13 +311,6 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.border),
           color: Theme.of(context).colorScheme.surface,
-          image: const DecorationImage(
-            image: NetworkImage(
-              'https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=2069&auto=format&fit=crop',
-            ),
-            fit: BoxFit.cover,
-            opacity: 0.3,
-          ),
           boxShadow: [
             BoxShadow(
               color: AppColors.accentBlue.withOpacity(0.1),
@@ -313,6 +323,18 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(20),
           child: Stack(
             children: [
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.3,
+                  child: CachedNetworkImage(
+                    imageUrl:
+                        'https://images.unsplash.com/photo-1503342394128-c104d54dba01?q=80&w=2069&auto=format&fit=crop',
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                    placeholder: (_, __) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
               Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -414,9 +436,31 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const SizedBox(
-            height: 100,
-            child: Center(child: Text('No categories found')),
+          return InkWell(
+            onTap: _loadData,
+            child: Container(
+              height: 60,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.wifi_off, color: Colors.orange, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'No internet — tap to retry',
+                    style: GoogleFonts.outfit(
+                      color: Colors.orange.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           );
         }
         return SizedBox(
@@ -456,13 +500,47 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildProductGrid() {
     return FutureBuilder<List<Product>>(
-      future: _productsFuture,
+      future: _featuredProductsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No products found'));
+          return InkWell(
+            onTap: _loadData,
+            child: Container(
+              height: 200,
+              margin: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.08),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.wifi_off, color: Colors.orange, size: 40),
+                  const SizedBox(height: 12),
+                  Text(
+                    'No internet connection',
+                    style: GoogleFonts.outfit(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.orange.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Pull down to refresh or tap here to retry',
+                    style: GoogleFonts.outfit(
+                      fontSize: 13,
+                      color: Colors.orange.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 8.0),

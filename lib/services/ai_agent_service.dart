@@ -1,27 +1,43 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import '../models/custom_design.dart';
+import '../config/gokwik_config.dart';
 
 class AIAgentService {
   String get _baseUrl =>
-      dotenv.env['WEB_API_BASE_URL'] ??
-      'https://designwear-backend.vishwamai.com/api';
+      ConfigLoader.get('WEB_API_BASE_URL') ?? 'http://10.0.2.2:3000/api';
 
   final List<Map<String, dynamic>> _history = [];
 
   Future<AgentResponse> sendMessage(
     String userMessage,
-    CustomDesign currentDesign,
-  ) async {
+    CustomDesign currentDesign, {
+    List<File>? imageAttachments,
+  }) async {
     try {
       final rawPrompt = await rootBundle.loadString('assets/system_prompt.txt');
       final systemPrompt = rawPrompt.replaceAll(
         '{{CURRENT_STATE}}',
         jsonEncode(currentDesign.toJson()),
       );
+
+      // Prepare image attachments
+      List<Map<String, String>>? imageData;
+      if (imageAttachments != null && imageAttachments.isNotEmpty) {
+        imageData = [];
+        for (final image in imageAttachments) {
+          try {
+            final bytes = await image.readAsBytes();
+            final base64Image = base64Encode(bytes);
+            imageData.add({'mimeType': 'image/jpeg', 'data': base64Image});
+          } catch (e) {
+            debugPrint('Error processing image attachment: $e');
+          }
+        }
+      }
 
       final response = await http.post(
         Uri.parse('$_baseUrl/ai/agent'),
@@ -30,6 +46,7 @@ class AIAgentService {
           'systemPrompt': systemPrompt,
           'history': _history,
           'userMessage': userMessage,
+          'imageAttachments': imageData,
         }),
       );
 
@@ -37,12 +54,26 @@ class AIAgentService {
 
       if (response.statusCode == 200 && responseData['success'] == true) {
         // Add user message locally now that request succeeded
-        _history.add({
-          'role': 'user',
-          'parts': [
-            {'text': userMessage},
-          ],
-        });
+        final List<Map<String, dynamic>> userParts = [
+          {'text': userMessage},
+        ];
+
+        // Add image attachments to history if provided
+        if (imageAttachments != null && imageAttachments.isNotEmpty) {
+          for (final image in imageAttachments) {
+            try {
+              final bytes = await image.readAsBytes();
+              final base64Image = base64Encode(bytes);
+              userParts.add({
+                'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
+              });
+            } catch (e) {
+              debugPrint('Error adding image to history: $e');
+            }
+          }
+        }
+
+        _history.add({'role': 'user', 'parts': userParts});
 
         final data = responseData['data'];
         final candidates = data['candidates'] as List?;

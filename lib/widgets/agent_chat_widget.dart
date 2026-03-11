@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/custom_design.dart';
 import '../services/ai_agent_service.dart';
+import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
   final CustomDesign currentDesign;
@@ -24,29 +26,50 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
   bool _isOpen = false;
   bool _isLoading = false;
-  final List<Map<String, String>> _messages = [
+  List<File> _selectedImages = [];
+  final List<Map<String, dynamic>> _messages = [
     {
       'role': 'agent',
-      'text': 'Hi! I\'m DesignBot. Tell me what you want to design! 🎨',
+      'text':
+          'Hi! I\'m DesignBot. Tell me what you want to design! 🎨\n\nYou can also upload reference images for design inspiration!',
+      'hasImages': false,
     },
   ];
 
   Future<void> _handleSubmitted(String text) async {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty && _selectedImages.isEmpty) return;
+
+    final messageText = text.trim().isEmpty ? '[Image attachment]' : text;
+    final hasImages = _selectedImages.isNotEmpty;
+    final imagesToSend = List<File>.from(_selectedImages);
 
     _textController.clear();
+    _selectedImages.clear();
     setState(() {
-      _messages.add({'role': 'user', 'text': text});
+      _messages.add({
+        'role': 'user',
+        'text': messageText,
+        'hasImages': hasImages,
+        'imageCount': imagesToSend.length,
+      });
       _isLoading = true;
     });
     _scrollToBottom();
 
     try {
-      final response = await _aiService.sendMessage(text, widget.currentDesign);
+      final response = await _aiService.sendMessage(
+        messageText,
+        widget.currentDesign,
+        imageAttachments: imagesToSend.isNotEmpty ? imagesToSend : null,
+      );
 
       setState(() {
         _isLoading = false;
-        _messages.add({'role': 'agent', 'text': response.text});
+        _messages.add({
+          'role': 'agent',
+          'text': response.text,
+          'hasImages': false,
+        });
       });
       _scrollToBottom();
 
@@ -61,7 +84,11 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _messages.add({'role': 'agent', 'text': 'Oops, something went wrong.'});
+        _messages.add({
+          'role': 'agent',
+          'text': 'Oops, something went wrong. Please try again.',
+          'hasImages': false,
+        });
       });
     }
   }
@@ -157,6 +184,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                       itemBuilder: (context, index) {
                         final msg = _messages[index];
                         final isUser = msg['role'] == 'user';
+                        final hasImages = msg['hasImages'] as bool? ?? false;
+                        final imageCount = msg['imageCount'] as int? ?? 0;
                         return Align(
                           alignment: isUser
                               ? Alignment.centerRight
@@ -180,14 +209,59 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                     : const Radius.circular(12),
                               ),
                             ),
-                            child: Text(
-                              msg['text']!,
-                              style: TextStyle(
-                                color: isUser
-                                    ? colorScheme.onPrimary
-                                    : colorScheme.onSurface,
-                                fontSize: 13,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (hasImages && imageCount > 0)
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isUser
+                                          ? colorScheme.onPrimary.withOpacity(
+                                              0.2,
+                                            )
+                                          : colorScheme.primary.withOpacity(
+                                              0.1,
+                                            ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.image,
+                                          size: 14,
+                                          color: isUser
+                                              ? colorScheme.onPrimary
+                                              : colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '$imageCount image${imageCount > 1 ? 's' : ''} attached',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isUser
+                                                ? colorScheme.onPrimary
+                                                : colorScheme.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                Text(
+                                  msg['text']!,
+                                  style: TextStyle(
+                                    color: isUser
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurface,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -213,50 +287,73 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                   // Input
                   Padding(
                     padding: const EdgeInsets.all(12),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _textController,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: colorScheme.onSurface,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: 'Type a message...',
-                              hintStyle: TextStyle(
-                                fontSize: 13,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: colorScheme.surfaceContainerHighest,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            onSubmitted: _handleSubmitted,
-                          ),
+                        // Image attachment widget
+                        AIImageAttachmentWidget(
+                          selectedImages: _selectedImages,
+                          onImagesSelected: (images) {
+                            setState(() {
+                              _selectedImages = images;
+                            });
+                          },
                         ),
-                        const SizedBox(width: 8),
-                        CircleAvatar(
-                          backgroundColor: colorScheme.primary,
-                          radius: 18,
-                          child: IconButton(
-                            icon: Icon(
-                              Icons.send,
-                              color: colorScheme.onPrimary,
-                              size: 16,
+                        const SizedBox(height: 8),
+                        // Text input row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: _selectedImages.isNotEmpty
+                                      ? 'Add a message or send images...'
+                                      : 'Type a message...',
+                                  hintStyle: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      colorScheme.surfaceContainerHighest,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                onSubmitted: _handleSubmitted,
+                              ),
                             ),
-                            onPressed: () =>
-                                _handleSubmitted(_textController.text),
-                          ),
+                            const SizedBox(width: 8),
+                            CircleAvatar(
+                              backgroundColor:
+                                  (_textController.text.isNotEmpty ||
+                                      _selectedImages.isNotEmpty)
+                                  ? colorScheme.primary
+                                  : colorScheme.primary.withOpacity(0.5),
+                              radius: 18,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.send,
+                                  color: colorScheme.onPrimary,
+                                  size: 16,
+                                ),
+                                onPressed: () =>
+                                    _handleSubmitted(_textController.text),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

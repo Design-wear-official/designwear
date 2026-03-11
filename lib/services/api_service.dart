@@ -6,7 +6,8 @@ import '../models/product.dart';
 import '../models/category.dart';
 import '../services/sanity_service.dart';
 
-/// Enhanced API service that can work with both Sanity directly and Next.js API
+/// Enhanced API service that works with both the Next.js backend and Sanity directly.
+/// When the web API is enabled but unreachable, it automatically falls back to Sanity.
 class ApiService {
   final String? webApiBaseUrl;
   final bool useWebApi;
@@ -25,34 +26,53 @@ class ApiService {
 
   Future<List<Product>> fetchProducts() async {
     if (useWebApi) {
-      return _fetchProductsFromWeb();
-    } else {
+      final results = await _fetchProductsFromWeb();
+      if (results.isNotEmpty) return results;
+      // Auto-fallback to Sanity if web API returns nothing or fails
+      debugPrint('Web API returned no products — falling back to Sanity');
       return _fetchProductsFromSanity();
     }
+    return _fetchProductsFromSanity();
+  }
+
+  Future<List<Product>> fetchFeaturedProducts() async {
+    if (useWebApi) {
+      // Backend doesn't have a featured endpoint yet — use Sanity directly
+      return _fetchFeaturedProductsFromSanity();
+    }
+    return _fetchFeaturedProductsFromSanity();
   }
 
   Future<List<Category>> fetchCategories() async {
     if (useWebApi) {
-      return _fetchCategoriesFromWeb();
-    } else {
+      final results = await _fetchCategoriesFromWeb();
+      if (results.isNotEmpty) return results;
+      debugPrint('Web API returned no categories — falling back to Sanity');
       return _fetchCategoriesFromSanity();
     }
+    return _fetchCategoriesFromSanity();
   }
 
   Future<List<Product>> fetchProductsByCategory(String categoryId) async {
     if (useWebApi) {
-      return _fetchProductsByCategoryFromWeb(categoryId);
-    } else {
+      final results = await _fetchProductsByCategoryFromWeb(categoryId);
+      if (results.isNotEmpty) return results;
+      debugPrint(
+        'Web API returned no products for category — falling back to Sanity',
+      );
       return _fetchProductsByCategoryFromSanity(categoryId);
     }
+    return _fetchProductsByCategoryFromSanity(categoryId);
   }
 
   Future<Product?> fetchProductById(String productId) async {
     if (useWebApi) {
-      return _fetchProductByIdFromWeb(productId);
-    } else {
+      final result = await _fetchProductByIdFromWeb(productId);
+      if (result != null) return result;
+      debugPrint('Web API returned no product by ID — falling back to Sanity');
       return _fetchProductByIdFromSanity(productId);
     }
+    return _fetchProductByIdFromSanity(productId);
   }
 
   Future<double> fetchTaxRate() async {
@@ -74,7 +94,8 @@ class ApiService {
     return headers;
   }
 
-  // Web API implementations
+  // ── Web API implementations ─────────────────────────────────────────────
+
   Future<List<Product>> _fetchProductsFromWeb() async {
     try {
       final headers = await _getHeaders();
@@ -190,9 +211,9 @@ class ApiService {
     }
   }
 
-  // Sanity implementations (using existing SanityService)
+  // ── Sanity implementations ──────────────────────────────────────────────
+
   Future<List<Product>> _fetchProductsFromSanity() async {
-    // Import and use the existing SanityService
     final sanityService = SanityService();
     return await sanityService.fetchProducts();
   }
@@ -210,13 +231,17 @@ class ApiService {
   }
 
   Future<Product?> _fetchProductByIdFromSanity(String productId) async {
-    // This method doesn't exist in original SanityService, so we'll implement it
     final products = await _fetchProductsFromSanity();
     try {
       return products.firstWhere((product) => product.id == productId);
     } catch (e) {
       return null;
     }
+  }
+
+  Future<List<Product>> _fetchFeaturedProductsFromSanity() async {
+    final sanityService = SanityService();
+    return await sanityService.fetchFeaturedProducts();
   }
 
   Future<double> _fetchTaxRateFromSanity() async {

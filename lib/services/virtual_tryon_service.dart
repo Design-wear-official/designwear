@@ -1,15 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
+import '../config/gokwik_config.dart';
 
 /// Service to handle Virtual Try-On using the local Node API proxy
 class VirtualTryOnService {
   String get _baseUrl =>
-      dotenv.env['WEB_API_BASE_URL'] ??
-      'https://designwear-backend.vishwamai.com/api';
+      ConfigLoader.get('WEB_API_BASE_URL') ?? 'http://10.0.2.2:3000/api';
 
   /// Generate a virtual try-on image
   Future<Uint8List?> generateTryOn({
