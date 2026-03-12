@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 
 class ShippingAddressesScreen extends StatelessWidget {
   const ShippingAddressesScreen({super.key});
@@ -20,34 +22,111 @@ class ShippingAddressesScreen extends StatelessWidget {
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildAddressCard(
-            context,
-            name: 'Home',
-            address: '123 Main Street, Apt 4B\nNew York, NY 10001\nUnited States',
-            isDefault: true,
-          ),
-          const SizedBox(height: 16),
-          _buildAddressCard(
-            context,
-            name: 'Office',
-            address: '456 Business Park Drive, Suite 200\nSan Francisco, CA 94107\nUnited States',
-            isDefault: false,
-          ),
-        ],
+      body: Consumer<AuthService>(
+        builder: (context, authService, _) {
+          final addresses = authService.currentUser?.addresses ?? [];
+
+          if (addresses.isEmpty) {
+            return Center(
+              child: Text(
+                'No saved addresses. Add one below!',
+                style: GoogleFonts.outfit(color: Theme.of(context).hintColor),
+              ),
+            );
+          }
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: addresses.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final addr = addresses[index];
+              return _buildAddressCard(
+                context,
+                name: addr['label'] ?? 'Address',
+                address: '${addr['street']}\n${addr['city']}, ${addr['state']} ${addr['zipCode']}\n${addr['country']}',
+                isDefault: addr['isDefault'] ?? false,
+              );
+            },
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Address addition coming soon')),
-          );
+          _showAddAddressDialog(context);
         },
         backgroundColor: colorScheme.primary,
         icon: Icon(Icons.add, color: colorScheme.onPrimary),
         label: Text('Add New Address', style: TextStyle(color: colorScheme.onPrimary)),
       ),
+    );
+  }
+
+  void _showAddAddressDialog(BuildContext context) {
+    final labelCtrl = TextEditingController();
+    final streetCtrl = TextEditingController();
+    final cityCtrl = TextEditingController();
+    final stateCtrl = TextEditingController();
+    final zipCtrl = TextEditingController();
+    bool isDefault = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Add Address', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(controller: labelCtrl, decoration: const InputDecoration(labelText: 'Label (e.g., Home)')),
+                    TextField(controller: streetCtrl, decoration: const InputDecoration(labelText: 'Street Address')),
+                    TextField(controller: cityCtrl, decoration: const InputDecoration(labelText: 'City')),
+                    Row(
+                      children: [
+                        Expanded(child: TextField(controller: stateCtrl, decoration: const InputDecoration(labelText: 'State'))),
+                        const SizedBox(width: 16),
+                        Expanded(child: TextField(controller: zipCtrl, decoration: const InputDecoration(labelText: 'ZIP Code'))),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    CheckboxListTile(
+                      title: const Text('Set as default'),
+                      value: isDefault,
+                      onChanged: (val) => setState(() => isDefault = val ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final authService = Provider.of<AuthService>(context, listen: false);
+                    authService.addAddress({
+                      'label': labelCtrl.text.isEmpty ? 'Other' : labelCtrl.text,
+                      'street': streetCtrl.text,
+                      'city': cityCtrl.text,
+                      'state': stateCtrl.text,
+                      'zipCode': zipCtrl.text,
+                      'country': 'United States',
+                      'isDefault': isDefault,
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          }
+        );
+      },
     );
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({super.key});
@@ -7,7 +9,6 @@ class PaymentMethodsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -21,64 +22,128 @@ class PaymentMethodsScreen extends StatelessWidget {
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Text(
-            'Saved Cards',
-            style: GoogleFonts.outfit(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildPaymentCard(
-            context,
-            type: 'Credit Card',
-            last4: '4242',
-            exp: '12/25',
-            icon: Icons.credit_card,
-            isDefault: true,
-          ),
-          const SizedBox(height: 12),
-          _buildPaymentCard(
-            context,
-            type: 'Debit Card',
-            last4: '1234',
-            exp: '08/26',
-            icon: Icons.credit_card,
-            isDefault: false,
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Other Methods',
-            style: GoogleFonts.outfit(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ListTile(
-            leading: Icon(Icons.account_balance_wallet, color: colorScheme.primary),
-            title: Text('UPI Apps', style: TextStyle(color: colorScheme.onSurface)),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16, color: Theme.of(context).hintColor),
-            tileColor: isDark ? colorScheme.surfaceContainerHighest : colorScheme.surface,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        ],
+      body: Consumer<AuthService>(
+        builder: (context, authService, _) {
+          final methods = authService.currentUser?.paymentMethods ?? [];
+
+          if (methods.isEmpty) {
+            return Center(
+              child: Text(
+                'No saved payment methods',
+                style: GoogleFonts.outfit(color: Theme.of(context).hintColor),
+              ),
+            );
+          }
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Text(
+                'Saved Methods',
+                style: GoogleFonts.outfit(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...methods.map((pm) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildPaymentCard(
+                    context,
+                    type: pm['type'] ?? 'Card',
+                    last4: pm['last4'] ?? '••••',
+                    exp: pm['exp'] ?? '',
+                    icon: pm['type'] == 'UPI' ? Icons.account_balance_wallet : Icons.credit_card,
+                    isDefault: pm['isDefault'] ?? false,
+                  ),
+                );
+              }),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Payment addition coming soon')),
-          );
+          _showAddPaymentDialog(context);
         },
         backgroundColor: colorScheme.primary,
         icon: Icon(Icons.add, color: colorScheme.onPrimary),
         label: Text('Add New Card', style: TextStyle(color: colorScheme.onPrimary)),
       ),
+    );
+  }
+
+  void _showAddPaymentDialog(BuildContext context) {
+    final typeCtrl = TextEditingController(text: 'Credit Card');
+    final last4Ctrl = TextEditingController();
+    final expCtrl = TextEditingController();
+    bool isDefault = false;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Add Payment Method', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      value: typeCtrl.text,
+                      items: ['Credit Card', 'Debit Card', 'UPI'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) setState(() => typeCtrl.text = val);
+                      },
+                      decoration: const InputDecoration(labelText: 'Type'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: last4Ctrl,
+                      decoration: const InputDecoration(labelText: 'Identifier (e.g., Last 4 Digits or UPI ID)'),
+                    ),
+                    TextField(controller: expCtrl, decoration: const InputDecoration(labelText: 'Expiry (e.g., 12/25)')),
+                    const SizedBox(height: 16),
+                    CheckboxListTile(
+                      title: const Text('Set as default'),
+                      value: isDefault,
+                      onChanged: (val) => setState(() => isDefault = val ?? false),
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final authService = Provider.of<AuthService>(context, listen: false);
+                    authService.addPaymentMethod({
+                      'type': typeCtrl.text,
+                      'last4': last4Ctrl.text,
+                      'exp': expCtrl.text,
+                      'isDefault': isDefault,
+                    });
+                    Navigator.pop(ctx);
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          }
+        );
+      },
     );
   }
 

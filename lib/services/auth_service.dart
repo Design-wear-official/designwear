@@ -12,6 +12,8 @@ class User {
   final String? email;
   final String? name;
   final String? photoUrl;
+  final List<Map<String, dynamic>> addresses;
+  final List<Map<String, dynamic>> paymentMethods;
   final bool isGuest;
 
   User({
@@ -20,6 +22,8 @@ class User {
     this.email,
     this.name,
     this.photoUrl,
+    this.addresses = const [],
+    this.paymentMethods = const [],
     this.isGuest = false,
   });
 
@@ -50,11 +54,29 @@ class AuthService extends ChangeNotifier {
     final uid = prefs.getString('auth_uid');
 
     if (token != null && uid != null) {
+      List<Map<String, dynamic>> loadedAddresses = [];
+      List<Map<String, dynamic>> loadedPayments = [];
+
+      try {
+        final addrStr = prefs.getString('auth_addresses');
+        if (addrStr != null) {
+          loadedAddresses = List<Map<String, dynamic>>.from(jsonDecode(addrStr));
+        }
+        final payStr = prefs.getString('auth_payment_methods');
+        if (payStr != null) {
+          loadedPayments = List<Map<String, dynamic>>.from(jsonDecode(payStr));
+        }
+      } catch (e) {
+        debugPrint('Error parsing stored lists: $e');
+      }
+
       _currentUser = User(
         id: uid,
         email: prefs.getString('auth_email'),
         name: prefs.getString('auth_name'),
         photoUrl: prefs.getString('auth_photo_url'),
+        addresses: loadedAddresses,
+        paymentMethods: loadedPayments,
         isGuest: prefs.getBool('auth_isGuest') ?? false,
       );
     } else {
@@ -80,6 +102,12 @@ class AuthService extends ChangeNotifier {
     if (data['photoUrl'] != null) {
       await prefs.setString('auth_photo_url', data['photoUrl']);
     }
+    if (data['addresses'] != null) {
+      await prefs.setString('auth_addresses', jsonEncode(data['addresses']));
+    }
+    if (data['paymentMethods'] != null) {
+      await prefs.setString('auth_payment_methods', jsonEncode(data['paymentMethods']));
+    }
     if (data['isGuest'] != null) {
       await prefs.setBool('auth_isGuest', data['isGuest']);
     }
@@ -101,6 +129,9 @@ class AuthService extends ChangeNotifier {
 
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data['success']) {
+        // For seamless integration with backend lists if they aren't explicitly returned down the line,
+        // it may be helpful to ensure that `_saveSession` acts as a full merge if missing.
+        // Usually, the backend returns the full user document from login.
         await _saveSession(data['data']);
       } else {
         final msg = data['error'] ?? 'Login failed';
@@ -254,18 +285,135 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> updateProfile({String? name, String? email}) async {
-    // To keep it simple, just update local storage for now
-    // A full implementation would PATCH /api/users/profile
-    final prefs = await SharedPreferences.getInstance();
-    if (name != null) await prefs.setString('auth_name', name);
-    if (email != null) await prefs.setString('auth_email', email);
-    await _loadUserFromStorage();
+    if (_currentUser?.id == null) return;
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/auth/update'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'uid': _currentUser!.id,
+              // ignore: use_null_aware_elements
+              if (name != null) 'name': name,
+              // ignore: use_null_aware_elements
+              if (email != null) 'email': email,
+            }),
+          )
+          .timeout(const Duration(seconds: 15));
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success']) {
+        final prefs = await SharedPreferences.getInstance();
+        if (name != null) await prefs.setString('auth_name', name);
+        if (email != null) await prefs.setString('auth_email', email);
+        await _loadUserFromStorage();
+      } else {
+        throw Exception(data['error'] ?? 'Profile update failed');
+      }
+    } on SocketException {
+      throw Exception('No internet connection.');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> updateProfileImage(String path) async {
+    if (_currentUser?.id == null) return;
+    
+    // Optimistically update local storage so UI reflects immediately
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_photo_url', path);
     await _loadUserFromStorage();
+
+    try {
+      // Background sync to backend
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/update'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'uid': _currentUser!.id,
+          'photoUrl': path,
+        }),
+      );
+      
+      if (response.statusCode != 200) {
+         debugPrint('Failed to sync profile image to backend: ${response.body}');
+      }
+    } catch (e) {
+      debugPrint('Error syncing profile image to backend: $e');
+    }
+  }
+
+  Future<void> addAddress(Map<String, dynamic> address) async {
+    if (_currentUser?.id == null) return;
+    
+    final currentList = List<Map<String, dynamic>>.from(_currentUser!.addresses);
+    
+    // If setting as default, make all others non-default
+    if (address['isDefault'] == true) {
+      for (var a in currentList) {
+        a['isDefault'] = false;
+      }
+    } else if (currentList.isEmpty) {
+      address['isDefault'] = true; // First one is default
+    }
+
+    currentList.add(address);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_addresses', jsonEncode(currentList));
+    await _loadUserFromStorage();
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/update'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'uid': _currentUser!.id,
+          'addresses': currentList,
+        }),
+      );
+      if (response.statusCode != 200) debugPrint('Failed to sync addresses: ${response.body}');
+    } catch (e) {
+      debugPrint('Error syncing addresses: $e');
+    }
+  }
+
+  Future<void> addPaymentMethod(Map<String, dynamic> method) async {
+    if (_currentUser?.id == null) return;
+    
+    final currentList = List<Map<String, dynamic>>.from(_currentUser!.paymentMethods);
+    if (method['isDefault'] == true) {
+      for (var p in currentList) {
+        p['isDefault'] = false;
+      }
+    } else if (currentList.isEmpty) {
+      method['isDefault'] = true;
+    }
+
+    currentList.add(method);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_payment_methods', jsonEncode(currentList));
+    await _loadUserFromStorage();
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/auth/update'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'uid': _currentUser!.id,
+          'paymentMethods': currentList,
+        }),
+      );
+      if (response.statusCode != 200) debugPrint('Failed to sync payment methods: ${response.body}');
+    } catch (e) {
+      debugPrint('Error syncing payment methods: $e');
+    }
   }
 
   Future<void> logout() async {
@@ -275,6 +423,8 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_email');
     await prefs.remove('auth_name');
     await prefs.remove('auth_photo_url');
+    await prefs.remove('auth_addresses');
+    await prefs.remove('auth_payment_methods');
     await prefs.remove('auth_isGuest');
 
     try {
