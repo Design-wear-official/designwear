@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/gokwik_config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class User {
   final String? id;
@@ -45,7 +46,50 @@ class AuthService extends ChangeNotifier {
   }
 
   void init() {
-    // Handled in constructor
+    if (!kIsWeb) {
+      _initFcm();
+    }
+  }
+
+  Future<void> _initFcm() async {
+    final messaging = FirebaseMessaging.instance;
+    await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    messaging.getToken().then((token) {
+      if (token != null) _syncFcmToken(token);
+    });
+
+    messaging.onTokenRefresh.listen((token) {
+      _syncFcmToken(token);
+    });
+  }
+
+  Future<void> _syncFcmToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    final storedToken = prefs.getString('mem_fcm_token');
+    
+    // Always store token locally
+    await prefs.setString('mem_fcm_token', token);
+
+    // If logged in, and token is new or hasn't been synced this session
+    if (_currentUser?.id != null && storedToken != token) {
+      try {
+        await http.post(
+          Uri.parse('$_baseUrl/auth/update'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'uid': _currentUser!.id,
+            'fcmToken': token,
+          }),
+        );
+      } catch (e) {
+        debugPrint('Failed to sync fcm token: $e');
+      }
+    }
   }
 
   Future<void> _loadUserFromStorage() async {
@@ -113,6 +157,12 @@ class AuthService extends ChangeNotifier {
     }
 
     await _loadUserFromStorage();
+
+    // After login, guarantee latest loaded FCM token is synced to this user.
+    final token = prefs.getString('mem_fcm_token');
+    if (token != null) {
+      _syncFcmToken(token); // safe duplicate call handles it
+    }
   }
 
   Future<void> signInWithEmail(String email, String password) async {
