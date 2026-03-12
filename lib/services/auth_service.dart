@@ -11,9 +11,17 @@ class User {
   final String? phone;
   final String? email;
   final String? name;
+  final String? photoUrl;
   final bool isGuest;
 
-  User({this.id, this.phone, this.email, this.name, this.isGuest = false});
+  User({
+    this.id,
+    this.phone,
+    this.email,
+    this.name,
+    this.photoUrl,
+    this.isGuest = false,
+  });
 
   bool get isLoggedIn => id != null;
 }
@@ -46,6 +54,7 @@ class AuthService extends ChangeNotifier {
         id: uid,
         email: prefs.getString('auth_email'),
         name: prefs.getString('auth_name'),
+        photoUrl: prefs.getString('auth_photo_url'),
         isGuest: prefs.getBool('auth_isGuest') ?? false,
       );
     } else {
@@ -67,6 +76,9 @@ class AuthService extends ChangeNotifier {
     }
     if (data['name'] != null) {
       await prefs.setString('auth_name', data['name']);
+    }
+    if (data['photoUrl'] != null) {
+      await prefs.setString('auth_photo_url', data['photoUrl']);
     }
     if (data['isGuest'] != null) {
       await prefs.setBool('auth_isGuest', data['isGuest']);
@@ -250,12 +262,19 @@ class AuthService extends ChangeNotifier {
     await _loadUserFromStorage();
   }
 
+  Future<void> updateProfileImage(String path) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_photo_url', path);
+    await _loadUserFromStorage();
+  }
+
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('auth_uid');
     await prefs.remove('auth_email');
     await prefs.remove('auth_name');
+    await prefs.remove('auth_photo_url');
     await prefs.remove('auth_isGuest');
 
     try {

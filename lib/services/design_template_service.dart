@@ -363,6 +363,16 @@ class DesignTemplateService {
       'Fredoka',
       'Comfortaa',
       'Righteous',
+      'Roboto',
+      'Open Sans',
+      'Lato',
+      'Montserrat',
+      'Playfair Display',
+      'Merriweather',
+      'Nunito',
+      'Poppins',
+      'Raleway',
+      'Ubuntu',
     ];
   }
 }

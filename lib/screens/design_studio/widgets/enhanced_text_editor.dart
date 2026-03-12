@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../services/design_template_service.dart';
 import '../../../styles/app_colors.dart';
+import '../design_studio_utils.dart';
 
 class EnhancedTextEditor extends StatefulWidget {
   final DesignTemplateService templateService;
@@ -107,11 +108,15 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                     child: Center(
                       child: Text(
                         font,
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
+                        style: DesignStudioUtils.getSafeGoogleFont(
+                          font,
+                          textStyle: TextStyle(
+                            color: isSelected ? Colors.white : Colors.black,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                            fontSize: 16,
+                          ),
                         ),
                       ),
                     ),

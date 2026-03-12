@@ -3,6 +3,7 @@ import '../../../models/custom_design.dart';
 import '../../../services/design_template_service.dart';
 import '../../../styles/app_colors.dart';
 import '../design_studio_constants.dart';
+import '../design_studio_utils.dart';
 
 class TextControlsWidget extends StatelessWidget {
   final CustomDesign design;
@@ -124,9 +125,12 @@ class TextControlsWidget extends StatelessWidget {
                 ),
                 child: Text(
                   font,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black,
-                    fontSize: 12,
+                  style: DesignStudioUtils.getSafeGoogleFont(
+                    font,
+                    textStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ),
