@@ -1,6 +1,3 @@
-[submodule "studio"]
-	path = studio
-	url = https://github.com/kasinadhsarma1/studio.git
 [submodule "designwear-backend"]
 	path = designwear-backend
 	url = https://github.com/kasinadhsarma1/designwear-backend
