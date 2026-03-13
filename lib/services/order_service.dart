@@ -73,7 +73,7 @@ class OrderService {
         'shippingAddress': shippingAddress,
         'billingAddress': shippingAddress,
         'totalAmount': cartService.total,
-        'paymentMethod': 'STRIPE',
+        'paymentMethod': 'RAZORPAY',
         'notes': notes,
       };
 

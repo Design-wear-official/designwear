@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../services/order_service.dart';
-import '../services/stripe_service.dart';
+import '../services/razorpay_service.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
 
@@ -94,9 +94,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         throw Exception('Failed to create order on the server');
       }
 
-      // 1. Initiate Stripe Payment
-      final stripeService = StripeService();
-      final paymentSuccess = await stripeService.makePayment(
+      // 1. Initiate Razorpay Payment
+      final razorpayService = RazorpayService();
+      final paymentSuccess = await razorpayService.makePayment(
         orderId: orderId,
         amount: cartService.total,
         customerName: _nameController.text,
