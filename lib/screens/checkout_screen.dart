@@ -6,6 +6,7 @@ import '../services/auth_service.dart';
 import '../services/order_service.dart';
 import '../services/stripe_service.dart';
 import 'login_screen.dart';
+import 'my_orders_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -157,7 +158,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    // Navigate to Orders screen
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+                      (route) => route.isFirst,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
@@ -176,6 +182,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ],
           ),
         );
+      }
+    } on UnauthorizedException {
+      if (mounted) {
+        // Token expired - logout and redirect to login
+        await authService.logout();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Session expired. Please login again.',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

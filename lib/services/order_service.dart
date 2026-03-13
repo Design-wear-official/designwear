@@ -4,15 +4,39 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 import 'cart_service.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
+
+/// Thrown when the backend returns a 401 Unauthorized (e.g. token expired).
+class UnauthorizedException implements Exception {
+  final String message;
+  const UnauthorizedException(this.message);
+  @override
+  String toString() => message;
+}
 
 class OrderService {
   final String? _baseUrl = WebApiConfig.useWebApi ? WebApiConfig.baseUrl : null;
 
   Future<Map<String, String>> _getHeaders() async {
     final headers = {'Content-Type': 'application/json'};
+
+    // Always try to get a fresh Firebase ID token (auto-refreshes if expired)
+    final firebaseUser = fb.FirebaseAuth.instance.currentUser;
+    if (firebaseUser != null) {
+      try {
+        final idToken = await firebaseUser.getIdToken(true); // force refresh
+        if (idToken != null && idToken.isNotEmpty) {
+          headers['Authorization'] = 'Bearer $idToken';
+          return headers;
+        }
+      } catch (e) {
+        debugPrint('Failed to get fresh Firebase ID token: $e');
+      }
+    }
+
+    // Fallback: use stored token (may be expired)
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-
     if (token != null && token.isNotEmpty) {
       headers['Authorization'] = 'Bearer $token';
     }
@@ -38,13 +62,18 @@ class OrderService {
             .map(
               (item) => {
                 'product_id': item.product.id,
+                'title': item.product.title,
                 'quantity': item.quantity,
+                'price': item.product.price,
                 'size': item.selectedSize,
                 'color': item.customDesign?.baseColor,
               },
             )
             .toList(),
-        'shipping_address': shippingAddress,
+        'shippingAddress': shippingAddress,
+        'billingAddress': shippingAddress,
+        'totalAmount': cartService.total,
+        'paymentMethod': 'STRIPE',
         'notes': notes,
       };
 
@@ -58,11 +87,16 @@ class OrderService {
         debugPrint('Order created successfully: ${response.body}');
         final data = jsonDecode(response.body);
         return data['data']['id']; // Return the Firestore document ID
+      } else if (response.statusCode == 401) {
+        debugPrint('Order creation failed with 401: ${response.body}');
+        throw UnauthorizedException('Session expired. Please login again.');
       } else {
         debugPrint('Order creation failed with status: ${response.statusCode}');
         debugPrint('Response: ${response.body}');
         return null;
       }
+    } on UnauthorizedException {
+      rethrow;
     } catch (e) {
       debugPrint('Order creation exception: $e');
       return null;
