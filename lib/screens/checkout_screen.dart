@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
 import '../services/order_service.dart';
+import '../services/stripe_service.dart';
 import 'login_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -29,8 +30,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _prefillUserData() {
     final authService = context.read<AuthService>();
-    if (authService.currentUser?.name != null) {
-      _nameController.text = authService.currentUser!.name!;
+    final user = authService.currentUser;
+    if (user == null) return;
+
+    if (user.name != null) {
+      _nameController.text = user.name!;
+    }
+
+    if (user.addresses.isNotEmpty) {
+      // Find default address or just take the first one
+      final address = user.addresses.firstWhere(
+        (a) => a['isDefault'] == true,
+        orElse: () => user.addresses.first,
+      );
+
+      _addressController.text = address['address'] ?? '';
+      _cityController.text = address['city'] ?? '';
+      _pincodeController.text = address['pincode'] ?? '';
     }
   }
 
@@ -67,14 +83,26 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       };
 
       final orderService = OrderService();
-      final success = await orderService.createOrder(
+      final orderId = await orderService.createOrder(
         cartService,
         shippingAddress,
         'Order placed via app',
       );
 
-      if (!success) {
+      if (orderId == null) {
         throw Exception('Failed to create order on the server');
+      }
+
+      // 1. Initiate Stripe Payment
+      final stripeService = StripeService();
+      final paymentSuccess = await stripeService.makePayment(
+        orderId: orderId,
+        amount: cartService.total,
+        customerName: _nameController.text,
+      );
+
+      if (!paymentSuccess) {
+        throw Exception('Payment failed or cancelled');
       }
 
       // Clear cart

@@ -17,7 +17,7 @@ import 'design_studio_screen.dart';
 import 'profile_screen.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../services/theme_provider.dart';
-import '../config/gokwik_config.dart';
+import '../config/app_config.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

@@ -5,11 +5,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
-import 'config/gokwik_config.dart';
+import 'config/app_config.dart';
 import 'styles/app_theme.dart';
 import 'services/theme_provider.dart';
 
@@ -58,6 +59,10 @@ Future<void> mainCommon(Flavor flavor) async {
 
   if (!kIsWeb) {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    
+    // Initialize Stripe
+    Stripe.publishableKey = dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
+    await Stripe.instance.applySettings();
   }
 
   runApp(DesignWearApp(flavor: flavor));

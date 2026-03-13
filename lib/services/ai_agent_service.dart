@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import '../models/custom_design.dart';
-import '../config/gokwik_config.dart';
+import '../config/app_config.dart';
 
 class AIAgentService {
   String get _baseUrl =>

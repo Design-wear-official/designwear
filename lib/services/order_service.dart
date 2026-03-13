@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../config/gokwik_config.dart';
+import '../config/app_config.dart';
 import 'cart_service.dart';
 
 class OrderService {
@@ -20,21 +20,19 @@ class OrderService {
   }
 
   /// Creates an order in the Node.js API based on the current cart
-  Future<bool> createOrder(
+  Future<String?> createOrder(
     CartService cartService,
     Map<String, dynamic> shippingAddress,
     String notes,
   ) async {
     if (_baseUrl == null) {
-      // If we are solely depending on Sanity, order creation is likely handled by a different webhook
       debugPrint('Web API is disabled. Cannot create order via API.');
-      return false;
+      return null;
     }
 
     try {
       final headers = await _getHeaders();
 
-      // Prepare payload to match order router format
       final payload = {
         'items': cartService.items
             .map(
@@ -58,15 +56,44 @@ class OrderService {
 
       if (response.statusCode == 201) {
         debugPrint('Order created successfully: ${response.body}');
-        return true;
+        final data = jsonDecode(response.body);
+        return data['data']['id']; // Return the Firestore document ID
       } else {
         debugPrint('Order creation failed with status: ${response.statusCode}');
         debugPrint('Response: ${response.body}');
-        return false;
+        return null;
       }
     } catch (e) {
       debugPrint('Order creation exception: $e');
-      return false;
+      return null;
+    }
+  }
+
+  /// Fetches the current user's order history from the Node.js API
+  Future<List<Map<String, dynamic>>> fetchOrders() async {
+    if (_baseUrl == null) {
+      debugPrint('Web API is disabled. Cannot fetch orders.');
+      return [];
+    }
+
+    try {
+      final headers = await _getHeaders();
+      final response = await http.get(
+        Uri.parse('$_baseUrl/orders'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['data'] != null) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+      debugPrint('Fetch orders failed: ${response.statusCode} - ${response.body}');
+      return [];
+    } catch (e) {
+      debugPrint('Error fetching orders: $e');
+      return [];
     }
   }
 }

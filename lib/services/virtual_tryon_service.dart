@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
-import '../config/gokwik_config.dart';
+import '../config/app_config.dart';
 
 /// Service to handle Virtual Try-On using the local Node API proxy
 class VirtualTryOnService {

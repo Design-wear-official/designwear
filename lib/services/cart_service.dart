@@ -3,7 +3,7 @@ import '../models/cart.dart';
 import '../models/product.dart';
 import '../models/custom_design.dart';
 import 'api_service.dart';
-import '../config/gokwik_config.dart';
+import '../config/app_config.dart';
 
 class CartService extends ChangeNotifier {
   final Cart _cart = Cart();

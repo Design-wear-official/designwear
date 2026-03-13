@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_sanity/flutter_sanity.dart';
 import '../models/product.dart';
 import '../models/category.dart';
-import '../config/gokwik_config.dart';
+import '../config/app_config.dart';
 
 class SanityService {
   final SanityClient client = SanityClient(
