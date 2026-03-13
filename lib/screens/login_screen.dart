@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../styles/app_colors.dart';
 import 'register_screen.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,7 +43,14 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordController.text.trim(),
       );
       if (mounted) {
-        Navigator.pop(context, true);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
       }
     } catch (e) {
       setState(() => _error = e.toString());
@@ -62,7 +70,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await context.read<AuthService>().loginAsGuest();
       if (mounted) {
-        Navigator.pop(context, true);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
       }
     } catch (e) {
       setState(() => _error = e.toString());
@@ -82,7 +97,14 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await context.read<AuthService>().signInWithGoogle();
       if (mounted) {
-        Navigator.pop(context, true);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomeScreen()),
+          );
+        }
       }
     } catch (e) {
       setState(() => _error = e.toString());
