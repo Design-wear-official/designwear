@@ -7,6 +7,7 @@ import '../services/cart_service.dart';
 import '../services/design_template_service.dart';
 import '../services/design_history_service.dart';
 import '../services/design_storage_service.dart';
+import '../services/design_studio_demo_service.dart';
 import '../styles/app_colors.dart';
 import '../widgets/agent_chat_widget.dart';
 import 'design_studio/design_canvas.dart';
@@ -33,6 +34,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   String? _selectedElementId;
   bool _showTemplates = false;
   bool _showLayers = false;
+  bool _showDemoHints = true;
+  int _currentDemoTipIndex = 0;
 
   // Auto-save timer
   late DateTime _lastAutoSave = DateTime.now();
@@ -117,6 +120,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         children: [
           Column(
             children: [
+              // Demo hint banner
+              if (_showDemoHints) _buildDemoHintBanner(),
+              
               // Canvas Area
               Expanded(
                 flex: 3,
@@ -181,6 +187,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             currentDesign: _design,
             onDesignUpdate: _updateDesign,
           ),
+
+          // Demo quick start overlay
+          if (_showDemoHints && _design.isEmpty) _buildDemoQuickStartOverlay(),
         ],
       ),
     );
@@ -390,6 +399,190 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         _selectedElementId = null;
       });
     }
+  }
+
+
+  Widget _buildDemoHintBanner() {
+    final demoService = DesignStudioDemoService();
+    final tips = demoService.demoTips;
+    
+    if (tips.isEmpty) return const SizedBox.shrink();
+
+    final currentTip = tips[_currentDemoTipIndex % tips.length];
+    
+    return Container(
+      margin: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.blue.withOpacity(0.1), Colors.purple.withOpacity(0.1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Text(
+            currentTip['icon']!,
+            style: const TextStyle(fontSize: 24),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  currentTip['title']!,
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  currentTip['description']!,
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              if (_currentDemoTipIndex > 0)
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios, size: 16),
+                  onPressed: () => setState(() => _currentDemoTipIndex--),
+                ),
+              if (_currentDemoTipIndex < tips.length - 1)
+                IconButton(
+                  icon: const Icon(Icons.arrow_forward_ios, size: 16),
+                  onPressed: () => setState(() => _currentDemoTipIndex++),
+                ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 16),
+                onPressed: () => setState(() => _showDemoHints = false),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDemoQuickStartOverlay() {
+    return Positioned(
+      top: 100,
+      left: 20,
+      right: 20,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.accentBlue),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(
+              '🎨 Welcome to Design Studio!',
+              style: GoogleFonts.outfit(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Start creating your custom design or choose from our demo templates',
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildQuickStartButton(
+                    'Add Text',
+                    Icons.text_fields,
+                    () {
+                      _addTextElement('Your Text Here');
+                      setState(() => _showDemoHints = false);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildQuickStartButton(
+                    'Add Sticker',
+                    Icons.emoji_emotions,
+                    () {
+                      _addStickerElement('😎');
+                      setState(() => _showDemoHints = false);
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _buildQuickStartButton(
+                    'Templates',
+                    Icons.admin_panel_settings,
+                    () {
+                      setState(() {
+                        _showTemplates = true;
+                        _showDemoHints = false;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickStartButton(String label, IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.accentBlue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: AppColors.accentBlue, size: 20),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   void _toggleTextEffect(DesignElement element, String effect) {

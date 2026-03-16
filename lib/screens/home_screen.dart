@@ -6,6 +6,10 @@ import 'package:provider/provider.dart';
 import '../services/api_service.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
+import '../services/demo_data_service.dart';
+import '../services/demo_navigation.dart';
+import '../services/demo_onboarding.dart';
+import '../config/demo_config.dart';
 import '../models/product.dart';
 import '../models/category.dart';
 import '../patterns/responsive_typography_pattern.dart';
@@ -33,12 +37,56 @@ class _HomeScreenState extends State<HomeScreen> {
   final CarouselSliderController _carouselController =
       CarouselSliderController();
 
+  // Demo-specific variables  
+  bool _showDemoWelcome = true;
+  final PageController _bannerPageController = PageController();
+  final int _currentBannerIndex = 0;
+
   @override
   void initState() {
     super.initState();
     _apiService = WebApiConfig.useWebApi
         ? ApiService.webApi(WebApiConfig.baseUrl)
         : ApiService.sanity();
+    _loadData();
+    
+    // Demo banner auto-scroll
+    _startBannerAutoScroll();
+    
+    // Show demo onboarding if in demo mode
+    if (DemoConfig().isDemoMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showDemoOnboarding();
+      });
+    }
+  }
+
+  void _showDemoOnboarding() async {
+    // Show onboarding after a brief delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (mounted) {
+      DemoOnboarding.showAppIntroduction(context);
+    }
+  }
+
+  @override
+  void dispose() {
+    _bannerPageController.dispose();
+    super.dispose();
+  }
+
+  void _startBannerAutoScroll() {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) {
+        final nextIndex = (_currentBannerIndex + 1) % DemoDataService().demoBanners.length;
+        _bannerPageController.animateToPage(
+          nextIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+        _startBannerAutoScroll();
+      }
+    });
     _loadData();
   }
 
@@ -86,14 +134,16 @@ class _HomeScreenState extends State<HomeScreen> {
               return IconButton(
                 onPressed: () {
                   if (authService.isLoggedIn) {
-                    Navigator.push(
+                    DemoNavigation.pushWithTransition(
                       context,
-                      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                      const ProfileScreen(),
+                      routeName: '/profile',
                     );
                   } else {
-                    Navigator.push(
+                    DemoNavigation.pushWithTransition(
                       context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      const LoginScreen(),
+                      routeName: '/login',
                     );
                   }
                 },
@@ -111,9 +161,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   IconButton(
                     onPressed: () {
-                      Navigator.push(
+                      DemoNavigation.pushWithTransition(
                         context,
-                        MaterialPageRoute(builder: (_) => const CartScreen()),
+                        const CartScreen(),
+                        routeName: '/cart',
                       );
                     },
                     icon: Icon(
@@ -155,7 +206,9 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (_showDemoWelcome) _buildDemoWelcomeBanner(),
               _buildHeroSection(),
+              _buildQuickActionsSection(),
               _buildDesignStudioBanner(),
               _buildSectionTitle('Categories'),
               _buildCategoryList(),
@@ -299,9 +352,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildDesignStudioBanner() {
     return GestureDetector(
       onTap: () {
-        Navigator.push(
+        DemoNavigation.pushWithScale(
           context,
-          MaterialPageRoute(builder: (context) => const DesignStudioScreen()),
+          const DesignStudioScreen(),
+          routeName: '/design-studio',
         );
       },
       child: Container(
@@ -562,12 +616,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   final product = snapshot.data![index];
                   return GestureDetector(
                     onTap: () {
-                      Navigator.push(
+                      DemoNavigation.pushWithTransition(
                         context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProductDetailScreen(product: product),
-                        ),
+                        ProductDetailScreen(product: product),
+                        routeName: '/product/${product.slug}',
                       );
                     },
                     child: Container(
@@ -703,6 +755,153 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildDemoWelcomeBanner() {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.accentBlue.withOpacity(0.1), AppColors.purple.withOpacity(0.1)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.accentBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.star, color: Colors.black, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Demo Mode Active',
+                  style: GoogleFonts.outfit(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  'Explore all features with demo data',
+                  style: GoogleFonts.outfit(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.close, size: 18),
+            onPressed: () => setState(() => _showDemoWelcome = false),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'QUICK ACTIONS',
+            style: GoogleFonts.outfit(
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _buildQuickActionCard(
+                  'Design Studio',
+                  Icons.create,
+                  AppColors.accentBlue,
+                  () => DemoNavigation.pushWithScale(
+                    context,
+                    const DesignStudioScreen(),
+                    routeName: '/design-studio',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionCard(
+                  'My Cart',
+                  Icons.shopping_cart,
+                  AppColors.purple,
+                  () => DemoNavigation.pushWithTransition(
+                    context,
+                    const CartScreen(),
+                    routeName: '/cart',
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuickActionCard(
+                  'Profile',
+                  Icons.person,
+                  Colors.orange,
+                  () => DemoNavigation.pushWithFade(
+                    context,
+                    const ProfileScreen(),
+                    routeName: '/profile',
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard(String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: GoogleFonts.outfit(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

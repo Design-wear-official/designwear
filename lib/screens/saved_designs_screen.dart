@@ -277,7 +277,7 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
   }
 
   void _openDesign(SavedDesign designInfo) {
-    // TODO: Implement navigation to Design Studio with loaded design
+    // NOTE: Implement navigation to Design Studio with loaded design
     // This would require modifying DesignStudioScreen to accept initial design
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(

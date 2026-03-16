@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product.dart';
 import '../models/category.dart';
 import '../services/sanity_service.dart';
+import '../services/demo_data_service.dart';
 
 /// Enhanced API service that works with both the Next.js backend and Sanity directly.
 /// When the web API is enabled but unreachable, it automatically falls back to Sanity.
@@ -215,33 +216,69 @@ class ApiService {
 
   Future<List<Product>> _fetchProductsFromSanity() async {
     final sanityService = SanityService();
-    return await sanityService.fetchProducts();
+    try {
+      final products = await sanityService.fetchProducts();
+      if (products.isNotEmpty) return products;
+      debugPrint('Sanity returned no products — using demo data');
+      return DemoDataService().demoProducts;
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().demoProducts;
+    }
   }
 
   Future<List<Category>> _fetchCategoriesFromSanity() async {
     final sanityService = SanityService();
-    return await sanityService.fetchCategories();
+    try {
+      final categories = await sanityService.fetchCategories();
+      if (categories.isNotEmpty) return categories;
+      debugPrint('Sanity returned no categories — using demo data');
+      return DemoDataService().demoCategories;
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().demoCategories;
+    }
   }
 
   Future<List<Product>> _fetchProductsByCategoryFromSanity(
     String categoryId,
   ) async {
     final sanityService = SanityService();
-    return await sanityService.fetchProductsByCategory(categoryId);
+    try {
+      final products = await sanityService.fetchProductsByCategory(categoryId);
+      if (products.isNotEmpty) return products;
+      debugPrint('Sanity returned no products for category — using demo data');
+      return DemoDataService().getProductsByCategory(categoryId);
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().getProductsByCategory(categoryId);
+    }
   }
 
   Future<Product?> _fetchProductByIdFromSanity(String productId) async {
-    final products = await _fetchProductsFromSanity();
     try {
-      return products.firstWhere((product) => product.id == productId);
+      final products = await _fetchProductsFromSanity();
+      return products.cast<Product?>().firstWhere(
+        (product) => product?.id == productId,
+        orElse: () => DemoDataService().getProductById(productId),
+      );
     } catch (e) {
-      return null;
+      debugPrint('Product fetch failed: $e — using demo data');
+      return DemoDataService().getProductById(productId);
     }
   }
 
   Future<List<Product>> _fetchFeaturedProductsFromSanity() async {
     final sanityService = SanityService();
-    return await sanityService.fetchFeaturedProducts();
+    try {
+      final products = await sanityService.fetchFeaturedProducts();
+      if (products.isNotEmpty) return products;
+      debugPrint('Sanity returned no featured products — using demo data');
+      return DemoDataService().featuredProducts;
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().featuredProducts;
+    }
   }
 
   Future<double> _fetchTaxRateFromSanity() async {

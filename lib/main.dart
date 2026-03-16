@@ -10,6 +10,7 @@ import 'screens/home_screen.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
 import 'config/app_config.dart';
+import 'config/demo_config.dart';
 import 'styles/app_theme.dart';
 import 'services/theme_provider.dart';
 
@@ -26,6 +27,9 @@ Future<void> mainCommon(Flavor flavor) async {
 
   // Initialize config loader (loads env.json for web)
   await ConfigLoader.init();
+
+  // Initialize demo configuration
+  await DemoConfig().initializeDemoMode();
 
   // Load environment variables from .env (fallback for mobile)
   if (!kIsWeb) {

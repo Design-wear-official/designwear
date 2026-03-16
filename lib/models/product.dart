@@ -7,6 +7,7 @@ class Product {
   final String? imageUrl;
   final String categoryId;
   final String stockStatus;
+  final bool featured;
 
   Product({
     required this.id,
@@ -17,6 +18,7 @@ class Product {
     this.imageUrl,
     required this.categoryId,
     required this.stockStatus,
+    this.featured = false,
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
@@ -43,6 +45,7 @@ class Product {
           ? (map['category']['_ref'] ?? '')
           : (map['category']?.toString() ?? ''),
       stockStatus: stock > 0 ? 'inStock' : 'outOfStock',
+      featured: map['featured'] == true,
     );
   }
 
@@ -57,6 +60,7 @@ class Product {
       imageUrl: map['imageUrl'],
       categoryId: map['categoryId'] ?? '',
       stockStatus: map['stockStatus'] ?? 'inStock',
+      featured: map['featured'] == true,
     );
   }
 
@@ -71,6 +75,7 @@ class Product {
       'imageUrl': imageUrl,
       'categoryId': categoryId,
       'stockStatus': stockStatus,
+      'featured': featured,
     };
   }
 }
