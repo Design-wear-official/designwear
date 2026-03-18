@@ -34,7 +34,7 @@ The project is divided into three main components:
 - **Frontend**: Flutter (Dart)
 - **Backend / API**: Next.js (TypeScript), Sanity.io (CMS), Node.js, Razorpay
 - **SDK**: TypeScript, npm ecosystem
-- **AI & ML**: Google Gemini 2.0 Flash (via API)
+- **AI & ML**: Google Gemini 3.1 Flash (via API)
 - **State Management**: Provider
 - **CI/CD**: GitHub Actions
 
