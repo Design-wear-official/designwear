@@ -6,6 +6,8 @@ This repository serves as a monorepo containing the main Flutter application, a 
 
 ![CI Status](https://github.com/kasinadhsarma1/designwear/actions/workflows/flutter_ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![wakatime](https://wakatime.com/badge/user/9849b760-c9b2-46e7-b469-271f5faa6c63/project/ed0c29b7-2115-4965-9f14-e77eadd9b38a.svg)](https://wakatime.com/badge/user/9849b760-c9b2-46e7-b469-271f5faa6c63/project/ed0c29b7-2115-4965-9f14-e77eadd9b38a)
+
 
 ## 📁 Repository Structure
 
