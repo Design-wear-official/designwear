@@ -18,7 +18,7 @@ The project is divided into three main components:
 ## ✨ Key Features
 
 - **🎨 Design Studio**: Customize t-shirts with colors, text, graphics, and emojis using the built-in **Sticker Picker**.
-- **🤖 Agentic AI Assistant**: Meet **DesignBot**, your personal fashion assistant powered by **Google Gemini 2.0**.
+- **🤖 Agentic AI Assistant**: Meet **DesignBot**, your personal fashion assistant powered by **Google Gemini 3.1**.
   - *Conversational Design*: Ask the bot to "Design a spooky shirt" or "Make it blue", and watch the design update instantly.
 - **👗 Virtual Try-On**: Visualize how clothes look on you before buying using our AI-powered Virtual Try-On feature (Gemini API).
 - **🛒 Seamless Shopping**: Complete e-commerce flow with Cart, Checkout, and Order management.
