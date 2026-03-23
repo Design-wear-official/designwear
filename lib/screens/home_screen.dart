@@ -78,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startBannerAutoScroll() {
     Future.delayed(const Duration(seconds: 5), () {
-      if (mounted) {
+      if (mounted && _bannerPageController.hasClients) {
         final nextIndex = (_currentBannerIndex + 1) % DemoDataService().demoBanners.length;
         _bannerPageController.animateToPage(
           nextIndex,
@@ -86,9 +86,11 @@ class _HomeScreenState extends State<HomeScreen> {
           curve: Curves.easeInOut,
         );
         _startBannerAutoScroll();
+      } else if (mounted) {
+        // PageView not yet attached — retry after a short delay
+        Future.delayed(const Duration(milliseconds: 200), _startBannerAutoScroll);
       }
     });
-    _loadData();
   }
 
   void _loadData() {

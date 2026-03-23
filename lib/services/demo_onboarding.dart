@@ -109,128 +109,133 @@ class _AppIntroductionDialogState extends State<AppIntroductionDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final dialogHeight = (screenHeight * 0.55).clamp(320.0, 480.0);
     return Dialog(
+      backgroundColor: const Color(0xFF1A1A24), // dark surface — visible in both modes
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Container(
-        height: 400,
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            // Page indicator
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: index == _currentPage
-                        ? AppColors.accentBlue
-                        : Colors.grey.withOpacity(0.3),
+      child: SizedBox(
+        height: dialogHeight,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Page indicator
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _pages.length,
+                  (index) => Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: index == _currentPage
+                          ? AppColors.accentBlue
+                          : Colors.grey.withOpacity(0.3),
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
-            // Page content
-            Expanded(
-              child: PageView.builder(
-                controller: _pageController,
-                onPageChanged: (page) => setState(() => _currentPage = page),
-                itemCount: _pages.length,
-                itemBuilder: (context, index) {
-                  final page = _pages[index];
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        page['icon'],
-                        style: const TextStyle(fontSize: 60),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        page['title'],
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onSurface,
+              // Page content
+              Expanded(
+                child: PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (page) => setState(() => _currentPage = page),
+                  itemCount: _pages.length,
+                  itemBuilder: (context, index) {
+                    final page = _pages[index];
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          page['icon'],
+                          style: const TextStyle(fontSize: 44),
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        page['description'],
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                        const SizedBox(height: 10),
+                        Text(
+                          page['title'],
+                          style: GoogleFonts.outfit(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  );
-                },
+                        const SizedBox(height: 6),
+                        Text(
+                          page['description'],
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: Colors.white70,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    );
+                  },
+                ),
               ),
-            ),
 
-            // Navigation buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                if (_currentPage > 0)
-                  TextButton(
-                    onPressed: () {
-                      _pageController.previousPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    child: Text(
-                      'Previous',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
-                    ),
-                  )
-                else
-                  const SizedBox.shrink(),
+              // Navigation buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  if (_currentPage > 0)
+                    TextButton(
+                      onPressed: () {
+                        _pageController.previousPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      child: Text(
+                        'Previous',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.w600),
+                      ),
+                    )
+                  else
+                    const SizedBox.shrink(),
 
-                if (_currentPage < _pages.length - 1)
-                  ElevatedButton(
-                    onPressed: () {
-                      _pageController.nextPage(
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentBlue,
-                      foregroundColor: Colors.black,
+                  if (_currentPage < _pages.length - 1)
+                    ElevatedButton(
+                      onPressed: () {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accentBlue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        'Next',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      ),
+                    )
+                  else
+                    ElevatedButton(
+                      onPressed: () {
+                        DemoConfig().trackDemoAction('onboarding_completed');
+                        Navigator.of(context).pop();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accentBlue,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        'Get Started!',
+                        style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    child: Text(
-                      'Next',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                    ),
-                  )
-                else
-                  ElevatedButton(
-                    onPressed: () {
-                      DemoConfig().trackDemoAction('onboarding_completed');
-                      Navigator.of(context).pop();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accentBlue,
-                      foregroundColor: Colors.black,
-                    ),
-                    child: Text(
-                      'Get Started!',
-                      style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

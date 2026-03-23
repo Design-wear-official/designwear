@@ -276,24 +276,55 @@ class AppTheme {
         onError: AppColors.white,
       ),
 
-      // Text Theme
-      textTheme: GoogleFonts.outfitTextTheme().copyWith(
-        displayLarge: AppTextStyles.displayLarge,
-        displayMedium: AppTextStyles.displayMedium,
-        displaySmall: AppTextStyles.displaySmall,
-        headlineLarge: AppTextStyles.h1,
-        headlineMedium: AppTextStyles.h2,
-        headlineSmall: AppTextStyles.h3,
-        titleLarge: AppTextStyles.h4,
-        titleMedium: AppTextStyles.h5,
-        titleSmall: AppTextStyles.h6,
-        bodyLarge: AppTextStyles.bodyLarge,
-        bodyMedium: AppTextStyles.bodyMedium,
-        bodySmall: AppTextStyles.bodySmall,
-        labelLarge: AppTextStyles.button,
-        labelMedium: AppTextStyles.label,
-        labelSmall: AppTextStyles.labelSmall,
-      ),
+      // Text Theme — apply white color so text is visible on dark backgrounds
+      textTheme: GoogleFonts.outfitTextTheme()
+          .apply(
+            bodyColor: AppColors.textPrimary,
+            displayColor: AppColors.textPrimary,
+          )
+          .copyWith(
+            displayLarge: AppTextStyles.displayLarge.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            displayMedium: AppTextStyles.displayMedium.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            displaySmall: AppTextStyles.displaySmall.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            headlineLarge: AppTextStyles.h1.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            headlineMedium: AppTextStyles.h2.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            headlineSmall: AppTextStyles.h3.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            titleLarge: AppTextStyles.h4.copyWith(color: AppColors.textPrimary),
+            titleMedium: AppTextStyles.h5.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            titleSmall: AppTextStyles.h6.copyWith(color: AppColors.textPrimary),
+            bodyLarge: AppTextStyles.bodyLarge.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            bodyMedium: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            bodySmall: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            labelLarge: AppTextStyles.button.copyWith(
+              color: AppColors.textPrimary,
+            ),
+            labelMedium: AppTextStyles.label.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            labelSmall: AppTextStyles.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
 
       // App Bar Theme
       appBarTheme: AppBarTheme(
@@ -309,10 +340,10 @@ class AppTheme {
         ),
       ),
 
-      // Elevated Button Theme
+      // Elevated Button Theme — use accentBlue instead of black so button is visible on dark background
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.black,
+          backgroundColor: AppColors.accentBlue,
           foregroundColor: AppColors.white,
           elevation: 0,
           padding: AppDimensions.buttonPadding,
@@ -329,7 +360,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
           side: const BorderSide(
-            color: AppColors.black,
+            color: AppColors.textSecondary,
             width: AppDimensions.borderWidthMd,
           ),
           padding: AppDimensions.buttonPadding,
@@ -466,14 +497,16 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
       ),
 
-      // Dialog Theme
+      // Dialog Theme — use dark surface so dialog text is visible in dark mode
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.white,
+        backgroundColor: AppColors.surface,
         shape: RoundedRectangleBorder(
           borderRadius: AppDimensions.borderRadiusLgBR,
         ),
-        titleTextStyle: AppTextStyles.h3,
-        contentTextStyle: AppTextStyles.bodyMedium,
+        titleTextStyle: AppTextStyles.h3.copyWith(color: AppColors.textPrimary),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(
+          color: AppColors.textPrimary,
+        ),
       ),
 
       // Progress Indicator Theme

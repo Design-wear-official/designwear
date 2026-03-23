@@ -30,8 +30,8 @@ class AppColors {
   /// Background color for the app (Dark)
   static const Color background = Color(0xFF0D0D12);
 
-  /// Surface color for cards and elevated elements (Glass)
-  static const Color surface = Color(0x1AFFFFFF); // 10% white for glass
+  /// Surface color for cards and elevated elements
+  static const Color surface = Color(0xFF1E1E2A);
 
   /// Light gray background (for subtle backgrounds)
   static const Color backgroundLight = Color(0xFF1A1A24);

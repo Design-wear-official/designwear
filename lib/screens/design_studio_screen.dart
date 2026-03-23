@@ -479,7 +479,6 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   }
 
   Widget _buildDemoQuickStartOverlay() {
-    final kbHeight = MediaQuery.of(context).viewInsets.bottom;
     final topOffset = MediaQuery.of(context).padding.top +
         kToolbarHeight +
         ResponsiveSizes.verticalPadding(context);
@@ -487,41 +486,41 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       top: topOffset,
       left: ResponsiveSizes.horizontalPadding(context),
       right: ResponsiveSizes.horizontalPadding(context),
-      bottom: kbHeight > 0 ? kbHeight : null,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.accentBlue),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 5),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               '🎨 Welcome to Design Studio!',
               style: GoogleFonts.outfit(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               'Start creating your custom design or choose from our demo templates',
               style: GoogleFonts.outfit(
-                fontSize: 14,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                fontSize: 13,
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(

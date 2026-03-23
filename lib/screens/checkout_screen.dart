@@ -412,8 +412,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _processPayment,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.onSurface,
-                    foregroundColor: Theme.of(context).colorScheme.surface,
+                    backgroundColor: const Color(0xFF00F0FF), // accentBlue — visible on dark bg
+                    foregroundColor: const Color(0xFF0D0D12), // near-black text on cyan
                     padding: EdgeInsets.symmetric(
                       vertical: ResponsiveSizes.buttonPaddingVertical(context) + 4,
                     ),
