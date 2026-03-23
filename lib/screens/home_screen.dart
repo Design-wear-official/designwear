@@ -14,6 +14,7 @@ import '../models/product.dart';
 import '../models/category.dart';
 import '../patterns/responsive_typography_pattern.dart';
 import '../styles/app_colors.dart';
+import '../utils/responsive_utils.dart';
 import 'product_detail_screen.dart';
 import 'cart_screen.dart';
 import 'login_screen.dart';
@@ -225,8 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildHeroSection() {
     return Container(
       width: double.infinity,
-      height: 260,
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      height: ResponsiveSizes.heroHeight(context),
+      margin: EdgeInsets.symmetric(
+        horizontal: ResponsiveSizes.horizontalPadding(context),
+        vertical: 10,
+      ),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
@@ -359,8 +363,11 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        height: 140,
+        margin: EdgeInsets.symmetric(
+          horizontal: ResponsiveSizes.horizontalPadding(context),
+          vertical: 12,
+        ),
+        height: ResponsiveSizes.bannerHeight(context),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: AppColors.border),
@@ -450,8 +457,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildSectionTitle(String title) {
+    final h = ResponsiveSizes.horizontalPadding(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+      padding: EdgeInsets.fromLTRB(h, 32, h, 16),
       child: Row(
         children: [
           Text(
@@ -520,7 +528,9 @@ class _HomeScreenState extends State<HomeScreen> {
         return SizedBox(
           height: 50,
           child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+            padding: EdgeInsets.symmetric(
+              horizontal: ResponsiveSizes.horizontalPadding(context),
+            ),
             scrollDirection: Axis.horizontal,
             itemCount: snapshot.data!.length,
             separatorBuilder: (_, __) => const SizedBox(width: 12),
@@ -604,7 +614,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 carouselController: _carouselController,
                 itemCount: snapshot.data!.length,
                 options: CarouselOptions(
-                  height: 400.0,
+                  height: ResponsiveSizes.carouselHeight(context),
                   enlargeCenterPage: true,
                   viewportFraction: 0.8,
                   enableInfiniteScroll:

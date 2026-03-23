@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import '../models/product.dart';
 import '../services/virtual_tryon_service.dart';
 import '../styles/app_colors.dart';
+import '../utils/responsive_utils.dart';
 
 class VirtualTryOnScreen extends StatefulWidget {
   final Product product;
@@ -289,7 +290,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: EdgeInsets.all(ResponsiveSizes.horizontalPadding(context)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -397,7 +398,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
           onTap: _showImageSourceDialog,
           child: Container(
             width: double.infinity,
-            height: 300,
+            height: ResponsiveSizes.carouselHeight(context) * 0.75,
             decoration: BoxDecoration(
               color: AppColors.white,
               borderRadius: BorderRadius.circular(20),
@@ -425,7 +426,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         child: Image.memory(
                           _userPhotoBytes!,
                           width: double.infinity,
-                          height: 300,
+                          height: ResponsiveSizes.carouselHeight(context) * 0.75,
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -560,7 +561,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
 
   Widget _buildBottomBar() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
         color: AppColors.white,
         boxShadow: [
@@ -574,7 +575,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
       child: SafeArea(
         child: SizedBox(
           width: double.infinity,
-          height: 56,
+          height: ResponsiveSizes.buttonPaddingVertical(context) * 3.5,
           child: ElevatedButton(
             onPressed: _isLoading ? null : _generateTryOn,
             style: ElevatedButton.styleFrom(

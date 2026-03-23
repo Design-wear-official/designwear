@@ -24,7 +24,7 @@ class Product {
   factory Product.fromMap(Map<String, dynamic> map) {
     // Sanity returns `stock` as an int and `price` as an int/double.
     // `stockStatus` is a String — derive it from the numeric stock value.
-    final stock = (map['stock'] ?? 0) as int? ?? 0;
+    final stock = (map['stock'] as num?)?.toInt() ?? 0;
     final rawPrice = map['price'];
     final double price = rawPrice == null
         ? 0.0
@@ -64,18 +64,4 @@ class Product {
     );
   }
 
-  /// Convert to JSON for API requests
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'slug': slug,
-      'description': description,
-      'price': price,
-      'imageUrl': imageUrl,
-      'categoryId': categoryId,
-      'stockStatus': stockStatus,
-      'featured': featured,
-    };
-  }
 }

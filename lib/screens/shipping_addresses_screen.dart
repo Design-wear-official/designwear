@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../utils/responsive_utils.dart';
 
 class ShippingAddressesScreen extends StatelessWidget {
   const ShippingAddressesScreen({super.key});
@@ -36,7 +37,7 @@ class ShippingAddressesScreen extends StatelessWidget {
           }
 
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveSizes.pagePadding(context),
             itemCount: addresses.length,
             separatorBuilder: (context, index) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
@@ -135,7 +136,7 @@ class ShippingAddressesScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
         color: isDark ? colorScheme.surfaceContainerHighest : colorScheme.surface,
         borderRadius: BorderRadius.circular(16),

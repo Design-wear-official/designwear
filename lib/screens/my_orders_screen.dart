@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/order_service.dart';
+import '../utils/responsive_utils.dart';
 import 'package:intl/intl.dart';
 
 class MyOrdersScreen extends StatefulWidget {
@@ -51,7 +52,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
 
           final orders = snapshot.data!;
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveSizes.pagePadding(context),
             itemCount: orders.length,
             itemBuilder: (context, index) {
               final order = orders[index];
@@ -96,7 +97,10 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: colorScheme.primary,
               foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveSizes.horizontalPadding(context) + 12,
+                vertical: ResponsiveSizes.buttonPaddingVertical(context),
+              ),
             ),
             child: const Text('Start Shopping'),
           ),
@@ -125,7 +129,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 2,
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveSizes.contentPadding(context),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -9,6 +9,7 @@ import 'settings_screen.dart';
 import 'my_orders_screen.dart';
 import 'shipping_addresses_screen.dart';
 import 'payment_methods_screen.dart';
+import '../utils/responsive_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -57,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: ResponsiveSizes.pagePadding(context),
             child: Column(
               children: [
                 // Profile Header
@@ -195,7 +196,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: colorScheme.error,
                       side: BorderSide(color: colorScheme.error),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      padding: EdgeInsets.symmetric(
+                        vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

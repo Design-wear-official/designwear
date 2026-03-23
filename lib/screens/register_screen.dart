@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/auth_service.dart';
 import '../styles/app_colors.dart';
+import '../utils/responsive_utils.dart';
+import '../patterns/responsive_typography_pattern.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -68,16 +70,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: ResponsiveSizes.pagePadding(context).copyWith(
+            top: 8,
+            bottom: ResponsiveSizes.buttonPaddingVertical(context) * 2,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Create Account',
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
+                style: ResponsiveTypography.h1(
+                  context,
                   fontWeight: FontWeight.bold,
-                ),
+                ).copyWith(color: Colors.black),
               ),
               const SizedBox(height: 8),
               Text(
@@ -126,7 +131,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.purple,
                     foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

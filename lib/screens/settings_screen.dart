@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/theme_provider.dart';
+import '../utils/responsive_utils.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -25,7 +26,7 @@ class SettingsScreen extends StatelessWidget {
       body: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveSizes.pagePadding(context),
             children: [
               _buildSectionHeader(context, 'Preferences'),
               SwitchListTile(

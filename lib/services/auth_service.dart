@@ -487,16 +487,4 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ---- Phone Auth (Removed during backend migration) ----
-  Future<void> sendOtp(String phoneNumber) async {
-    throw UnimplementedError(
-      'Phone authentication is disabled in this version. Please use Email/Password.',
-    );
-  }
-
-  Future<void> loginWithPhone(String otp) async {
-    throw UnimplementedError(
-      'Phone authentication is disabled in this version. Please use Email/Password.',
-    );
-  }
 }

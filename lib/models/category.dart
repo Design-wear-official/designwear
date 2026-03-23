@@ -34,14 +34,4 @@ class Category {
     );
   }
 
-  /// Convert to JSON for API requests
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'slug': slug,
-      'description': description,
-      'imageUrl': imageUrl,
-    };
-  }
 }

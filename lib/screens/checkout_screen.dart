@@ -7,6 +7,7 @@ import '../services/order_service.dart';
 import '../services/razorpay_service.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
+import '../utils/responsive_utils.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -243,7 +244,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveSizes.pagePadding(context),
         child: Form(
           key: _formKey,
           child: Column(
@@ -413,7 +414,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.onSurface,
                     foregroundColor: Theme.of(context).colorScheme.surface,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveSizes.buttonPaddingVertical(context) + 4,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0),
                     ),
@@ -496,7 +499,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildSection({required String title, required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         border: Border(

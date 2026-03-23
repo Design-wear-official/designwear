@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
+import '../utils/responsive_utils.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({super.key});
@@ -36,7 +37,7 @@ class PaymentMethodsScreen extends StatelessWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveSizes.pagePadding(context),
             children: [
               Text(
                 'Saved Methods',
@@ -158,7 +159,7 @@ class PaymentMethodsScreen extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
         color: isDark ? colorScheme.surfaceContainerHighest : colorScheme.surface,
         borderRadius: BorderRadius.circular(16),

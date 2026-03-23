@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/custom_design.dart';
 import '../services/design_storage_service.dart';
 import '../styles/app_colors.dart';
+import '../utils/responsive_utils.dart';
 import 'design_studio_screen.dart';
 
 class SavedDesignsScreen extends StatefulWidget {
@@ -80,9 +81,9 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.accentBlue,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 32,
-                        vertical: 16,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: ResponsiveSizes.horizontalPadding(context) + 12,
+                        vertical: ResponsiveSizes.buttonPaddingVertical(context),
                       ),
                     ),
                     child: const Text('START DESIGNING'),
@@ -93,7 +94,7 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
           }
 
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: ResponsiveSizes.pagePadding(context),
             itemCount: savedDesigns.length,
             itemBuilder: (context, index) {
               final design = savedDesigns[index];
@@ -104,7 +105,7 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
+                  contentPadding: ResponsiveSizes.contentPadding(context),
                   leading: CircleAvatar(
                     backgroundColor: AppColors.accentBlue,
                     radius: 30,

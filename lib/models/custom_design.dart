@@ -6,8 +6,7 @@ class DesignElement {
   final double y;
   final double size;
   final String color;
-  final Map<String, dynamic>
-  properties; // Additional properties like font, effects, etc.
+  final Map<String, dynamic> properties;
 
   DesignElement({
     required this.id,
@@ -81,8 +80,7 @@ class CustomDesign {
   final double stickerY;
   final double stickerSize;
   final List<DesignElement> elements; // New layered design system
-  final String templateId; // Template identifier
-  final Map<String, dynamic> metadata; // Additional design metadata
+  final String templateId;
 
   CustomDesign({
     this.baseColor = "0xFFFFFFFF", // Default white
@@ -97,7 +95,6 @@ class CustomDesign {
     this.stickerSize = 60,
     this.elements = const [],
     this.templateId = '',
-    this.metadata = const {},
   });
 
   CustomDesign copyWith({
@@ -113,7 +110,6 @@ class CustomDesign {
     double? stickerSize,
     List<DesignElement>? elements,
     String? templateId,
-    Map<String, dynamic>? metadata,
   }) {
     return CustomDesign(
       baseColor: baseColor ?? this.baseColor,
@@ -128,7 +124,6 @@ class CustomDesign {
       stickerSize: stickerSize ?? this.stickerSize,
       elements: elements ?? List.from(this.elements),
       templateId: templateId ?? this.templateId,
-      metadata: metadata ?? Map.from(this.metadata),
     );
   }
 
@@ -146,7 +141,6 @@ class CustomDesign {
       'stickerSize': stickerSize,
       'elements': elements.map((e) => e.toJson()).toList(),
       'templateId': templateId,
-      'metadata': metadata,
     };
   }
 
@@ -168,15 +162,12 @@ class CustomDesign {
               .toList() ??
           [],
       templateId: json['templateId'] ?? '',
-      metadata: Map<String, dynamic>.from(json['metadata'] ?? {}),
     );
   }
 
   // Helper methods for design history and templates
   bool get isEmpty =>
       text.isEmpty && sticker.isEmpty && elements.isEmpty && templateId.isEmpty;
-
-  bool get hasElements => elements.isNotEmpty;
 
   CustomDesign addElement(DesignElement element) {
     return copyWith(elements: [...elements, element]);
@@ -194,15 +185,5 @@ class CustomDesign {
           .map((e) => e.id == elementId ? newElement : e)
           .toList(),
     );
-  }
-
-  CustomDesign moveElement(String elementId, int newIndex) {
-    final List<DesignElement> newElements = List.from(elements);
-    final elementIndex = newElements.indexWhere((e) => e.id == elementId);
-    if (elementIndex != -1) {
-      final element = newElements.removeAt(elementIndex);
-      newElements.insert(newIndex.clamp(0, newElements.length), element);
-    }
-    return copyWith(elements: newElements);
   }
 }

@@ -9,6 +9,7 @@ import '../services/design_history_service.dart';
 import '../services/design_storage_service.dart';
 import '../services/design_studio_demo_service.dart';
 import '../styles/app_colors.dart';
+import '../utils/responsive_utils.dart';
 import '../widgets/agent_chat_widget.dart';
 import 'design_studio/design_canvas.dart';
 import 'design_studio/tools_panel.dart';
@@ -411,8 +412,11 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     final currentTip = tips[_currentDemoTipIndex % tips.length];
     
     return Container(
-      margin: const EdgeInsets.all(12),
-      padding: const EdgeInsets.all(12),
+      margin: EdgeInsets.symmetric(
+        horizontal: ResponsiveSizes.horizontalPadding(context),
+        vertical: ResponsiveSizes.verticalPadding(context),
+      ),
+      padding: EdgeInsets.all(ResponsiveSizes.verticalPadding(context) + 2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [Colors.blue.withOpacity(0.1), Colors.purple.withOpacity(0.1)],
@@ -475,10 +479,15 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   }
 
   Widget _buildDemoQuickStartOverlay() {
+    final kbHeight = MediaQuery.of(context).viewInsets.bottom;
+    final topOffset = MediaQuery.of(context).padding.top +
+        kToolbarHeight +
+        ResponsiveSizes.verticalPadding(context);
     return Positioned(
-      top: 100,
-      left: 20,
-      right: 20,
+      top: topOffset,
+      left: ResponsiveSizes.horizontalPadding(context),
+      right: ResponsiveSizes.horizontalPadding(context),
+      bottom: kbHeight > 0 ? kbHeight : null,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(

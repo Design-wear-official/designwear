@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../styles/app_colors.dart';
+import '../utils/responsive_utils.dart';
+import '../patterns/responsive_typography_pattern.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 
@@ -126,16 +128,19 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: ResponsiveSizes.pagePadding(context).copyWith(
+            top: 8,
+            bottom: ResponsiveSizes.buttonPaddingVertical(context) * 2,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Welcome Back',
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
+                style: ResponsiveTypography.h1(
+                  context,
                   fontWeight: FontWeight.bold,
-                ),
+                ).copyWith(color: Colors.black),
               ),
               const SizedBox(height: 8),
               Text(
@@ -177,7 +182,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.purple,
                     foregroundColor: AppColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -230,7 +237,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: OutlinedButton(
                   onPressed: _isLoading ? null : _loginAsGuest,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                    ),
                     side: BorderSide(color: AppColors.gray300),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -254,7 +263,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: OutlinedButton.icon(
                   onPressed: _isLoading ? null : _loginWithGoogle,
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                    ),
                     side: BorderSide(color: AppColors.gray300),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),

@@ -89,8 +89,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
             // Virtual Try-On Button
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveSizes.horizontalPadding(context),
                 vertical: 16.0,
               ),
               child: SizedBox(
@@ -136,7 +136,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(
+              ResponsiveSizes.horizontalPadding(context),
+            ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -256,7 +258,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveSizes.horizontalPadding(context),
+          vertical: ResponsiveSizes.buttonPaddingVertical(context),
+        ),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           border: Border(

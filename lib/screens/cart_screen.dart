@@ -5,6 +5,7 @@ import '../widgets/safe_network_image.dart';
 import '../services/cart_service.dart';
 import '../models/cart.dart';
 import 'checkout_screen.dart';
+import '../utils/responsive_utils.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -74,7 +75,10 @@ class CartScreen extends StatelessWidget {
           ElevatedButton(
             onPressed: () => Navigator.pop(context),
             style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveSizes.horizontalPadding(context) + 12,
+                vertical: ResponsiveSizes.buttonPaddingVertical(context),
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(0),
               ),
@@ -94,7 +98,7 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildCartContent(BuildContext context, CartService cartService) {
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: ResponsiveSizes.pagePadding(context),
       itemCount: cartService.items.length,
       itemBuilder: (context, index) {
         final item = cartService.items[index];
@@ -279,7 +283,7 @@ class CartScreen extends StatelessWidget {
 
   Widget _buildBottomBar(BuildContext context, CartService cartService) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         boxShadow: [
@@ -366,7 +370,9 @@ class CartScreen extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  padding: EdgeInsets.symmetric(
+                    vertical: ResponsiveSizes.buttonPaddingVertical(context) + 2,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(0),
                   ),
