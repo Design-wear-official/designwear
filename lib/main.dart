@@ -31,8 +31,16 @@ Future<void> mainCommon(Flavor flavor) async {
   // Initialize demo configuration
   await DemoConfig().initializeDemoMode();
 
-  // Load environment variables from .env
-  await dotenv.load(fileName: ".env");
+  // Load environment variables from .env (mobile/desktop only).
+  // Web uses --dart-define build args or built-in defaults — .env is not
+  // bundled in web builds and must not be served publicly (contains secrets).
+  if (!kIsWeb) {
+    try {
+      await dotenv.load(fileName: ".env");
+    } catch (_) {
+      debugPrint('ℹ️ .env not found — using dart-define values or defaults');
+    }
+  }
 
   // Initialize Firebase with error handling for duplicate initialization
   try {

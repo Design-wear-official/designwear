@@ -35,14 +35,13 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static FirebaseOptions get web => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    authDomain: dotenv.env['FIREBASE_AUTH_DOMAIN'] ??
-        '${dotenv.env['FIREBASE_PROJECT_ID'] ?? ''}.firebaseapp.com',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+  static FirebaseOptions get web => const FirebaseOptions(
+    apiKey: 'AIzaSyBHsyXLrGgAazfZx0lxqhCOR5fJE-vo7ls',
+    appId: '1:653328426569:web:005abd63cc23b9a7628198',
+    messagingSenderId: '350351347585',
+    projectId: 'designwear-731c9',
+    authDomain: 'designwear-731c9.firebaseapp.com',
+    storageBucket: 'designwear-731c9.firebasestorage.app',
   );
 
   static FirebaseOptions get android => FirebaseOptions(
