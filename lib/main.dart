@@ -31,10 +31,8 @@ Future<void> mainCommon(Flavor flavor) async {
   // Initialize demo configuration
   await DemoConfig().initializeDemoMode();
 
-  // Load environment variables from .env (fallback for mobile)
-  if (!kIsWeb) {
-    await dotenv.load(fileName: ".env");
-  }
+  // Load environment variables from .env
+  await dotenv.load(fileName: ".env");
 
   // Initialize Firebase with error handling for duplicate initialization
   try {
@@ -99,6 +97,22 @@ class DesignWearApp extends StatelessWidget {
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
+            builder: (context, child) {
+              // Fill full viewport with scaffold bg color
+              final bg = Theme.of(context).scaffoldBackgroundColor;
+              final screenW = MediaQuery.of(context).size.width;
+              // If screen is very wide use full width; just cap at 1440 for ultra-wide
+              final maxW = screenW > 1440 ? 1440.0 : double.infinity;
+              return DecoratedBox(
+                decoration: BoxDecoration(color: bg),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxW),
+                    child: child,
+                  ),
+                ),
+              );
+            },
             home: const HomeScreen(),
           );
         },

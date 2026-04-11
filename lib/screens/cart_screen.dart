@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/safe_network_image.dart';
@@ -112,170 +113,224 @@ class CartScreen extends StatelessWidget {
     CartService cartService,
     CartItem item,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
-          ),
-        ), // Minimal separator
+    // Responsive image size: larger on tablet/desktop
+    final imgSize = ResponsiveUtils.getResponsiveValue<double>(
+      context,
+      mobile: 88,
+      tablet: 110,
+      desktop: 120,
+    );
+
+    return Dismissible(
+      key: ValueKey('${item.product.id}_${item.selectedSize}'),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 20),
+        color: Colors.red.shade600,
+        child: const Icon(Icons.delete_outline, color: Colors.white, size: 28),
       ),
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 24),
-        child: Row(
-          children: [
-            // Product Image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(0), // Sharp images
-              child: item.product.imageUrl != null
-                  ? SafeNetworkImage(
-                      imageUrl: item.product.imageUrl!,
-                      width: 80,
-                      height: 80,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 80,
-                      height: 80,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.2),
-                      child: Icon(
-                        Icons.image,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.4),
-                      ),
-                    ),
+      confirmDismiss: (_) async {
+        return await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Remove item'),
+            content: Text(
+              'Remove "${item.product.title}" from your cart?',
             ),
-            const SizedBox(width: 16),
-            // Product Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.product.title,
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (item.selectedSize != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        'Size: ${item.selectedSize}',
-                        style: GoogleFonts.outfit(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                          fontSize: 12,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                child: const Text('Remove'),
+              ),
+            ],
+          ),
+        ) ?? false;
+      },
+      onDismissed: (_) => cartService.removeFromCart(
+        item.product.id,
+        size: item.selectedSize,
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            bottom: BorderSide(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.12),
+            ),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Product Image
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: item.product.imageUrl != null
+                    ? SafeNetworkImage(
+                        imageUrl: item.product.imageUrl!,
+                        width: imgSize,
+                        height: imgSize,
+                        fit: BoxFit.cover,
+                      )
+                    : Container(
+                        width: imgSize,
+                        height: imgSize,
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.2),
+                        child: Icon(
+                          Icons.image,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.4),
                         ),
                       ),
+              ),
+              const SizedBox(width: 16),
+              // Product Details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.product.title,
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: ResponsiveTextStyles.bodyMedium(context)
+                            .fontSize,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  if (item.customDesign != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.secondary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(4),
-                          border: Border.all(
-                            color: Theme.of(context).colorScheme.secondary,
-                            width: 0.5,
-                          ),
-                        ),
+                    if (item.selectedSize != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          'CUSTOM DESIGN',
+                          'Size: ${item.selectedSize}',
                           style: GoogleFonts.outfit(
-                            color: Theme.of(context).colorScheme.secondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.6),
+                            fontSize: 12,
                           ),
                         ),
                       ),
+                    if (item.customDesign != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .secondary
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.secondary,
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Text(
+                            'CUSTOM DESIGN',
+                            style: GoogleFonts.outfit(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '₹${item.product.price.toStringAsFixed(2)}',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize:
+                            ResponsiveTextStyles.priceSmall(context).fontSize,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '₹${item.product.price.toStringAsFixed(2)}',
-                    style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onSurface,
+                  ],
+                ),
+              ),
+              // Quantity Controls
+              Column(
+                children: [
+                  // Delete button — 44×44 touch target
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: IconButton(
+                      onPressed: () => cartService.removeFromCart(
+                        item.product.id,
+                        size: item.selectedSize,
+                      ),
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      iconSize: 20,
+                      tooltip: 'Remove',
+                      padding: EdgeInsets.zero,
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withOpacity(0.3),
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _QuantityButton(
+                          icon: Icons.remove,
+                          onTap: () => cartService.decrementQuantity(
+                            item.product.id,
+                            size: item.selectedSize,
+                          ),
+                        ),
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 10),
+                          child: Text(
+                            '${item.quantity}',
+                            style: GoogleFonts.outfit(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        _QuantityButton(
+                          icon: Icons.add,
+                          onTap: () => cartService.incrementQuantity(
+                            item.product.id,
+                            size: item.selectedSize,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
-            // Quantity Controls
-            Column(
-              children: [
-                IconButton(
-                  onPressed: () => cartService.removeFromCart(
-                    item.product.id,
-                    size: item.selectedSize,
-                  ),
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  iconSize: 20,
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.3),
-                    ),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      InkWell(
-                        onTap: () => cartService.decrementQuantity(
-                          item.product.id,
-                          size: item.selectedSize,
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Icon(Icons.remove, size: 16),
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          '${item.quantity}',
-                          style: GoogleFonts.outfit(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      InkWell(
-                        onTap: () => cartService.incrementQuantity(
-                          item.product.id,
-                          size: item.selectedSize,
-                        ),
-                        child: const Padding(
-                          padding: EdgeInsets.all(8),
-                          child: Icon(Icons.add, size: 16),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -392,5 +447,31 @@ class CartScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+/// Quantity +/− button with a guaranteed ≥44×44 touch target and web cursor.
+class _QuantityButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _QuantityButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final btn = InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(6),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Icon(icon, size: 18),
+      ),
+    );
+
+    if (kIsWeb) {
+      return MouseRegion(cursor: SystemMouseCursors.click, child: btn);
+    }
+    return btn;
   }
 }

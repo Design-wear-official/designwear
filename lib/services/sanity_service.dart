@@ -14,7 +14,7 @@ class SanityService {
   Future<List<Product>> fetchProducts() async {
     try {
       const query =
-          '*[_type == "product"]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+          '*[_type == "product"] | order(_updatedAt desc) {_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
@@ -50,7 +50,7 @@ class SanityService {
   Future<List<Category>> fetchCategories() async {
     try {
       const query =
-          '*[_type == "category"]{_id, title, slug, description, "imageUrl": image.asset->url}';
+          '*[_type == "category"] | order(title asc) {_id, title, slug, description, "imageUrl": image.asset->url}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Category.fromMap(item)).toList();
     } catch (e) {
