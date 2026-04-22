@@ -45,5 +45,11 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Camera access permission for AI image attachments -->
+	<key>NSCameraUsageDescription</key>
+	<string>DesignWear needs camera access to capture reference images for AI-powered t-shirt design suggestions.</string>
+	<!-- Photo library access permission for AI image attachments -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DesignWear needs photo library access to select reference images for AI-powered t-shirt design suggestions.</string>
 </dict>
 </plist>

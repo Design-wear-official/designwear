@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../widgets/safe_network_image.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../utils/responsive_utils.dart';
+import '../patterns/responsive_typography_pattern.dart';
+import '../styles/app_colors.dart';
 import 'cart_screen.dart';
 import 'virtual_tryon_screen.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
+  final String? heroTag;
 
-  const ProductDetailScreen({super.key, required this.product});
+  const ProductDetailScreen({super.key, required this.product, this.heroTag});
 
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
@@ -20,18 +25,26 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _selectedSize;
   final List<String> _sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  bool _isAddingToCart = false;
+  bool _isBuyingNow = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Theme.of(context).colorScheme.surface,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: CircleAvatar(
-          backgroundColor: Colors.white,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surface.withOpacity(0.8),
           child: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: Icon(
+              Icons.arrow_back,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -41,25 +54,47 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Hero(
-              tag: widget.product.id,
+              tag: widget.heroTag ?? widget.product.id,
               child: Container(
                 width: double.infinity,
-                height:
-                    MediaQuery.of(context).size.height * 0.55, // Larger image
-                decoration: BoxDecoration(color: Colors.grey.shade50),
-                child: widget.product.imageUrl != null
-                    ? SafeNetworkImage(
-                        imageUrl: widget.product.imageUrl!,
-                        fit: BoxFit.cover,
-                      )
-                    : const Icon(Icons.image_not_supported, size: 100),
+                height: ResponsiveUtils.getResponsiveValue<double>(
+                  context,
+                  mobile: MediaQuery.of(context).size.height * 0.50,
+                  tablet: MediaQuery.of(context).size.height * 0.55,
+                  desktop: MediaQuery.of(context).size.height * 0.60,
+                ),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
+                ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(40),
+                    bottomRight: Radius.circular(40),
+                  ),
+                  child: widget.product.imageUrl != null
+                      ? SafeNetworkImage(
+                          imageUrl: widget.product.imageUrl!,
+                          fit: BoxFit.cover,
+                        )
+                      : Icon(
+                          Icons.image_not_supported,
+                          size: 100,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.5),
+                        ),
+                ),
               ),
             ),
 
             // Virtual Try-On Button
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
+              padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveSizes.horizontalPadding(context),
                 vertical: 16.0,
               ),
               child: SizedBox(
@@ -76,32 +111,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   },
                   icon: const Icon(
                     Icons.auto_awesome,
-                    color: Color(0xFFD4AF37),
-                  ), // Gold
+                    color: AppColors.accentBlue,
+                  ),
                   label: Text(
                     'Try It On Virtually ✨',
                     style: GoogleFonts.outfit(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
                     ),
                   ),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(
-                      color: Color(0xFFD4AF37),
-                      width: 1,
-                    ), // Gold border
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0), // Sharp edges
+                    side: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
+                      width: 1.5,
                     ),
-                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
                   ),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(
+              ResponsiveSizes.horizontalPadding(context),
+            ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -110,21 +151,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     children: [
                       Text(
                         widget.product.title.toUpperCase(),
-                        style: GoogleFonts.outfit(
-                          fontSize: 24,
-                          fontWeight: FontWeight.w300, // Thinner, elegant font
-                          letterSpacing: 1.1,
-                          color: Colors.black87,
-                        ),
+                        style: ResponsiveTypography.h3(
+                          context,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ).copyWith(letterSpacing: 1.1),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         '₹${widget.product.price.toStringAsFixed(2)}',
-                        style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF1A1A1A),
-                        ),
+                        style: ResponsiveTypography.price(
+                          context,
+                        ).copyWith(color: AppColors.accentBlue),
                       ),
                     ],
                   ),
@@ -152,48 +190,21 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 24),
 
                   // Size Selection
-                  Text(
-                    'Select Size',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('Select Size', style: ResponsiveTypography.h4(context)),
                   const SizedBox(height: 12),
                   Wrap(
-                    spacing: 16,
+                    spacing: 12,
+                    runSpacing: 8,
                     children: _sizes.map((size) {
                       final isSelected = _selectedSize == size;
-                      return GestureDetector(
+                      return _SizeChip(
+                        size: size,
+                        isSelected: isSelected,
                         onTap: () {
                           setState(() {
                             _selectedSize = isSelected ? null : size;
                           });
                         },
-                        child: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected
-                                  ? Colors.black
-                                  : Colors.grey.shade300,
-                              width: 1.5,
-                            ),
-                            color: isSelected
-                                ? Colors.black
-                                : Colors.transparent,
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            size,
-                            style: GoogleFonts.outfit(
-                              color: isSelected ? Colors.white : Colors.black87,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
                       );
                     }).toList(),
                   ),
@@ -201,19 +212,19 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 24),
                   Text(
                     'Description',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: ResponsiveTypography.h4(
+                      context,
+                    ).copyWith(color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     widget.product.description,
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      color: Colors.grey.shade700,
-                      height: 1.5,
-                    ),
+                    style: ResponsiveTypography.body(
+                      context,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.7),
+                    ).copyWith(height: 1.5),
                   ),
                   const SizedBox(height: 40),
                 ],
@@ -223,10 +234,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
       ),
       bottomNavigationBar: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveSizes.horizontalPadding(context),
+          vertical: ResponsiveSizes.buttonPaddingVertical(context),
+        ),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.95),
-          border: Border(top: BorderSide(color: Colors.grey.shade100)),
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+            ),
+          ),
         ),
         child: SafeArea(
           child: Row(
@@ -234,52 +252,94 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               // Add to Cart Button
               Expanded(
                 child: OutlinedButton(
-                  onPressed: widget.product.stockStatus == 'outOfStock'
+                  onPressed: (widget.product.stockStatus == 'outOfStock' ||
+                          _isAddingToCart)
                       ? null
                       : () => _addToCart(context),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 56),
-                    side: const BorderSide(color: Colors.black, width: 1.5),
+                    side: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : AppColors.accentBlue,
+                      width: 1.5,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0),
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: Text(
-                    'ADD TO CART',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                      color: Colors.black,
-                    ),
-                  ),
+                  child: _isAddingToCart
+                      ? SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.accentBlue,
+                          ),
+                        )
+                      : Text(
+                          'ADD TO CART',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : AppColors.accentBlue,
+                          ),
+                        ),
                 ),
               ),
               const SizedBox(width: 16),
               // Buy Now Button
               Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.product.stockStatus == 'outOfStock'
-                      ? null
-                      : () => _buyNow(context),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(0, 56),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(0),
-                    ),
-                    elevation: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(30),
+                    gradient: AppColors.neonGradient,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accentBlue.withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    widget.product.stockStatus == 'outOfStock'
-                        ? 'OUT OF STOCK'
-                        : 'BUY NOW',
-                    style: GoogleFonts.outfit(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+                  child: ElevatedButton(
+                    onPressed: (widget.product.stockStatus == 'outOfStock' ||
+                            _isBuyingNow)
+                        ? null
+                        : () => _buyNow(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 0,
                     ),
+                    child: _isBuyingNow
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            widget.product.stockStatus == 'outOfStock'
+                                ? 'OUT OF STOCK'
+                                : 'BUY NOW',
+                            style: GoogleFonts.outfit(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 1,
+                            ),
+                          ),
                   ),
                 ),
               ),
@@ -290,7 +350,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  void _addToCart(BuildContext context) {
+  Future<void> _addToCart(BuildContext context) async {
     if (_selectedSize == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -305,8 +365,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
 
-    context.read<CartService>().addToCart(widget.product, size: _selectedSize);
+    setState(() => _isAddingToCart = true);
 
+    // Small delay so the loading state is visible — feels intentional
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    if (!mounted) return;
+    context.read<CartService>().addToCart(widget.product, size: _selectedSize);
+    setState(() => _isAddingToCart = false);
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -333,7 +401,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  void _buyNow(BuildContext context) {
+  Future<void> _buyNow(BuildContext context) async {
     if (_selectedSize == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -348,9 +416,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       return;
     }
 
-    // Add to cart and go directly to cart
-    context.read<CartService>().addToCart(widget.product, size: _selectedSize);
+    setState(() => _isBuyingNow = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
 
+    context.read<CartService>().addToCart(widget.product, size: _selectedSize);
+    setState(() => _isBuyingNow = false);
+
+    if (!mounted) return;
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const CartScreen()),
@@ -381,5 +454,109 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       default:
         return 'Availability Unknown';
     }
+  }
+}
+
+/// Animated size selector chip with scale feedback and web hover cursor.
+class _SizeChip extends StatefulWidget {
+  final String size;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _SizeChip({
+    required this.size,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  State<_SizeChip> createState() => _SizeChipState();
+}
+
+class _SizeChipState extends State<_SizeChip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 120),
+      lowerBound: 0.88,
+      upperBound: 1.0,
+      value: 1.0,
+    );
+    _scale = _controller;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) => _controller.reverse();
+  void _onTapUp(TapUpDetails _) => _controller.forward();
+  void _onTapCancel() => _controller.forward();
+
+  @override
+  Widget build(BuildContext context) {
+    final chip = GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: ScaleTransition(
+        scale: _scale,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          // 56×56 ensures ≥48dp touch target on all phones
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: widget.isSelected
+                  ? AppColors.accentBlue
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+              width: widget.isSelected ? 2.0 : 1.5,
+            ),
+            color: widget.isSelected
+                ? AppColors.accentBlue
+                : Colors.transparent,
+            boxShadow: widget.isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.accentBlue.withOpacity(0.25),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            widget.size,
+            style: GoogleFonts.outfit(
+              color: widget.isSelected
+                  ? (Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black
+                      : Colors.white)
+                  : Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (kIsWeb) {
+      return MouseRegion(cursor: SystemMouseCursors.click, child: chip);
+    }
+    return chip;
   }
 }

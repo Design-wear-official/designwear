@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/custom_design.dart';
 import '../services/ai_agent_service.dart';
+import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
   final CustomDesign currentDesign;
@@ -24,42 +26,69 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
   bool _isOpen = false;
   bool _isLoading = false;
-  final List<Map<String, String>> _messages = [
+  List<File> _selectedImages = [];
+  final List<Map<String, dynamic>> _messages = [
     {
       'role': 'agent',
-      'text': 'Hi! I\'m DesignBot. Tell me what you want to design! 🎨',
+      'text':
+          'Hi! I\'m DesignBot. Tell me what you want to design! 🎨\n\nYou can also upload reference images for design inspiration!',
+      'hasImages': false,
     },
   ];
 
   Future<void> _handleSubmitted(String text) async {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty && _selectedImages.isEmpty) return;
+
+    final messageText = text.trim().isEmpty ? '[Image attachment]' : text;
+    final hasImages = _selectedImages.isNotEmpty;
+    final imagesToSend = List<File>.from(_selectedImages);
 
     _textController.clear();
+    _selectedImages.clear();
     setState(() {
-      _messages.add({'role': 'user', 'text': text});
+      _messages.add({
+        'role': 'user',
+        'text': messageText,
+        'hasImages': hasImages,
+        'imageCount': imagesToSend.length,
+      });
       _isLoading = true;
     });
     _scrollToBottom();
 
     try {
-      final response = await _aiService.sendMessage(text, widget.currentDesign);
+      final response = await _aiService.sendMessage(
+        messageText,
+        widget.currentDesign,
+        imageAttachments: imagesToSend.isNotEmpty ? imagesToSend : null,
+      );
 
       setState(() {
         _isLoading = false;
-        _messages.add({'role': 'agent', 'text': response.text});
+        _messages.add({
+          'role': 'agent',
+          'text': response.text,
+          'hasImages': false,
+        });
       });
       _scrollToBottom();
 
       if (response.updatedDesign != null) {
         widget.onDesignUpdate(response.updatedDesign!);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Design updated by AI! ✨')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Design updated by AI! ✨')),
+          );
+        }
       }
     } catch (e) {
       setState(() {
         _isLoading = false;
-        _messages.add({'role': 'agent', 'text': 'Oops, something went wrong.'});
+        _messages.add({
+          'role': 'agent',
+          'text': 'Oops, something went wrong. Please try again.',
+          'hasImages': false,
+        });
       });
     }
   }
@@ -78,6 +107,9 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Positioned(
       bottom: 20,
       right: 20,
@@ -92,11 +124,14 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
               height: 400,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.outline.withValues(alpha: 0.2),
+                ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: isDark ? 0.4 : 0.1),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -106,10 +141,13 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                 children: [
                   // Header
                   Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: const BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.vertical(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(20),
                       ),
                     ),
@@ -119,14 +157,14 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                         Text(
                           'DesignBot AI',
                           style: GoogleFonts.outfit(
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             Icons.close,
-                            color: Colors.white,
+                            color: colorScheme.onPrimary,
                             size: 20,
                           ),
                           onPressed: () => setState(() => _isOpen = false),
@@ -146,6 +184,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                       itemBuilder: (context, index) {
                         final msg = _messages[index];
                         final isUser = msg['role'] == 'user';
+                        final hasImages = msg['hasImages'] as bool? ?? false;
+                        final imageCount = msg['imageCount'] as int? ?? 0;
                         return Align(
                           alignment: isUser
                               ? Alignment.centerRight
@@ -158,8 +198,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                             ),
                             decoration: BoxDecoration(
                               color: isUser
-                                  ? Colors.black
-                                  : Colors.grey.shade100,
+                                  ? colorScheme.primary
+                                  : colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(12).copyWith(
                                 bottomLeft: isUser
                                     ? const Radius.circular(12)
@@ -169,12 +209,59 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                     : const Radius.circular(12),
                               ),
                             ),
-                            child: Text(
-                              msg['text']!,
-                              style: TextStyle(
-                                color: isUser ? Colors.white : Colors.black,
-                                fontSize: 13,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (hasImages && imageCount > 0)
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 6),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isUser
+                                          ? colorScheme.onPrimary.withOpacity(
+                                              0.2,
+                                            )
+                                          : colorScheme.primary.withOpacity(
+                                              0.1,
+                                            ),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.image,
+                                          size: 14,
+                                          color: isUser
+                                              ? colorScheme.onPrimary
+                                              : colorScheme.primary,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '$imageCount image${imageCount > 1 ? 's' : ''} attached',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: isUser
+                                                ? colorScheme.onPrimary
+                                                : colorScheme.primary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                Text(
+                                  msg['text']!,
+                                  style: TextStyle(
+                                    color: isUser
+                                        ? colorScheme.onPrimary
+                                        : colorScheme.onSurface,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -187,12 +274,12 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                     Container(
                       padding: const EdgeInsets.only(left: 16, bottom: 8),
                       alignment: Alignment.centerLeft,
-                      child: const SizedBox(
+                      child: SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.black,
+                          color: colorScheme.primary,
                         ),
                       ),
                     ),
@@ -200,45 +287,73 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                   // Input
                   Padding(
                     padding: const EdgeInsets.all(12),
-                    child: Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _textController,
-                            decoration: InputDecoration(
-                              hintText: 'Type a message...',
-                              hintStyle: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey.shade400,
-                              ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(25),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                            ),
-                            style: const TextStyle(fontSize: 13),
-                            onSubmitted: _handleSubmitted,
-                          ),
+                        // Image attachment widget
+                        AIImageAttachmentWidget(
+                          selectedImages: _selectedImages,
+                          onImagesSelected: (images) {
+                            setState(() {
+                              _selectedImages = images;
+                            });
+                          },
                         ),
-                        const SizedBox(width: 8),
-                        CircleAvatar(
-                          backgroundColor: Colors.black,
-                          radius: 18,
-                          child: IconButton(
-                            icon: const Icon(
-                              Icons.send,
-                              color: Colors.white,
-                              size: 16,
+                        const SizedBox(height: 8),
+                        // Text input row
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                controller: _textController,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.onSurface,
+                                ),
+                                decoration: InputDecoration(
+                                  hintText: _selectedImages.isNotEmpty
+                                      ? 'Add a message or send images...'
+                                      : 'Type a message...',
+                                  hintStyle: TextStyle(
+                                    fontSize: 13,
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.4,
+                                    ),
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(25),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      colorScheme.surfaceContainerHighest,
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                ),
+                                onSubmitted: _handleSubmitted,
+                              ),
                             ),
-                            onPressed: () =>
-                                _handleSubmitted(_textController.text),
-                          ),
+                            const SizedBox(width: 8),
+                            CircleAvatar(
+                              backgroundColor:
+                                  (_textController.text.isNotEmpty ||
+                                      _selectedImages.isNotEmpty)
+                                  ? colorScheme.primary
+                                  : colorScheme.primary.withOpacity(0.5),
+                              radius: 18,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.send,
+                                  color: colorScheme.onPrimary,
+                                  size: 16,
+                                ),
+                                onPressed: () =>
+                                    _handleSubmitted(_textController.text),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -250,8 +365,9 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           // Floating Button
           FloatingActionButton(
             onPressed: () => setState(() => _isOpen = !_isOpen),
-            backgroundColor: Colors.black,
-            child: const Icon(Icons.auto_awesome, color: Colors.white),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            child: const Icon(Icons.auto_awesome),
           ),
         ],
       ),

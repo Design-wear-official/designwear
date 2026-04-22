@@ -1,0 +1,55 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Internal (Debug)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_internal.dart",
+            "args": [
+                "--flavor",
+                "internal",
+                "--target",
+                "lib/main_internal.dart"
+            ]
+        },
+        {
+            "name": "External (Debug)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main_external.dart",
+            "args": [
+                "--flavor",
+                "external",
+                "--target",
+                "lib/main_external.dart"
+            ]
+        },
+        {
+            "name": "Internal (Release)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "program": "lib/main_internal.dart",
+            "args": [
+                "--flavor",
+                "internal",
+                "--target",
+                "lib/main_internal.dart"
+            ]
+        },
+        {
+            "name": "External (Release)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release",
+            "program": "lib/main_external.dart",
+            "args": [
+                "--flavor",
+                "external",
+                "--target",
+                "lib/main_external.dart"
+            ]
+        }
+    ]
+}

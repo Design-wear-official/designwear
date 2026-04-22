@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -44,6 +45,19 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+    }
+
+    flavorDimensions += "default"
+
+    productFlavors {
+        create("internal") {
+            dimension = "default"
+            applicationIdSuffix = ".internal"
+            versionNameSuffix = "-internal"
+        }
+        create("external") {
+            dimension = "default"
         }
     }
 }

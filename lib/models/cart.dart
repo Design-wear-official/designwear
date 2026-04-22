@@ -15,14 +15,6 @@ class CartItem {
   });
 
   double get total => product.price * quantity;
-
-  Map<String, dynamic> toMap() {
-    return {
-      'productId': product.id,
-      'quantity': quantity,
-      'selectedSize': selectedSize,
-    };
-  }
 }
 
 class Cart {
@@ -34,7 +26,7 @@ class Cart {
 
   double get subtotal => items.fold(0, (sum, item) => sum + item.total);
 
-  double taxRate = 0.18; // Default 18%
+  double taxRate = 0.18; // 18% GST (updated via setTaxRate from API)
 
   void setTaxRate(double rate) {
     taxRate = rate / 100.0;

@@ -3,7 +3,11 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/cart_service.dart';
 import '../services/auth_service.dart';
+import '../services/order_service.dart';
+import '../services/razorpay_service.dart';
 import 'login_screen.dart';
+import 'my_orders_screen.dart';
+import '../utils/responsive_utils.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -28,8 +32,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   void _prefillUserData() {
     final authService = context.read<AuthService>();
-    if (authService.currentUser?.name != null) {
-      _nameController.text = authService.currentUser!.name!;
+    final user = authService.currentUser;
+    if (user == null) return;
+
+    if (user.name != null) {
+      _nameController.text = user.name!;
+    }
+
+    if (user.addresses.isNotEmpty) {
+      // Find default address or just take the first one
+      final address = user.addresses.firstWhere(
+        (a) => a['isDefault'] == true,
+        orElse: () => user.addresses.first,
+      );
+
+      _addressController.text = address['address'] ?? '';
+      _cityController.text = address['city'] ?? '';
+      _pincodeController.text = address['pincode'] ?? '';
     }
   }
 
@@ -57,12 +76,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     setState(() => _isProcessing = true);
 
     try {
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 2));
+      final cartService = context.read<CartService>();
+      final shippingAddress = {
+        'name': _nameController.text,
+        'address': _addressController.text,
+        'city': _cityController.text,
+        'pincode': _pincodeController.text,
+      };
+
+      final orderService = OrderService();
+      final orderId = await orderService.createOrder(
+        cartService,
+        shippingAddress,
+        'Order placed via app',
+      );
+
+      if (orderId == null) {
+        throw Exception('Failed to create order on the server');
+      }
+
+      // 1. Initiate Razorpay Payment
+      final razorpayService = RazorpayService();
+      final paymentSuccess = await razorpayService.makePayment(
+        orderId: orderId,
+        amount: cartService.total,
+        customerName: _nameController.text,
+      );
+
+      if (!paymentSuccess) {
+        throw Exception('Payment failed or cancelled');
+      }
 
       // Clear cart
       if (mounted) {
-        context.read<CartService>().clearCart();
+        cartService.clearCart();
 
         // Show success dialog
         await showDialog(
@@ -78,13 +125,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: Colors.green.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.check_circle,
                     size: 60,
-                    color: Colors.green[600],
+                    color: Colors.green,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -99,7 +146,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 Text(
                   'Your order has been placed successfully.\nYou will receive a confirmation shortly.',
                   textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(color: Colors.grey[600]),
+                  style: GoogleFonts.poppins(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
               ],
             ),
@@ -108,11 +159,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
+                    // Navigate to Orders screen
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const MyOrdersScreen()),
+                      (route) => route.isFirst,
+                    );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -128,12 +184,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         );
       }
+    } on UnauthorizedException {
+      if (mounted) {
+        // Token expired - logout and redirect to login
+        await authService.logout();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Session expired. Please login again.',
+                style: GoogleFonts.poppins(color: Colors.white),
+              ),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
+        }
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Payment failed: $e'),
-            backgroundColor: Colors.red,
+            content: Text(
+              'Payment failed: $e',
+              style: GoogleFonts.poppins(
+                color: Theme.of(context).colorScheme.onError,
+              ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -147,7 +228,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'CHECKOUT',
@@ -158,12 +239,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: ResponsiveSizes.pagePadding(context),
         child: Form(
           key: _formKey,
           child: Column(
@@ -191,7 +272,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                   '₹${item.total.toStringAsFixed(2)}',
                                   style: GoogleFonts.outfit(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurface,
                                   ),
                                 ),
                               ],
@@ -206,7 +289,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Subtotal',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
                             Text(
@@ -226,7 +311,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'Tax (${cartService.currentTaxRate}% GST)',
                               style: GoogleFonts.outfit(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.6),
                               ),
                             ),
                             Text(
@@ -255,7 +342,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               style: GoogleFonts.outfit(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 20,
-                                color: Colors.black,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                           ],
@@ -325,21 +412,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: ElevatedButton(
                   onPressed: _isProcessing ? null : _processPayment,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    backgroundColor: const Color(0xFF00F0FF), // accentBlue — visible on dark bg
+                    foregroundColor: const Color(0xFF0D0D12), // near-black text on cyan
+                    padding: EdgeInsets.symmetric(
+                      vertical: ResponsiveSizes.buttonPaddingVertical(context) + 4,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(0),
                     ),
                     elevation: 0,
                   ),
                   child: _isProcessing
-                      ? const SizedBox(
+                      ? SizedBox(
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                            valueColor: AlwaysStoppedAnimation(
+                              Theme.of(context).colorScheme.surface,
+                            ),
                           ),
                         )
                       : Text(
@@ -360,27 +451,39 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.lock, size: 16, color: Colors.grey[600]),
+                    Icon(
+                      Icons.lock,
+                      size: 16,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       'Secure Payment',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Icon(
                       Icons.verified_user,
                       size: 16,
-                      color: Colors.grey[600],
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
                     ),
                     const SizedBox(width: 4),
                     Text(
                       '100% Safe',
                       style: GoogleFonts.outfit(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -396,10 +499,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Widget _buildSection({required String title, required Widget child}) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: const Border(bottom: BorderSide(color: Colors.black12)),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          ),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -410,7 +517,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               fontWeight: FontWeight.bold,
               fontSize: 12,
               letterSpacing: 0.5,
-              color: Colors.grey[800],
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
             ),
           ),
           const SizedBox(height: 20),
@@ -435,22 +542,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       style: GoogleFonts.outfit(fontSize: 14),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: GoogleFonts.outfit(color: Colors.grey[600]),
+        labelStyle: GoogleFonts.outfit(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(color: Colors.black, width: 1.5),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.onSurface,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(0),
-          borderSide: const BorderSide(color: Colors.red),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
         ),
       ),
     );

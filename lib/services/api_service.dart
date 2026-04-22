@@ -1,65 +1,79 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product.dart';
 import '../models/category.dart';
-import '../config/gokwik_config.dart';
 import '../services/sanity_service.dart';
+import '../services/demo_data_service.dart';
 
-/// Enhanced API service that can work with both Sanity directly and Next.js API
+/// Enhanced API service that works with both the Next.js backend and Sanity directly.
+/// When the web API is enabled but unreachable, it automatically falls back to Sanity.
 class ApiService {
   final String? webApiBaseUrl;
   final bool useWebApi;
 
-  ApiService({
-    this.webApiBaseUrl,
-    this.useWebApi = false,
-  });
+  ApiService({this.webApiBaseUrl, this.useWebApi = false});
 
   /// Factory constructor for web API mode
   factory ApiService.webApi(String baseUrl) {
-    return ApiService(
-      webApiBaseUrl: baseUrl,
-      useWebApi: true,
-    );
+    return ApiService(webApiBaseUrl: baseUrl, useWebApi: true);
   }
 
   /// Factory constructor for direct Sanity mode (default)
   factory ApiService.sanity() {
-    return ApiService(
-      useWebApi: false,
-    );
+    return ApiService(useWebApi: false);
   }
 
   Future<List<Product>> fetchProducts() async {
     if (useWebApi) {
-      return _fetchProductsFromWeb();
-    } else {
+      final results = await _fetchProductsFromWeb();
+      if (results.isNotEmpty) return results;
+      // Auto-fallback to Sanity if web API returns nothing or fails
+      debugPrint('Web API returned no products — falling back to Sanity');
       return _fetchProductsFromSanity();
     }
+    return _fetchProductsFromSanity();
+  }
+
+  Future<List<Product>> fetchFeaturedProducts() async {
+    if (useWebApi) {
+      // Backend doesn't have a featured endpoint yet — use Sanity directly
+      return _fetchFeaturedProductsFromSanity();
+    }
+    return _fetchFeaturedProductsFromSanity();
   }
 
   Future<List<Category>> fetchCategories() async {
     if (useWebApi) {
-      return _fetchCategoriesFromWeb();
-    } else {
+      final results = await _fetchCategoriesFromWeb();
+      if (results.isNotEmpty) return results;
+      debugPrint('Web API returned no categories — falling back to Sanity');
       return _fetchCategoriesFromSanity();
     }
+    return _fetchCategoriesFromSanity();
   }
 
   Future<List<Product>> fetchProductsByCategory(String categoryId) async {
     if (useWebApi) {
-      return _fetchProductsByCategoryFromWeb(categoryId);
-    } else {
+      final results = await _fetchProductsByCategoryFromWeb(categoryId);
+      if (results.isNotEmpty) return results;
+      debugPrint(
+        'Web API returned no products for category — falling back to Sanity',
+      );
       return _fetchProductsByCategoryFromSanity(categoryId);
     }
+    return _fetchProductsByCategoryFromSanity(categoryId);
   }
 
   Future<Product?> fetchProductById(String productId) async {
     if (useWebApi) {
-      return _fetchProductByIdFromWeb(productId);
-    } else {
+      final result = await _fetchProductByIdFromWeb(productId);
+      if (result != null) return result;
+      debugPrint('Web API returned no product by ID — falling back to Sanity');
       return _fetchProductByIdFromSanity(productId);
     }
+    return _fetchProductByIdFromSanity(productId);
   }
 
   Future<double> fetchTaxRate() async {
@@ -70,12 +84,25 @@ class ApiService {
     }
   }
 
-  // Web API implementations
+  Future<Map<String, String>> _getHeaders() async {
+    final headers = {'Content-Type': 'application/json'};
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+    return headers;
+  }
+
+  // ── Web API implementations ─────────────────────────────────────────────
+
   Future<List<Product>> _fetchProductsFromWeb() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/products'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -85,19 +112,20 @@ class ApiService {
           return products.map((item) => Product.fromApiMap(item)).toList();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return [];
     }
   }
 
   Future<List<Category>> _fetchCategoriesFromWeb() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/categories'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -107,19 +135,22 @@ class ApiService {
           return categories.map((item) => Category.fromApiMap(item)).toList();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return [];
     }
   }
 
-  Future<List<Product>> _fetchProductsByCategoryFromWeb(String categoryId) async {
+  Future<List<Product>> _fetchProductsByCategoryFromWeb(
+    String categoryId,
+  ) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/categories/$categoryId/products'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -129,19 +160,20 @@ class ApiService {
           return products.map((item) => Product.fromApiMap(item)).toList();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return [];
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return [];
     }
   }
 
   Future<Product?> _fetchProductByIdFromWeb(String productId) async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/products/$productId'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -150,19 +182,20 @@ class ApiService {
           return Product.fromApiMap(data['data']);
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return null;
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return null;
     }
   }
 
   Future<double> _fetchTaxRateFromWeb() async {
     try {
+      final headers = await _getHeaders();
       final response = await http.get(
         Uri.parse('$webApiBaseUrl/settings/tax-rate'),
-        headers: {'Content-Type': 'application/json'},
+        headers: headers,
       );
 
       if (response.statusCode == 200) {
@@ -171,38 +204,80 @@ class ApiService {
           return (data['data']['taxRate'] ?? 18.0).toDouble();
         }
       }
-      print('Web API fetch failed: ${response.statusCode}');
+      debugPrint('Web API fetch failed: ${response.statusCode}');
       return 18.0;
     } catch (e) {
-      print('Web API fetch failed: $e');
+      debugPrint('Web API fetch failed: $e');
       return 18.0;
     }
   }
 
-  // Sanity implementations (using existing SanityService)
+  // ── Sanity implementations ──────────────────────────────────────────────
+
   Future<List<Product>> _fetchProductsFromSanity() async {
-    // Import and use the existing SanityService
     final sanityService = SanityService();
-    return await sanityService.fetchProducts();
+    try {
+      final products = await sanityService.fetchProducts();
+      if (products.isNotEmpty) return products;
+      debugPrint('Sanity returned no products — using demo data');
+      return DemoDataService().demoProducts;
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().demoProducts;
+    }
   }
 
   Future<List<Category>> _fetchCategoriesFromSanity() async {
     final sanityService = SanityService();
-    return await sanityService.fetchCategories();
+    try {
+      final categories = await sanityService.fetchCategories();
+      if (categories.isNotEmpty) return categories;
+      debugPrint('Sanity returned no categories — using demo data');
+      return DemoDataService().demoCategories;
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().demoCategories;
+    }
   }
 
-  Future<List<Product>> _fetchProductsByCategoryFromSanity(String categoryId) async {
+  Future<List<Product>> _fetchProductsByCategoryFromSanity(
+    String categoryId,
+  ) async {
     final sanityService = SanityService();
-    return await sanityService.fetchProductsByCategory(categoryId);
+    try {
+      final products = await sanityService.fetchProductsByCategory(categoryId);
+      if (products.isNotEmpty) return products;
+      debugPrint('Sanity returned no products for category — using demo data');
+      return DemoDataService().getProductsByCategory(categoryId);
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().getProductsByCategory(categoryId);
+    }
   }
 
   Future<Product?> _fetchProductByIdFromSanity(String productId) async {
-    // This method doesn't exist in original SanityService, so we'll implement it
-    final products = await _fetchProductsFromSanity();
     try {
-      return products.firstWhere((product) => product.id == productId);
+      final products = await _fetchProductsFromSanity();
+      return products.cast<Product?>().firstWhere(
+        (product) => product?.id == productId,
+        orElse: () => DemoDataService().getProductById(productId),
+      );
     } catch (e) {
-      return null;
+      debugPrint('Product fetch failed: $e — using demo data');
+      return DemoDataService().getProductById(productId);
+    }
+  }
+
+  Future<List<Product>> _fetchFeaturedProductsFromSanity() async {
+    final sanityService = SanityService();
+    try {
+      final products = await sanityService.fetchFeaturedProducts();
+      if (products.isNotEmpty) return products;
+      debugPrint('Sanity returned no featured products — using demo data');
+      return DemoDataService().featuredProducts;
+    } catch (e) {
+      debugPrint('Sanity fetch failed: $e — using demo data');
+      return DemoDataService().featuredProducts;
     }
   }
 

@@ -40,7 +40,7 @@ class SanityClient {
     return Uri(
       scheme: 'https',
       host: '$projectId.${useCdn ? 'apicdn' : 'api'}.sanity.io',
-      path: '/v1/data/query/$dataset',
+      path: '/v2021-10-21/data/query/$dataset',
       queryParameters: queryParameters,
     );
   }

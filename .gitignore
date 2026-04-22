@@ -60,3 +60,6 @@ next.config.ts
 
 assets/env.json
 .firebase/hosting.YnVpbGQvd2Vi.cache
+
+# Private submodule approach
+flux2/

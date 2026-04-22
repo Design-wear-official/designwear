@@ -1,8 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
+import 'settings_screen.dart';
+import 'my_orders_screen.dart';
+import 'shipping_addresses_screen.dart';
+import 'payment_methods_screen.dart';
+import '../utils/responsive_utils.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -12,10 +19,27 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  Future<void> _pickImage(AuthService authService) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    
+    if (image != null) {
+      await authService.updateProfileImage(image.path);
+      // Let Provider UI rebuild automatically since _loadUserFromStorage calls notifyListeners
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated!')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'My Profile',
@@ -23,8 +47,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         centerTitle: true,
         elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: colorScheme.surface,
+        foregroundColor: colorScheme.onSurface,
       ),
       body: Consumer<AuthService>(
         builder: (context, authService, child) {
@@ -34,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: ResponsiveSizes.pagePadding(context),
             child: Column(
               children: [
                 // Profile Header
@@ -42,18 +66,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     Stack(
                       children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: Colors.deepPurple.shade100,
-                          child: Text(
-                            (user.name?.isNotEmpty ?? false)
-                                ? user.name![0].toUpperCase()
-                                : 'U',
-                            style: GoogleFonts.outfit(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.deepPurple,
-                            ),
+                        GestureDetector(
+                          onTap: () => _pickImage(authService),
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundColor: colorScheme.primary.withOpacity(0.2),
+                            backgroundImage: user.photoUrl != null && user.photoUrl!.isNotEmpty
+                                ? (user.photoUrl!.startsWith('http') 
+                                    ? NetworkImage(user.photoUrl!) as ImageProvider
+                                    : FileImage(File(user.photoUrl!)))
+                                : null,
+                            child: (user.photoUrl == null || user.photoUrl!.isEmpty)
+                                ? Text(
+                                    (user.name?.isNotEmpty ?? false)
+                                        ? user.name![0].toUpperCase()
+                                        : 'U',
+                                    style: GoogleFonts.outfit(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.primary,
+                                    ),
+                                  )
+                                : null,
                           ),
                         ),
                         Positioned(
@@ -64,14 +98,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 _showEditProfileDialog(context, authService),
                             child: Container(
                               padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
-                                color: Colors.deepPurple,
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary,
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.edit,
                                 size: 16,
-                                color: Colors.white,
+                                color: colorScheme.onPrimary,
                               ),
                             ),
                           ),
@@ -84,6 +118,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       style: GoogleFonts.outfit(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     if (user.email != null)
@@ -91,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         user.email!,
                         style: GoogleFonts.outfit(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                     if (user.phone != null)
@@ -99,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         '+91 ${user.phone}',
                         style: GoogleFonts.outfit(
                           fontSize: 14,
-                          color: Colors.grey[600],
+                          color: Theme.of(context).hintColor,
                         ),
                       ),
                   ],
@@ -108,28 +143,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                 // Menu Options
                 _buildMenuOption(
+                  context: context,
                   icon: Icons.shopping_bag_outlined,
                   title: 'My Orders',
                   subtitle: 'View your order history',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const MyOrdersScreen()));
+                  },
                 ),
                 _buildMenuOption(
+                  context: context,
                   icon: Icons.location_on_outlined,
                   title: 'Shipping Addresses',
                   subtitle: 'Manage your delivery locations',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const ShippingAddressesScreen()));
+                  },
                 ),
                 _buildMenuOption(
+                  context: context,
                   icon: Icons.credit_card_outlined,
                   title: 'Payment Methods',
                   subtitle: 'Manage your saved cards',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PaymentMethodsScreen()));
+                  },
                 ),
                 _buildMenuOption(
+                  context: context,
                   icon: Icons.settings_outlined,
                   title: 'Settings',
                   subtitle: 'Notifications, Password, etc.',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                  },
                 ),
 
                 const SizedBox(height: 32),
@@ -147,9 +194,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       );
                     },
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: Colors.red,
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      foregroundColor: colorScheme.error,
+                      side: BorderSide(color: colorScheme.error),
+                      padding: EdgeInsets.symmetric(
+                        vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -172,22 +221,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildMenuOption({
+    required BuildContext context,
     required IconData icon,
     required String title,
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? colorScheme.surfaceContainerHighest : colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withOpacity(0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
         ],
       ),
       child: ListTile(
@@ -195,23 +249,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.deepPurple.shade50,
+            color: colorScheme.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: Colors.deepPurple),
+          child: Icon(icon, color: colorScheme.primary),
         ),
         title: Text(
           title,
-          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16),
+          style: GoogleFonts.outfit(fontWeight: FontWeight.w600, fontSize: 16, color: colorScheme.onSurface),
         ),
         subtitle: Text(
           subtitle,
-          style: GoogleFonts.outfit(fontSize: 12, color: Colors.grey[600]),
+          style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).hintColor),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.arrow_forward_ios,
           size: 16,
-          color: Colors.grey,
+          color: Theme.of(context).hintColor,
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
@@ -233,62 +287,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
           'Edit Profile',
           style: GoogleFonts.outfit(fontWeight: FontWeight.bold),
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: 'Name',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'Cancel',
-              style: GoogleFonts.outfit(color: Colors.grey),
+              style: GoogleFonts.outfit(color: Theme.of(context).hintColor),
             ),
           ),
           ElevatedButton(
             onPressed: () async {
               try {
-                // Assuming updateProfile exists or we add it.
-                // Since AuthService might not have a public update method for Mock/Firebase easily exposed yet,
-                // we will simulate it or call it if available.
-                // For now, let's assume we can just update the local model via a new method we might need to add to AuthService
-                // OR just show a success message as "Feature coming soon" if strictly backend bound.
-                // But the user asked to "fix all" and implement profile page.
-
-                // Let's verify AuthService first.
-                // For this step I'll just print/mock success updates on UI side if needed
-                // But better to check AuthService.
-
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Profile updated successfully!'),
-                  ),
+                // Update profile locally through AuthService
+                await authService.updateProfile(
+                  name: nameController.text.trim(),
+                  email: emailController.text.trim(),
                 );
+
+                if (context.mounted) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Profile updated successfully!'),
+                    ),
+                  );
+                }
               } catch (e) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Failed to update: $e')));
+                }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple),
-            child: Text('Save', style: GoogleFonts.outfit(color: Colors.white)),
+            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.primary),
+            child: Text(
+              'Save',
+              style: GoogleFonts.outfit(color: Theme.of(context).colorScheme.onPrimary),
+            ),
           ),
         ],
       ),

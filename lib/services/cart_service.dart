@@ -2,7 +2,8 @@ import 'package:flutter/foundation.dart';
 import '../models/cart.dart';
 import '../models/product.dart';
 import '../models/custom_design.dart';
-import 'sanity_service.dart';
+import 'api_service.dart';
+import '../config/app_config.dart';
 
 class CartService extends ChangeNotifier {
   final Cart _cart = Cart();
@@ -23,23 +24,26 @@ class CartService extends ChangeNotifier {
 
   bool get isNotEmpty => _cart.isNotEmpty;
 
-  final SanityService _sanityService = SanityService();
+  late ApiService _apiService;
   double _currentTaxRate = 18.0;
 
   double get currentTaxRate => _currentTaxRate;
 
   CartService() {
+    _apiService = WebApiConfig.useWebApi
+        ? ApiService.webApi(WebApiConfig.baseUrl)
+        : ApiService.sanity();
     _init();
   }
 
   Future<void> _init() async {
     try {
-      _currentTaxRate = await _sanityService.fetchTaxRate();
+      _currentTaxRate = await _apiService.fetchTaxRate();
       _cart.setTaxRate(_currentTaxRate);
       notifyListeners();
     } catch (e) {
       if (kDebugMode) {
-        print('Error fetching tax rate: $e');
+        debugPrint('Error fetching tax rate: $e');
       }
     }
   }
