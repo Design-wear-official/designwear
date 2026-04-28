@@ -40,11 +40,11 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   String _selectedGarmentType = 'tshirt';
 
   static const _garmentTypes = [
-    {'id': 'tshirt',  'label': 'T-Shirt',  'emoji': '👕'},
-    {'id': 'hoodie',  'label': 'Hoodie',   'emoji': '🧥'},
-    {'id': 'polo',    'label': 'Polo',     'emoji': '👔'},
-    {'id': 'cap',     'label': 'Cap',      'emoji': '🧢'},
-    {'id': 'totebag', 'label': 'Tote Bag', 'emoji': '👜'},
+    {'id': 'tshirt',  'label': 'T-Shirt' },
+    {'id': 'hoodie',  'label': 'Hoodie'  },
+    {'id': 'polo',    'label': 'Polo'    },
+    {'id': 'cap',     'label': 'Cap'     },
+    {'id': 'totebag', 'label': 'Tote Bag'},
   ];
 
   late DateTime _lastAutoSave = DateTime.now();
@@ -283,7 +283,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
             onPressed: () {
               context.read<CartService>().addToCart(_baseProduct, customDesign: _design);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Design added to cart! 🎨')),
+                const SnackBar(content: Text('Design added to cart!')),
               );
               Navigator.pop(context);
             },
@@ -335,8 +335,6 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(type['emoji']!, style: const TextStyle(fontSize: 13)),
-                  const SizedBox(width: 5),
                   Text(
                     type['label']!,
                     style: GoogleFonts.outfit(
@@ -467,12 +465,12 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       padding: EdgeInsets.all(ResponsiveSizes.verticalPadding(context) + 2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.withOpacity(0.1), Colors.purple.withOpacity(0.1)],
+          colors: [Colors.blue.withValues(alpha: 0.1), Colors.purple.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -497,7 +495,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   currentTip['description']!,
                   style: GoogleFonts.outfit(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -542,7 +540,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           border: Border.all(color: AppColors.accentBlue),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -552,7 +550,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '🎨 Welcome to Design Studio!',
+              'Welcome to Design Studio!',
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -564,7 +562,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
               'Start creating your custom design or choose from our demo templates',
               style: GoogleFonts.outfit(
                 fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
               ),
               textAlign: TextAlign.center,
             ),
@@ -587,7 +585,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                     'Add Sticker',
                     Icons.emoji_emotions,
                     () {
-                      _addStickerElement('😎');
+                      _addStickerElement(':)');
                       setState(() => _showDemoHints = false);
                     },
                   ),
@@ -619,9 +617,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.accentBlue.withOpacity(0.1),
+          color: AppColors.accentBlue.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
+          border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
