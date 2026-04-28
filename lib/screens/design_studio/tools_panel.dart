@@ -66,43 +66,43 @@ class _ToolsPanelState extends State<ToolsPanel> {
       final index = entry.key;
       final tab = entry.value;
       final isSelected = _selectedTab == index;
+      final cs = Theme.of(context).colorScheme;
 
       return Expanded(
         child: GestureDetector(
           onTap: () => setState(() => _selectedTab = index),
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+              gradient: isSelected
+                  ? const LinearGradient(
+                      colors: [Color(0xFFF97316), Color(0xFFEC4899)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: isSelected
+                  ? [BoxShadow(color: const Color(0xFFF97316).withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))]
+                  : null,
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   tab['icon'] as IconData,
-                  color: isSelected
-                      ? Colors.white
-                      : Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.6),
+                  color: isSelected ? Colors.white : cs.onSurface.withValues(alpha: 0.5),
                   size: 20,
                 ),
                 const SizedBox(height: 4),
                 Text(
                   tab['label'] as String,
                   style: TextStyle(
-                    color: isSelected
-                        ? Colors.white
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: isSelected ? Colors.white : cs.onSurface.withValues(alpha: 0.5),
                     fontSize: 10,
-                    fontWeight: isSelected
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),
               ],
