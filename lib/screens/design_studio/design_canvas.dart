@@ -22,9 +22,27 @@ class DesignCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       alignment: Alignment.center,
       children: [
+        // Canvas backdrop — rounded card with shadow
+        Container(
+          width: DesignStudioConstants.canvasWidth + 32,
+          height: DesignStudioConstants.canvasWidth * 1.25 + 32,
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
+                blurRadius: 28,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+        ),
+
         // Base T-Shirt Image (Using a color filter for tinting)
         ColorFiltered(
           colorFilter: ColorFilter.mode(

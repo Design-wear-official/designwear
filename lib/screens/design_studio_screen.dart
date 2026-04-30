@@ -37,11 +37,18 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   bool _showLayers = false;
   bool _showDemoHints = true;
   int _currentDemoTipIndex = 0;
+  String _selectedGarmentType = 'tshirt';
 
-  // Auto-save timer
+  static const _garmentTypes = [
+    {'id': 'tshirt',  'label': 'T-Shirt' },
+    {'id': 'hoodie',  'label': 'Hoodie'  },
+    {'id': 'polo',    'label': 'Polo'    },
+    {'id': 'cap',     'label': 'Cap'     },
+    {'id': 'totebag', 'label': 'Tote Bag'},
+  ];
+
   late DateTime _lastAutoSave = DateTime.now();
 
-  // Dummy product for the base t-shirt
   final Product _baseProduct = Product(
     id: "custom-tee-001",
     title: "Men's Custom T-Shirt",
@@ -121,10 +128,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         children: [
           Column(
             children: [
-              // Demo hint banner
               if (_showDemoHints) _buildDemoHintBanner(),
-              
-              // Canvas Area
+              _buildGarmentTypeSelector(),
               Expanded(
                 flex: 3,
                 child: Container(
@@ -197,112 +202,153 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   }
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return AppBar(
-      title: Text(
-        'DESIGN STUDIO',
-        style: GoogleFonts.outfit(
-          fontWeight: FontWeight.w800,
-          letterSpacing: 1.2,
-          fontSize: 16,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFF97316), Color(0xFFEC4899)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(7),
+            ),
+            child: const Center(
+              child: Text(
+                'DW',
+                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            'DESIGN STUDIO',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.2,
+              fontSize: 15,
+              color: cs.onSurface,
+            ),
+          ),
+        ],
       ),
       centerTitle: true,
-      backgroundColor: Colors.transparent,
-      foregroundColor: Theme.of(context).colorScheme.onSurface,
+      backgroundColor: cs.surface,
+      foregroundColor: cs.onSurface,
       elevation: 0,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: cs.outline.withValues(alpha: 0.12)),
+      ),
       actions: [
-        // Undo button
         IconButton(
           onPressed: _historyService.canUndo ? _undo : null,
           icon: Icon(
             Icons.undo,
-            color: _historyService.canUndo
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.3),
+            color: _historyService.canUndo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.3),
           ),
           tooltip: 'Undo',
         ),
-
-        // Redo button
         IconButton(
           onPressed: _historyService.canRedo ? _redo : null,
           icon: Icon(
             Icons.redo,
-            color: _historyService.canRedo
-                ? Theme.of(context).colorScheme.onSurface
-                : Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.3),
+            color: _historyService.canRedo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.3),
           ),
           tooltip: 'Redo',
         ),
-
-        // Save button
         IconButton(
-          onPressed: () =>
-              SaveDesignDialog.show(context, _design, _storageService),
+          onPressed: () => SaveDesignDialog.show(context, _design, _storageService),
           icon: const Icon(Icons.save_outlined),
           tooltip: 'Save Design',
         ),
-
-        // Templates button
         IconButton(
-          onPressed: () {
-            setState(() {
-              _showTemplates = !_showTemplates;
-              _showLayers = false;
-            });
-          },
-          icon: Icon(
-            Icons.admin_panel_settings_outlined,
-            color: _showTemplates
-                ? AppColors.accentBlue
-                : Theme.of(context).colorScheme.onSurface,
-          ),
+          onPressed: () => setState(() { _showTemplates = !_showTemplates; _showLayers = false; }),
+          icon: Icon(Icons.style_outlined, color: _showTemplates ? AppColors.accentBlue : cs.onSurface),
           tooltip: 'Templates',
         ),
-
-        // Layers button
         IconButton(
-          onPressed: () {
-            setState(() {
-              _showLayers = !_showLayers;
-              _showTemplates = false;
-            });
-          },
-          icon: Icon(
-            Icons.layers_outlined,
-            color: _showLayers
-                ? AppColors.accentBlue
-                : Theme.of(context).colorScheme.onSurface,
-          ),
+          onPressed: () => setState(() { _showLayers = !_showLayers; _showTemplates = false; }),
+          icon: Icon(Icons.layers_outlined, color: _showLayers ? AppColors.accentBlue : cs.onSurface),
           tooltip: 'Layers',
         ),
-
-        // Add to cart button
-        TextButton(
-          onPressed: () {
-            context.read<CartService>().addToCart(
-              _baseProduct,
-              customDesign: _design,
-            );
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Design added to cart! 🎨')),
-            );
-            Navigator.pop(context);
-          },
-          child: Text(
-            'ADD TO CART',
-            style: GoogleFonts.outfit(
-              fontWeight: FontWeight.bold,
-              color: AppColors.accentBlue,
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: TextButton(
+            onPressed: () {
+              context.read<CartService>().addToCart(_baseProduct, customDesign: _design);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Design added to cart!')),
+              );
+              Navigator.pop(context);
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.accentBlue.withValues(alpha: 0.12),
+              foregroundColor: AppColors.accentBlue,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            child: Text(
+              'ADD TO CART',
+              style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 12),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildGarmentTypeSelector() {
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        itemCount: _garmentTypes.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final type = _garmentTypes[index];
+          final isSelected = _selectedGarmentType == type['id'];
+          return GestureDetector(
+            onTap: () => setState(() => _selectedGarmentType = type['id']!),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOut,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.accentBlue : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.accentBlue
+                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
+                ),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: AppColors.accentBlue.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 2))]
+                    : null,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    type['label']!,
+                    style: GoogleFonts.outfit(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -419,12 +465,12 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       padding: EdgeInsets.all(ResponsiveSizes.verticalPadding(context) + 2),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.blue.withOpacity(0.1), Colors.purple.withOpacity(0.1)],
+          colors: [Colors.blue.withValues(alpha: 0.1), Colors.purple.withValues(alpha: 0.1)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -449,7 +495,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   currentTip['description']!,
                   style: GoogleFonts.outfit(
                     fontSize: 12,
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ],
@@ -494,7 +540,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           border: Border.all(color: AppColors.accentBlue),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -504,7 +550,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              '🎨 Welcome to Design Studio!',
+              'Welcome to Design Studio!',
               style: GoogleFonts.outfit(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -516,7 +562,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
               'Start creating your custom design or choose from our demo templates',
               style: GoogleFonts.outfit(
                 fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.75),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.75),
               ),
               textAlign: TextAlign.center,
             ),
@@ -539,7 +585,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                     'Add Sticker',
                     Icons.emoji_emotions,
                     () {
-                      _addStickerElement('😎');
+                      _addStickerElement(':)');
                       setState(() => _showDemoHints = false);
                     },
                   ),
@@ -571,9 +617,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.accentBlue.withOpacity(0.1),
+          color: AppColors.accentBlue.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
+          border: Border.all(color: AppColors.accentBlue.withValues(alpha: 0.3)),
         ),
         child: Column(
           children: [
