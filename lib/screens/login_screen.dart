@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import '../styles/app_colors.dart';
-import '../utils/responsive_utils.dart';
-import '../patterns/responsive_typography_pattern.dart';
+import '../presentation/styles/app_colors.dart';
+import '../presentation/utils/responsive_utils.dart';
+import '../presentation/patterns/responsive_typography_pattern.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
 
@@ -364,3 +364,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

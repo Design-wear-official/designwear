@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../models/custom_design.dart';
 import '../../../services/design_template_service.dart';
-import '../../../styles/app_colors.dart';
+import '../../../presentation/styles/app_colors.dart';
 import '../design_studio_constants.dart';
 import '../design_studio_utils.dart';
 
@@ -199,3 +199,4 @@ class TextControlsWidget extends StatelessWidget {
     );
   }
 }
+

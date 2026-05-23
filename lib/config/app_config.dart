@@ -12,6 +12,13 @@ class ConfigLoader {
     'WEB_API_BASE_URL': String.fromEnvironment('WEB_API_BASE_URL'),
     'API_TIMEOUT_SECONDS': String.fromEnvironment('API_TIMEOUT_SECONDS'),
     'USE_WEB_API': String.fromEnvironment('USE_WEB_API'),
+    'GEMINI_API_KEY': String.fromEnvironment('GEMINI_API_KEY'),
+    'RAZORPAY_KEY_ID': String.fromEnvironment('RAZORPAY_KEY_ID'),
+    'FIREBASE_PROJECT_ID': String.fromEnvironment('FIREBASE_PROJECT_ID'),
+    'FIREBASE_API_KEY': String.fromEnvironment('FIREBASE_API_KEY'),
+    'FIREBASE_APP_ID': String.fromEnvironment('FIREBASE_APP_ID'),
+    'FIREBASE_MESSAGING_SENDER_ID': String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+    'FIREBASE_STORAGE_BUCKET': String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
   };
 
   static bool _initialized = false;
@@ -56,8 +63,34 @@ class WebApiConfig {
 
 /// App Configuration
 class AppConfig {
-  static String get appName => ConfigLoader.get('APP_NAME') ?? 'Design Wear';
+  static String get appName => ConfigLoader.get('APP_NAME') ?? 'DesignWear';
   static bool get isDebug => ConfigLoader.get('DEBUG_MODE') == 'true';
   static String get dataSource => ConfigLoader.get('DATA_SOURCE') ?? 'sanity';
   static bool get enableFallback => ConfigLoader.get('ENABLE_FALLBACK') == 'true';
+}
+
+/// Google Gemini AI Configuration
+class GeminiConfig {
+  static String get apiKey => ConfigLoader.get('GEMINI_API_KEY') ?? '';
+  static bool get isConfigured => apiKey.isNotEmpty;
+  static const String model = 'gemini-2.0-flash-exp';
+  static const int maxOutputTokens = 8192;
+  static const double temperature = 0.7;
+}
+
+/// Razorpay Payment Configuration
+class RazorpayConfig {
+  static String get keyId => ConfigLoader.get('RAZORPAY_KEY_ID') ?? '';
+  static bool get isConfigured => keyId.isNotEmpty;
+  static const String currency = 'INR';
+}
+
+/// Firebase Configuration (runtime values, not the google-services.json ones)
+class FirebaseRuntimeConfig {
+  static String get projectId => ConfigLoader.get('FIREBASE_PROJECT_ID') ?? '';
+  static String get apiKey => ConfigLoader.get('FIREBASE_API_KEY') ?? '';
+  static String get appId => ConfigLoader.get('FIREBASE_APP_ID') ?? '';
+  static String get messagingSenderId => ConfigLoader.get('FIREBASE_MESSAGING_SENDER_ID') ?? '';
+  static String get storageBucket => ConfigLoader.get('FIREBASE_STORAGE_BUCKET') ?? '';
+  static bool get isConfigured => projectId.isNotEmpty;
 }

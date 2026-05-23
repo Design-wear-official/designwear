@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../models/custom_design.dart';
 import '../../../services/design_template_service.dart';
-import '../../../styles/app_colors.dart';
+import '../../../presentation/styles/app_colors.dart';
 import 'text_controls_widget.dart';
 import 'enhanced_text_editor.dart';
 
@@ -84,3 +84,4 @@ class TextTab extends StatelessWidget {
     );
   }
 }
+

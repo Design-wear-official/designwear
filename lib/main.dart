@@ -9,10 +9,14 @@ import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'services/cart_service.dart';
 import 'services/auth_service.dart';
+import 'services/api_service.dart';
 import 'config/app_config.dart';
 import 'config/demo_config.dart';
-import 'styles/app_theme.dart';
+import 'presentation/styles/app_theme.dart';
 import 'services/theme_provider.dart';
+import 'data/repositories/product_repository.dart';
+import 'data/repositories/product_repository_impl.dart';
+import 'domain/usecases/product_use_cases.dart';
 
 enum Flavor { internal, external }
 
@@ -87,7 +91,34 @@ class DesignWearApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => CartService()),
+        Provider<ProductRepository>(
+          create: (_) => ProductRepositoryImpl(
+            WebApiConfig.useWebApi
+                ? ApiService.webApi(WebApiConfig.baseUrl)
+                : ApiService.sanity(),
+          ),
+        ),
+        Provider<GetCategoriesUseCase>(
+          create: (context) => GetCategoriesUseCase(context.read<ProductRepository>()),
+        ),
+        Provider<GetFeaturedProductsUseCase>(
+          create: (context) => GetFeaturedProductsUseCase(context.read<ProductRepository>()),
+        ),
+        Provider<GetProductsUseCase>(
+          create: (context) => GetProductsUseCase(context.read<ProductRepository>()),
+        ),
+        Provider<GetProductsByCategoryUseCase>(
+          create: (context) => GetProductsByCategoryUseCase(context.read<ProductRepository>()),
+        ),
+        Provider<GetProductByIdUseCase>(
+          create: (context) => GetProductByIdUseCase(context.read<ProductRepository>()),
+        ),
+        Provider<GetTaxRateUseCase>(
+          create: (context) => GetTaxRateUseCase(context.read<ProductRepository>()),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CartService(context.read<GetTaxRateUseCase>()),
+        ),
         ChangeNotifierProvider(
           create: (_) {
             final authService = AuthService();
@@ -128,3 +159,4 @@ class DesignWearApp extends StatelessWidget {
     );
   }
 }
+

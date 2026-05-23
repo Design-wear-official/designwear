@@ -8,9 +8,9 @@ import '../services/design_template_service.dart';
 import '../services/design_history_service.dart';
 import '../services/design_storage_service.dart';
 import '../services/design_studio_demo_service.dart';
-import '../styles/app_colors.dart';
-import '../utils/responsive_utils.dart';
-import '../widgets/agent_chat_widget.dart';
+import '../presentation/styles/app_colors.dart';
+import '../presentation/utils/responsive_utils.dart';
+import '../presentation/widgets/agent_chat_widget.dart';
 import 'design_studio/design_canvas.dart';
 import 'design_studio/tools_panel.dart';
 import 'design_studio/templates_panel.dart';
@@ -647,3 +647,4 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     _updateDesign(_design.updateElement(element.id, updatedElement));
   }
 }
+

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_constants.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.system;
@@ -10,34 +11,37 @@ class ThemeProvider extends ChangeNotifier {
     _loadTheme();
   }
 
-  bool get isDarkMode {
-    if (_themeMode == ThemeMode.system) {
-      // In a real device context we might need to query MediaQuery.platformBrightnessOf(context)
-      // but standard approach is just to rely on ThemeMode.system to fall back
-      // Since we can't easily query that from the provider without context,
-      // we'll treat 'system' as an unknown or default to light for simple boolean checks.
-      return false;
-    }
-    return _themeMode == ThemeMode.dark;
-  }
+  bool get isDarkMode => _themeMode == ThemeMode.dark;
 
   void toggleTheme(bool isOn) {
-    _themeMode = isOn ? ThemeMode.dark : ThemeMode.light;
-    _saveTheme(isOn);
+    setThemeMode(isOn ? ThemeMode.dark : ThemeMode.light);
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    if (_themeMode == mode) return;
+    _themeMode = mode;
+    _saveTheme(mode);
     notifyListeners();
   }
 
   Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
-    final isDark = prefs.getBool('isDarkMode');
-    if (isDark != null) {
-      _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
+    final saved = prefs.getString(AppConstants.prefKeyThemeMode);
+    if (saved != null) {
+      _themeMode = _modeFromString(saved);
       notifyListeners();
     }
   }
 
-  Future<void> _saveTheme(bool isDark) async {
+  Future<void> _saveTheme(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', isDark);
+    await prefs.setString(AppConstants.prefKeyThemeMode, mode.name);
+  }
+
+  static ThemeMode _modeFromString(String s) {
+    return ThemeMode.values.firstWhere(
+      (m) => m.name == s,
+      orElse: () => ThemeMode.system,
+    );
   }
 }

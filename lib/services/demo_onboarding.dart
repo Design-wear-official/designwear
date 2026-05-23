@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../styles/app_colors.dart';
+import '../presentation/styles/app_colors.dart';
 import '../config/demo_config.dart';
 
 /// Demo onboarding and tutorial service

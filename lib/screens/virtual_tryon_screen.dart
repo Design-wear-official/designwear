@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../widgets/safe_network_image.dart';
+import '../presentation/widgets/safe_network_image.dart';
 import 'package:http/http.dart' as http;
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../models/product.dart';
 import '../services/virtual_tryon_service.dart';
-import '../styles/app_colors.dart';
-import '../utils/responsive_utils.dart';
+import '../presentation/styles/app_colors.dart';
+import '../presentation/utils/responsive_utils.dart';
 
 class VirtualTryOnScreen extends StatefulWidget {
   final Product product;
@@ -628,3 +628,4 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
     );
   }
 }
+

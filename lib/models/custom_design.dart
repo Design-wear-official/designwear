@@ -79,11 +79,16 @@ class CustomDesign {
   final double stickerX;
   final double stickerY;
   final double stickerSize;
-  final List<DesignElement> elements; // New layered design system
+  final List<DesignElement> elements; // Layered design system
   final String templateId;
+  final String name; // User-given name for the design
+  final String productType; // 'T-Shirt', 'Hoodie', 'Cap', etc.
+  final String? thumbnailPath; // Local path to saved thumbnail
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   CustomDesign({
-    this.baseColor = "0xFFFFFFFF", // Default white
+    this.baseColor = "0xFFFFFFFF",
     this.text = "",
     this.textX = 0,
     this.textY = 0,
@@ -95,6 +100,11 @@ class CustomDesign {
     this.stickerSize = 60,
     this.elements = const [],
     this.templateId = '',
+    this.name = '',
+    this.productType = 'T-Shirt',
+    this.thumbnailPath,
+    this.createdAt,
+    this.updatedAt,
   });
 
   CustomDesign copyWith({
@@ -110,6 +120,11 @@ class CustomDesign {
     double? stickerSize,
     List<DesignElement>? elements,
     String? templateId,
+    String? name,
+    String? productType,
+    String? thumbnailPath,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return CustomDesign(
       baseColor: baseColor ?? this.baseColor,
@@ -124,6 +139,11 @@ class CustomDesign {
       stickerSize: stickerSize ?? this.stickerSize,
       elements: elements ?? List.from(this.elements),
       templateId: templateId ?? this.templateId,
+      name: name ?? this.name,
+      productType: productType ?? this.productType,
+      thumbnailPath: thumbnailPath ?? this.thumbnailPath,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -141,6 +161,11 @@ class CustomDesign {
       'stickerSize': stickerSize,
       'elements': elements.map((e) => e.toJson()).toList(),
       'templateId': templateId,
+      'name': name,
+      'productType': productType,
+      'thumbnailPath': thumbnailPath,
+      'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
     };
   }
 
@@ -156,12 +181,20 @@ class CustomDesign {
       stickerX: (json['stickerX'] as num?)?.toDouble() ?? 0,
       stickerY: (json['stickerY'] as num?)?.toDouble() ?? 0,
       stickerSize: (json['stickerSize'] as num?)?.toDouble() ?? 60,
-      elements:
-          (json['elements'] as List<dynamic>?)
+      elements: (json['elements'] as List<dynamic>?)
               ?.map((e) => DesignElement.fromJson(e))
               .toList() ??
           [],
       templateId: json['templateId'] ?? '',
+      name: json['name'] ?? '',
+      productType: json['productType'] ?? 'T-Shirt',
+      thumbnailPath: json['thumbnailPath'],
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'])
+          : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.tryParse(json['updatedAt'])
+          : null,
     );
   }
 

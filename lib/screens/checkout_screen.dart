@@ -7,7 +7,7 @@ import '../services/order_service.dart';
 import '../services/razorpay_service.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
-import '../utils/responsive_utils.dart';
+import '../presentation/utils/responsive_utils.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -572,3 +572,4 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 }
+

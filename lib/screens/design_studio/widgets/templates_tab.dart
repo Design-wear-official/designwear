@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../services/design_template_service.dart';
-import '../../../styles/app_colors.dart';
+import '../../../presentation/styles/app_colors.dart';
 
 class TemplatesTab extends StatelessWidget {
   final DesignTemplateService templateService;
@@ -82,3 +82,4 @@ class TemplatesTab extends StatelessWidget {
     );
   }
 }
+

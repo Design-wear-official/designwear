@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../services/design_template_service.dart';
-import '../../styles/app_colors.dart';
+import '../../presentation/styles/app_colors.dart';
 import 'design_studio_constants.dart';
 
 class TemplatesPanel extends StatelessWidget {
@@ -126,3 +126,4 @@ class TemplatesPanel extends StatelessWidget {
     );
   }
 }
+

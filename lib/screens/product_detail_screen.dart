@@ -3,12 +3,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../widgets/safe_network_image.dart';
+import '../presentation/widgets/safe_network_image.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
-import '../utils/responsive_utils.dart';
-import '../patterns/responsive_typography_pattern.dart';
-import '../styles/app_colors.dart';
+import '../presentation/utils/responsive_utils.dart';
+import '../presentation/patterns/responsive_typography_pattern.dart';
+import '../presentation/styles/app_colors.dart';
 import 'cart_screen.dart';
 import 'virtual_tryon_screen.dart';
 
@@ -560,3 +560,4 @@ class _SizeChipState extends State<_SizeChip>
     return chip;
   }
 }
+

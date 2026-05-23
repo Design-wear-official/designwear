@@ -1,11 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
-import '../services/api_service.dart';
+import '../domain/usecases/product_use_cases.dart';
 import '../services/demo_navigation.dart';
-import '../styles/app_colors.dart';
-import '../utils/responsive_utils.dart';
-import '../widgets/safe_network_image.dart';
+import '../presentation/styles/app_colors.dart';
+import '../presentation/utils/responsive_utils.dart';
+import '../presentation/widgets/safe_network_image.dart';
 import '../config/app_config.dart';
 import 'product_detail_screen.dart';
 
@@ -26,9 +28,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   late TextEditingController _searchController;
   late FocusNode _searchFocusNode;
   bool _searchFocused = false;
+  Timer? _debounce;
+  String _liveQuery = '';
 
   late Future<List<Product>> _productsFuture;
-  late ApiService _apiService;
+  late GetProductsUseCase _getProductsUseCase;
 
   _SortOption _sortOption = _SortOption.relevance;
   _AvailabilityFilter _availabilityFilter = _AvailabilityFilter.all;
@@ -37,29 +41,40 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   @override
   void initState() {
     super.initState();
+    _liveQuery = widget.initialQuery;
     _searchController = TextEditingController(text: widget.initialQuery);
     _searchFocusNode = FocusNode()
       ..addListener(() => setState(() => _searchFocused = _searchFocusNode.hasFocus));
-    _apiService = WebApiConfig.useWebApi
-        ? ApiService.webApi(WebApiConfig.baseUrl)
-        : ApiService.sanity();
-    _productsFuture = _apiService.fetchProducts();
+    _getProductsUseCase = Provider.of<GetProductsUseCase>(context, listen: false);
+    _productsFuture = _getProductsUseCase();
+    // Auto-focus the field so keyboard is ready
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _searchFocusNode.requestFocus());
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
   }
 
   void _doSearch() {
+    _debounce?.cancel();
     _searchFocusNode.unfocus();
-    setState(() {});
+    setState(() => _liveQuery = _searchController.text.trim());
+  }
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _liveQuery = value.trim());
+    });
   }
 
   List<Product> _applyFilters(List<Product> all) {
-    final q = _searchController.text.trim().toLowerCase();
+    final q = _liveQuery.toLowerCase();
 
     var results = all.where((p) {
       // Search match
@@ -172,99 +187,130 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             ),
           ),
 
-          // Search input (same Google-style capsule)
+          // Search input – matches home bar style
           Expanded(
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              height: barH,
+              duration: const Duration(milliseconds: 220),
+              curve: Curves.easeOut,
+              height: 48,
               decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(barH / 2),
-                border: _searchFocused
-                    ? Border.all(color: AppColors.accentBlue, width: 1.8)
-                    : Border.all(
-                        color: isDark
-                            ? Colors.white.withOpacity(0.15)
-                            : Colors.black.withOpacity(0.15),
-                        width: 1.2,
-                      ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
-                    blurRadius: _searchFocused ? 14 : 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+                color: isDark ? const Color(0xFF1E1E2E) : const Color(0xFFF1F3F6),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: _searchFocused
+                      ? AppColors.accentBlue
+                      : (isDark
+                          ? Colors.white.withOpacity(0.08)
+                          : Colors.black.withOpacity(0.08)),
+                  width: _searchFocused ? 1.8 : 1.2,
+                ),
+                boxShadow: _searchFocused
+                    ? [
+                        BoxShadow(
+                          color: AppColors.accentBlue.withOpacity(0.18),
+                          blurRadius: 16,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(isDark ? 0.3 : 0.06),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(left: 16, right: 10),
+                    padding: const EdgeInsets.only(left: 14, right: 8),
                     child: Icon(Icons.search_rounded,
                         size: 20,
                         color: _searchFocused
                             ? AppColors.accentBlue
-                            : (isDark ? const Color(0xFF9AA0A6) : const Color(0xFF70757A))),
+                            : (isDark
+                                ? const Color(0xFF9AA0A6)
+                                : const Color(0xFF9E9E9E))),
                   ),
                   Expanded(
                     child: TextField(
                       focusNode: _searchFocusNode,
                       controller: _searchController,
                       style: GoogleFonts.outfit(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w400,
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w500,
                         color: isDark ? Colors.white : Colors.black87,
-                        height: 1.0,
+                        height: 1.2,
                       ),
                       textAlignVertical: TextAlignVertical.center,
                       textInputAction: TextInputAction.search,
                       cursorColor: AppColors.accentBlue,
+                      cursorWidth: 2,
+                      cursorHeight: 18,
                       decoration: InputDecoration(
-                        hintText: 'Search products…',
+                        hintText: 'Search products, designs…',
                         hintStyle: GoogleFonts.outfit(
-                          fontSize: 15,
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w400,
                           color: isDark
-                              ? const Color(0xFF9AA0A6)
-                              : const Color(0xFF70757A),
-                          height: 1.0,
+                              ? const Color(0xFF6B7280)
+                              : const Color(0xFF9CA3AF),
+                          height: 1.2,
                         ),
                         border: InputBorder.none,
                         enabledBorder: InputBorder.none,
                         focusedBorder: InputBorder.none,
-                        contentPadding: EdgeInsets.zero,
+                        contentPadding: const EdgeInsets.only(bottom: 1),
                         isDense: true,
                       ),
                       onSubmitted: (_) => _doSearch(),
-                      onChanged: (_) => setState(() {}),
+                      onChanged: _onSearchChanged,
                     ),
                   ),
+                  // Clear button
                   if (_searchController.text.isNotEmpty)
                     GestureDetector(
                       onTap: () {
                         _searchController.clear();
-                        setState(() {});
+                        _onSearchChanged('');
                       },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Icon(Icons.cancel_rounded,
-                            size: 18,
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
                             color: isDark
-                                ? const Color(0xFF9AA0A6)
-                                : const Color(0xFF70757A)),
+                                ? Colors.white.withOpacity(0.15)
+                                : Colors.black.withOpacity(0.10),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.close_rounded,
+                              size: 13,
+                              color: isDark ? Colors.white70 : Colors.black54),
+                        ),
                       ),
                     ),
                   // Search button
                   Padding(
-                    padding: const EdgeInsets.only(right: 4),
+                    padding: const EdgeInsets.only(right: 5),
                     child: GestureDetector(
                       onTap: _doSearch,
                       child: Container(
-                        height: barH - 8,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        height: 38,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
                         decoration: BoxDecoration(
                           gradient: AppColors.neonGradient,
-                          borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.accentBlue.withOpacity(0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
                         ),
                         alignment: Alignment.center,
                         child: Text(
@@ -273,7 +319,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,
-                            letterSpacing: 0.3,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
@@ -655,7 +701,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
           const SizedBox(height: 8),
           GestureDetector(
             onTap: () => setState(() {
-              _productsFuture = _apiService.fetchProducts();
+              _productsFuture = _getProductsUseCase();
             }),
             child: Text('Tap to retry',
                 style: GoogleFonts.outfit(
@@ -666,3 +712,4 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     );
   }
 }
+

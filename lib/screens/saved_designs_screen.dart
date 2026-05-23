@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/custom_design.dart';
 import '../services/design_storage_service.dart';
-import '../styles/app_colors.dart';
-import '../utils/responsive_utils.dart';
+import '../presentation/styles/app_colors.dart';
+import '../presentation/utils/responsive_utils.dart';
 import 'design_studio_screen.dart';
 
 class SavedDesignsScreen extends StatefulWidget {
@@ -347,3 +347,4 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
     );
   }
 }
+

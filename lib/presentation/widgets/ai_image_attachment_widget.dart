@@ -300,3 +300,4 @@ class _AIImageAttachmentWidgetState extends State<AIImageAttachmentWidget> {
     );
   }
 }
+

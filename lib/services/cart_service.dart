@@ -2,11 +2,11 @@ import 'package:flutter/foundation.dart';
 import '../models/cart.dart';
 import '../models/product.dart';
 import '../models/custom_design.dart';
-import 'api_service.dart';
-import '../config/app_config.dart';
+import '../domain/usecases/product_use_cases.dart';
 
 class CartService extends ChangeNotifier {
   final Cart _cart = Cart();
+  final GetTaxRateUseCase _getTaxRateUseCase;
 
   Cart get cart => _cart;
 
@@ -24,21 +24,23 @@ class CartService extends ChangeNotifier {
 
   bool get isNotEmpty => _cart.isNotEmpty;
 
-  late ApiService _apiService;
+  bool get hasCoupon => _cart.hasCoupon;
+
+  Coupon? get appliedCoupon => _cart.appliedCoupon;
+
+  double get couponDiscount => _cart.couponDiscount;
+
   double _currentTaxRate = 18.0;
 
   double get currentTaxRate => _currentTaxRate;
 
-  CartService() {
-    _apiService = WebApiConfig.useWebApi
-        ? ApiService.webApi(WebApiConfig.baseUrl)
-        : ApiService.sanity();
+  CartService(this._getTaxRateUseCase) {
     _init();
   }
 
   Future<void> _init() async {
     try {
-      _currentTaxRate = await _apiService.fetchTaxRate();
+      _currentTaxRate = await _getTaxRateUseCase();
       _cart.setTaxRate(_currentTaxRate);
       notifyListeners();
     } catch (e) {
@@ -95,6 +97,16 @@ class CartService extends ChangeNotifier {
 
   void clearCart() {
     _cart.clear();
+    notifyListeners();
+  }
+
+  void applyCoupon(Coupon coupon) {
+    _cart.applyCoupon(coupon);
+    notifyListeners();
+  }
+
+  void removeCoupon() {
+    _cart.removeCoupon();
     notifyListeners();
   }
 }

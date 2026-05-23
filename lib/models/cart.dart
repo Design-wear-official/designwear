@@ -5,54 +5,97 @@ class CartItem {
   final Product product;
   int quantity;
   String? selectedSize;
+  String? selectedColor;
   CustomDesign? customDesign;
 
   CartItem({
     required this.product,
     this.quantity = 1,
     this.selectedSize,
+    this.selectedColor,
     this.customDesign,
   });
 
   double get total => product.price * quantity;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'productId': product.id,
+      'quantity': quantity,
+      'selectedSize': selectedSize,
+      'selectedColor': selectedColor,
+      'hasCustomDesign': customDesign != null,
+    };
+  }
+}
+
+class Coupon {
+  final String code;
+  final double discountPercent;
+  final double? maxDiscountAmount;
+  final double? minOrderAmount;
+  final bool isValid;
+
+  const Coupon({
+    required this.code,
+    required this.discountPercent,
+    this.maxDiscountAmount,
+    this.minOrderAmount,
+    this.isValid = true,
+  });
+
+  double discountFor(double subtotal) {
+    if (!isValid) return 0;
+    if (minOrderAmount != null && subtotal < minOrderAmount!) return 0;
+    final discount = subtotal * (discountPercent / 100);
+    if (maxDiscountAmount != null && discount > maxDiscountAmount!) {
+      return maxDiscountAmount!;
+    }
+    return discount;
+  }
 }
 
 class Cart {
   final List<CartItem> items;
+  Coupon? appliedCoupon;
 
-  Cart({List<CartItem>? items}) : items = items ?? [];
+  Cart({List<CartItem>? items, this.appliedCoupon}) : items = items ?? [];
 
   int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
 
-  double get subtotal => items.fold(0, (sum, item) => sum + item.total);
+  double get subtotal => items.fold(0.0, (sum, item) => sum + item.total);
 
-  double taxRate = 0.18; // 18% GST (updated via setTaxRate from API)
+  double taxRate = 0.18; // 18% GST
 
-  void setTaxRate(double rate) {
-    taxRate = rate / 100.0;
-  }
+  void setTaxRate(double rate) => taxRate = rate / 100.0;
 
-  double get tax => subtotal * taxRate;
+  double get couponDiscount => appliedCoupon?.discountFor(subtotal) ?? 0;
 
-  double get total => subtotal + tax;
+  double get discountedSubtotal => subtotal - couponDiscount;
+
+  double get tax => discountedSubtotal * taxRate;
+
+  double get total => discountedSubtotal + tax;
+
+  void applyCoupon(Coupon coupon) => appliedCoupon = coupon;
+
+  void removeCoupon() => appliedCoupon = null;
 
   void addItem(
     Product product, {
     int quantity = 1,
     String? size,
+    String? color,
     CustomDesign? customDesign,
   }) {
-    // If it's a custom design, we might treat it as unique or check equality of design
-    // For simplicity, let's say custom designs are always unique entries for now
     if (customDesign != null) {
-      items.add(
-        CartItem(
-          product: product,
-          quantity: quantity,
-          selectedSize: size,
-          customDesign: customDesign,
-        ),
-      );
+      items.add(CartItem(
+        product: product,
+        quantity: quantity,
+        selectedSize: size,
+        selectedColor: color,
+        customDesign: customDesign,
+      ));
       return;
     }
 
@@ -60,27 +103,37 @@ class Cart {
       (item) =>
           item.product.id == product.id &&
           item.selectedSize == size &&
+          item.selectedColor == color &&
           item.customDesign == null,
     );
 
     if (existingIndex >= 0) {
       items[existingIndex].quantity += quantity;
     } else {
-      items.add(
-        CartItem(product: product, quantity: quantity, selectedSize: size),
-      );
+      items.add(CartItem(
+        product: product,
+        quantity: quantity,
+        selectedSize: size,
+        selectedColor: color,
+      ));
     }
   }
 
-  void removeItem(String productId, {String? size}) {
+  void removeItem(String productId, {String? size, String? color}) {
     items.removeWhere(
-      (item) => item.product.id == productId && item.selectedSize == size,
+      (item) =>
+          item.product.id == productId &&
+          item.selectedSize == size &&
+          item.selectedColor == color,
     );
   }
 
-  void updateQuantity(String productId, int quantity, {String? size}) {
+  void updateQuantity(String productId, int quantity, {String? size, String? color}) {
     final index = items.indexWhere(
-      (item) => item.product.id == productId && item.selectedSize == size,
+      (item) =>
+          item.product.id == productId &&
+          item.selectedSize == size &&
+          item.selectedColor == color,
     );
 
     if (index >= 0) {
@@ -94,9 +147,12 @@ class Cart {
 
   void clear() {
     items.clear();
+    appliedCoupon = null;
   }
 
   bool get isEmpty => items.isEmpty;
 
   bool get isNotEmpty => items.isNotEmpty;
+
+  bool get hasCoupon => appliedCoupon != null && appliedCoupon!.isValid;
 }

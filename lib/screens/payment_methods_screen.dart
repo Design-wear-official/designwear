@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import '../utils/responsive_utils.dart';
+import '../presentation/utils/responsive_utils.dart';
 
 class PaymentMethodsScreen extends StatelessWidget {
   const PaymentMethodsScreen({super.key});
@@ -217,3 +217,4 @@ class PaymentMethodsScreen extends StatelessWidget {
     );
   }
 }
+

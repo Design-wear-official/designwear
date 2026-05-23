@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import '../utils/responsive_utils.dart';
+import '../presentation/utils/responsive_utils.dart';
 
 class ShippingAddressesScreen extends StatelessWidget {
   const ShippingAddressesScreen({super.key});
@@ -223,3 +223,4 @@ class ShippingAddressesScreen extends StatelessWidget {
     );
   }
 }
+

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../styles/app_colors.dart';
+import '../../../presentation/styles/app_colors.dart';
 
 class DraggableElementWidget extends StatelessWidget {
   final String id;
@@ -58,3 +58,4 @@ class DraggableElementWidget extends StatelessWidget {
     );
   }
 }
+
