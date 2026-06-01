@@ -39,40 +39,36 @@ Future<void> mainCommon(Flavor flavor) async {
   // Web uses --dart-define build args or built-in defaults — .env is not
   // bundled in web builds and must not be served publicly (contains secrets).
   if (!kIsWeb) {
+    await dotenv.load(fileName: ".env", isOptional: true, mergeWith: {});
+  }
+
+  // Skip Firebase when no credentials are configured (e.g. running without .env)
+  final hasFirebaseCreds = kIsWeb ||
+      (dotenv.env['FIREBASE_ANDROID_API_KEY']?.isNotEmpty ?? false);
+
+  if (hasFirebaseCreds) {
     try {
-      await dotenv.load(fileName: ".env");
-    } catch (_) {
-      debugPrint('ℹ️ .env not found — using dart-define values or defaults');
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      if (!kIsWeb) {
+        FlutterError.onError =
+            FirebaseCrashlytics.instance.recordFlutterFatalError;
+        PlatformDispatcher.instance.onError = (error, stack) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          return true;
+        };
+      }
+
+      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    } catch (e) {
+      if (!e.toString().contains('duplicate-app')) {
+        debugPrint('⚠️ Firebase init failed: $e');
+      }
     }
-  }
-
-  // Initialize Firebase with error handling for duplicate initialization
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
-    if (!kIsWeb) {
-      // Pass all uncaught "fatal" errors from the framework to Crashlytics
-      FlutterError.onError =
-          FirebaseCrashlytics.instance.recordFlutterFatalError;
-
-      // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true;
-      };
-    }
-  } catch (e) {
-    // Ignore duplicate app error, Firebase is already initialized
-    if (!e.toString().contains('duplicate-app')) {
-      rethrow;
-    }
-  }
-
-  if (!kIsWeb) {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-    
+  } else {
+    debugPrint('ℹ️ Firebase credentials not configured — running without Firebase');
   }
 
   runApp(DesignWearApp(flavor: flavor));
