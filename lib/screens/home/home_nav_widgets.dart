@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../presentation/styles/app_colors.dart';
-import '../../services/demo_navigation.dart';
 import '../../services/auth_service.dart';
-import '../../presentation/utils/responsive_utils.dart';
 import '../cart_screen.dart';
 import '../login_screen.dart';
 import '../profile_screen.dart';
@@ -81,60 +79,21 @@ class HomeBottomNav extends StatelessWidget {
         Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SearchResultsScreen(initialQuery: '')));
         break;
       case 2:
-        DemoNavigation.pushWithScale(context, const DesignStudioScreen(), routeName: '/design-studio');
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DesignStudioScreen(), settings: const RouteSettings(name: '/design-studio')));
         break;
       case 3:
-        DemoNavigation.pushWithTransition(context, const CartScreen(), routeName: '/cart');
+        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CartScreen(), settings: const RouteSettings(name: '/cart')));
         break;
       case 4:
         final auth = context.read<AuthService>();
-        DemoNavigation.pushWithTransition(
-          context,
-          auth.isLoggedIn ? const ProfileScreen() : const LoginScreen(),
-          routeName: auth.isLoggedIn ? '/profile' : '/login',
-        );
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => auth.isLoggedIn ? const ProfileScreen() : const LoginScreen(),
+          settings: RouteSettings(name: auth.isLoggedIn ? '/profile' : '/login'),
+        ));
         break;
       default:
         onTap(i);
     }
-  }
-}
-
-/// Demo mode welcome banner.
-class HomeDemoWelcomeBanner extends StatelessWidget {
-  final VoidCallback onDismiss;
-  const HomeDemoWelcomeBanner({super.key, required this.onDismiss});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.all(16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [AppColors.accentBlue.withOpacity(0.1), AppColors.purple.withOpacity(0.1)],
-          begin: Alignment.topLeft, end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accentBlue.withOpacity(0.3)),
-      ),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: AppColors.accentBlue, borderRadius: BorderRadius.circular(12)),
-          child: const Icon(Icons.star, color: Colors.black, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Demo Mode Active', style: GoogleFonts.outfit(fontSize: 14, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
-            Text('Explore all features with demo data',
-                style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7))),
-          ]),
-        ),
-        IconButton(icon: const Icon(Icons.close, size: 18), onPressed: onDismiss),
-      ]),
-    );
   }
 }
 

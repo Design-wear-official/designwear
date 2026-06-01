@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_sanity/flutter_sanity.dart';
 import '../models/product.dart';
 import '../models/category.dart';
+import '../models/banner.dart';
+import '../models/deal.dart';
+import '../services/design_template_service.dart';
 import '../config/app_config.dart';
 
 class SanityService {
@@ -79,6 +83,64 @@ class SanityService {
     } catch (e) {
       debugPrint('Sanity fetch failed: $e. Returning default tax rate.');
       return 18.0;
+    }
+  }
+
+  Future<List<HomeBanner>> fetchBanners() async {
+    try {
+      const query = '*[_type == "homeBanner" && active == true] | order(order asc) '
+          '{_id, badge, title, subtitle, ctaLabel, ctaAction, ctaColor, "imageUrl": image.asset->url, order}';
+      final List<dynamic> result = await client.fetch(query);
+      final banners = result.map((m) => HomeBanner.fromMap(m as Map<String, dynamic>)).toList();
+      return banners.isNotEmpty ? banners : HomeBanner.fallbacks;
+    } catch (e) {
+      debugPrint('Sanity fetchBanners failed: $e');
+      return HomeBanner.fallbacks;
+    }
+  }
+
+  Future<List<Deal>> fetchDeals() async {
+    try {
+      const query = '*[_type == "deal" && active == true && (expiresAt == null || expiresAt > now())] '
+          '| order(_updatedAt desc) {_id, label, originalPrice, salePrice, discountPercent, colorHex}';
+      final List<dynamic> result = await client.fetch(query);
+      final deals = result.map((m) => Deal.fromMap(m as Map<String, dynamic>)).toList();
+      return deals.isNotEmpty ? deals : Deal.fallbacks;
+    } catch (e) {
+      debugPrint('Sanity fetchDeals failed: $e');
+      return Deal.fallbacks;
+    }
+  }
+
+  Future<List<DesignTemplate>> fetchDesignTemplates() async {
+    try {
+      const query = '*[_type == "designTemplate" && active == true] | order(order asc) '
+          '{_id, "templateId": templateId.current, name, description, category, '
+          '"thumbnailUrl": thumbnail.asset->url, tags, designData}';
+      final List<dynamic> result = await client.fetch(query);
+      return result.map((m) {
+        final map = m as Map<String, dynamic>;
+        CustomDesign design;
+        try {
+          design = CustomDesign.fromJson(
+            jsonDecode(map['designData'] as String? ?? '{}') as Map<String, dynamic>,
+          );
+        } catch (_) {
+          design = CustomDesign(baseColor: '0xFF2C2C2C', elements: []);
+        }
+        return DesignTemplate(
+          id: map['templateId'] as String? ?? map['_id'] as String? ?? '',
+          name: map['name'] as String? ?? '',
+          description: map['description'] as String? ?? '',
+          category: map['category'] as String? ?? 'minimalist',
+          thumbnailUrl: map['thumbnailUrl'] as String? ?? '',
+          tags: (map['tags'] as List<dynamic>?)?.cast<String>() ?? [],
+          design: design,
+        );
+      }).toList();
+    } catch (e) {
+      debugPrint('Sanity fetchDesignTemplates failed: $e');
+      return [];
     }
   }
 }

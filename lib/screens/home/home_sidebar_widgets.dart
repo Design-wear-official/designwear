@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../presentation/styles/app_colors.dart';
 import '../../models/product.dart';
-import '../../services/demo_navigation.dart';
 import '../../presentation/utils/responsive_utils.dart';
 import '../../presentation/widgets/safe_network_image.dart';
 import '../product_detail_screen.dart';
@@ -20,7 +19,7 @@ class HomeDesignStudioBanner extends StatelessWidget {
     final isDesktop = ResponsiveUtils.isDesktop(context);
 
     return GestureDetector(
-      onTap: () => DemoNavigation.pushWithScale(context, const DesignStudioScreen(), routeName: '/design-studio'),
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DesignStudioScreen(), settings: const RouteSettings(name: '/design-studio'))),
       child: Container(
         margin: EdgeInsets.fromLTRB(isDesktop ? 8 : hp, 12, hp, 12),
         height: isDesktop ? 200 : ResponsiveSizes.bannerHeight(context),
@@ -108,11 +107,11 @@ class HomeTrendingSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _Stat('1.2K', 'Orders Today', AppColors.accentBlue, context),
+              _stat('1.2K', 'Orders Today', AppColors.accentBlue, context),
               Container(width: 1, height: 32, color: isDark ? Colors.white12 : Colors.black12),
-              _Stat('38', 'New Designs', AppColors.purple, context),
+              _stat('38', 'New Designs', AppColors.purple, context),
               Container(width: 1, height: 32, color: isDark ? Colors.white12 : Colors.black12),
-              _Stat('4.9★', 'Rating', AppColors.gold, context),
+              _stat('4.9★', 'Rating', AppColors.gold, context),
             ],
           ),
         ),
@@ -140,10 +139,10 @@ class HomeTrendingSection extends StatelessWidget {
                     style: GoogleFonts.outfit(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: AppColors.accentBlue)),
               ]),
               const SizedBox(height: 16),
-              _TrendItem('Graphic Tees', '#1', Icons.trending_up, AppColors.accentBlue, context),
-              _TrendItem('Hoodies', '#2', Icons.local_fire_department, Colors.orange, context),
-              _TrendItem('Polo Shirts', '#3', Icons.star, AppColors.gold, context),
-              _TrendItem('Tank Tops', '#4', Icons.bolt, AppColors.purple, context),
+              _trendItem('Graphic Tees', '#1', Icons.trending_up, AppColors.accentBlue, context),
+              _trendItem('Hoodies', '#2', Icons.local_fire_department, Colors.orange, context),
+              _trendItem('Polo Shirts', '#3', Icons.star, AppColors.gold, context),
+              _trendItem('Tank Tops', '#4', Icons.bolt, AppColors.purple, context),
               const SizedBox(height: 18),
               Container(height: 1, color: isDark ? Colors.white.withOpacity(0.06) : Colors.black.withOpacity(0.06)),
               const SizedBox(height: 16),
@@ -151,10 +150,10 @@ class HomeTrendingSection extends StatelessWidget {
                   style: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 2,
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
               const SizedBox(height: 12),
-              _FeatureRow(Icons.local_shipping_outlined, 'Free shipping over ₹999', context),
-              _FeatureRow(Icons.replay, '30-day returns', context),
-              _FeatureRow(Icons.verified_outlined, 'Premium quality', context),
-              _FeatureRow(Icons.support_agent, '24/7 support', context),
+              _featureRow(Icons.local_shipping_outlined, 'Free shipping over ₹999', context),
+              _featureRow(Icons.replay, '30-day returns', context),
+              _featureRow(Icons.verified_outlined, 'Premium quality', context),
+              _featureRow(Icons.support_agent, '24/7 support', context),
             ],
           ),
         ),
@@ -162,7 +161,7 @@ class HomeTrendingSection extends StatelessWidget {
     );
   }
 
-  Widget _Stat(String val, String label, Color color, BuildContext ctx) => Column(
+  Widget _stat(String val, String label, Color color, BuildContext ctx) => Column(
     children: [
       Text(val, style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w900, color: color)),
       const SizedBox(height: 2),
@@ -170,7 +169,7 @@ class HomeTrendingSection extends StatelessWidget {
     ],
   );
 
-  Widget _TrendItem(String label, String rank, IconData icon, Color color, BuildContext ctx) => Padding(
+  Widget _trendItem(String label, String rank, IconData icon, Color color, BuildContext ctx) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Row(children: [
       Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
@@ -181,7 +180,7 @@ class HomeTrendingSection extends StatelessWidget {
     ]),
   );
 
-  Widget _FeatureRow(IconData icon, String text, BuildContext ctx) => Padding(
+  Widget _featureRow(IconData icon, String text, BuildContext ctx) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(children: [
       Icon(icon, size: 16, color: AppColors.accentBlue),
@@ -286,7 +285,7 @@ class HomeProductGrid extends StatelessWidget {
                   return SizedBox(
                     width: cardW, height: cardH,
                     child: GestureDetector(
-                      onTap: () => DemoNavigation.pushWithTransition(context, ProductDetailScreen(product: p, heroTag: tag), routeName: '/product/${p.slug}'),
+                      onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p, heroTag: tag), settings: RouteSettings(name: '/product/${p.slug}'))),
                       child: Container(
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,

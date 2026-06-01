@@ -4,8 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/product.dart';
 import '../models/category.dart';
+import '../models/banner.dart';
+import '../models/deal.dart';
 import '../services/sanity_service.dart';
-import '../services/demo_data_service.dart';
+import '../services/design_template_service.dart';
 
 /// Enhanced API service that works with both the Next.js backend and Sanity directly.
 /// When the web API is enabled but unreachable, it automatically falls back to Sanity.
@@ -83,6 +85,11 @@ class ApiService {
       return _fetchTaxRateFromSanity();
     }
   }
+
+  // Content endpoints — always served from Sanity CMS
+  Future<List<HomeBanner>> fetchBanners() => SanityService().fetchBanners();
+  Future<List<Deal>> fetchDeals() => SanityService().fetchDeals();
+  Future<List<DesignTemplate>> fetchDesignTemplates() => SanityService().fetchDesignTemplates();
 
   Future<Map<String, String>> _getHeaders() async {
     final headers = {'Content-Type': 'application/json'};
@@ -217,26 +224,20 @@ class ApiService {
   Future<List<Product>> _fetchProductsFromSanity() async {
     final sanityService = SanityService();
     try {
-      final products = await sanityService.fetchProducts();
-      if (products.isNotEmpty) return products;
-      debugPrint('Sanity returned no products — using demo data');
-      return DemoDataService().demoProducts;
+      return await sanityService.fetchProducts();
     } catch (e) {
-      debugPrint('Sanity fetch failed: $e — using demo data');
-      return DemoDataService().demoProducts;
+      debugPrint('Sanity fetch failed: $e');
+      return [];
     }
   }
 
   Future<List<Category>> _fetchCategoriesFromSanity() async {
     final sanityService = SanityService();
     try {
-      final categories = await sanityService.fetchCategories();
-      if (categories.isNotEmpty) return categories;
-      debugPrint('Sanity returned no categories — using demo data');
-      return DemoDataService().demoCategories;
+      return await sanityService.fetchCategories();
     } catch (e) {
-      debugPrint('Sanity fetch failed: $e — using demo data');
-      return DemoDataService().demoCategories;
+      debugPrint('Sanity fetch failed: $e');
+      return [];
     }
   }
 
@@ -245,13 +246,10 @@ class ApiService {
   ) async {
     final sanityService = SanityService();
     try {
-      final products = await sanityService.fetchProductsByCategory(categoryId);
-      if (products.isNotEmpty) return products;
-      debugPrint('Sanity returned no products for category — using demo data');
-      return DemoDataService().getProductsByCategory(categoryId);
+      return await sanityService.fetchProductsByCategory(categoryId);
     } catch (e) {
-      debugPrint('Sanity fetch failed: $e — using demo data');
-      return DemoDataService().getProductsByCategory(categoryId);
+      debugPrint('Sanity fetch failed: $e');
+      return [];
     }
   }
 
@@ -259,25 +257,22 @@ class ApiService {
     try {
       final products = await _fetchProductsFromSanity();
       return products.cast<Product?>().firstWhere(
-        (product) => product?.id == productId,
-        orElse: () => DemoDataService().getProductById(productId),
+        (p) => p?.id == productId,
+        orElse: () => null,
       );
     } catch (e) {
-      debugPrint('Product fetch failed: $e — using demo data');
-      return DemoDataService().getProductById(productId);
+      debugPrint('Product fetch failed: $e');
+      return null;
     }
   }
 
   Future<List<Product>> _fetchFeaturedProductsFromSanity() async {
     final sanityService = SanityService();
     try {
-      final products = await sanityService.fetchFeaturedProducts();
-      if (products.isNotEmpty) return products;
-      debugPrint('Sanity returned no featured products — using demo data');
-      return DemoDataService().featuredProducts;
+      return await sanityService.fetchFeaturedProducts();
     } catch (e) {
-      debugPrint('Sanity fetch failed: $e — using demo data');
-      return DemoDataService().featuredProducts;
+      debugPrint('Sanity fetch failed: $e');
+      return [];
     }
   }
 

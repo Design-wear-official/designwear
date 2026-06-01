@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/custom_design.dart';
+import '../services/sanity_service.dart';
 
 class DesignTemplate {
   final String id;
@@ -49,228 +50,16 @@ class DesignTemplate {
 class DesignTemplateService {
   static const String _customTemplatesKey = 'custom_design_templates';
 
-  // Pre-built templates
-  static final List<DesignTemplate> _builtInTemplates = [
-    DesignTemplate(
-      id: 'vintage_rock',
-      name: 'Vintage Rock',
-      description: 'Classic rock band style with distressed text',
-      category: 'vintage',
-      thumbnailUrl: 'assets/images/templates/vintage_rock.png',
-      tags: ['music', 'vintage', 'rock'],
-      design: CustomDesign(
-        baseColor: '0xFF2C2C2C',
-        elements: [
-          DesignElement(
-            id: 'vintage_text',
-            type: 'text',
-            content: 'ROCK BAND',
-            x: 0,
-            y: -20,
-            size: 32,
-            color: '0xFFFFFFFF',
-            properties: {
-              'fontFamily': 'RockSalt',
-              'bold': true,
-              'shadow': true,
-              'shadowColor': '0xFF000000',
-              'shadowOffset': {'x': 2.0, 'y': 2.0},
-            },
-          ),
-          DesignElement(
-            id: 'vintage_sticker',
-            type: 'sticker',
-            content: '🎸',
-            x: 0,
-            y: 40,
-            size: 60,
-            color: '0xFFFFD700',
-            properties: {},
-          ),
-        ],
-      ),
-    ),
-    DesignTemplate(
-      id: 'minimalist_quote',
-      name: 'Minimalist Quote',
-      description: 'Clean and simple motivational text',
-      category: 'minimalist',
-      thumbnailUrl: 'assets/images/templates/minimalist.png',
-      tags: ['quote', 'minimal', 'clean'],
-      design: CustomDesign(
-        baseColor: '0xFFFFFFFF',
-        elements: [
-          DesignElement(
-            id: 'main_text',
-            type: 'text',
-            content: 'BE YOURSELF',
-            x: 0,
-            y: -10,
-            size: 24,
-            color: '0xFF2C2C2C',
-            properties: {
-              'fontFamily': 'Outfit',
-              'bold': false,
-              'italic': false,
-              'letterSpacing': 2.0,
-            },
-          ),
-          DesignElement(
-            id: 'sub_text',
-            type: 'text',
-            content: 'everyone else is taken',
-            x: 0,
-            y: 20,
-            size: 14,
-            color: '0xFF666666',
-            properties: {'fontFamily': 'Outfit', 'bold': false, 'italic': true},
-          ),
-        ],
-      ),
-    ),
-    DesignTemplate(
-      id: 'sports_team',
-      name: 'Sports Team',
-      description: 'Athletic team style with number and team name',
-      category: 'sports',
-      thumbnailUrl: 'assets/images/templates/sports.png',
-      tags: ['sports', 'team', 'athletic'],
-      design: CustomDesign(
-        baseColor: '0xFF1E3A8A',
-        elements: [
-          DesignElement(
-            id: 'team_name',
-            type: 'text',
-            content: 'CHAMPIONS',
-            x: 0,
-            y: -30,
-            size: 28,
-            color: '0xFFFFFFFF',
-            properties: {
-              'fontFamily': 'Oswald',
-              'bold': true,
-              'letterSpacing': 3.0,
-            },
-          ),
-          DesignElement(
-            id: 'number',
-            type: 'text',
-            content: '23',
-            x: 0,
-            y: 10,
-            size: 72,
-            color: '0xFFFFD700',
-            properties: {
-              'fontFamily': 'Oswald',
-              'bold': true,
-              'shadow': true,
-              'shadowColor': '0xFF000000',
-            },
-          ),
-          DesignElement(
-            id: 'sport_icon',
-            type: 'sticker',
-            content: '⚽',
-            x: 0,
-            y: 80,
-            size: 40,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-    ),
-    DesignTemplate(
-      id: 'urban_street',
-      name: 'Urban Street',
-      description: 'Street art inspired graffiti style',
-      category: 'urban',
-      thumbnailUrl: 'assets/images/templates/urban.png',
-      tags: ['street', 'urban', 'graffiti'],
-      design: CustomDesign(
-        baseColor: '0xFF000000',
-        elements: [
-          DesignElement(
-            id: 'street_text',
-            type: 'text',
-            content: 'STREET ART',
-            x: 0,
-            y: 0,
-            size: 36,
-            color: '0xFFFF6B35',
-            properties: {
-              'fontFamily': 'BungeeShade',
-              'bold': true,
-              'shadow': true,
-              'shadowColor': '0xFFFFD23F',
-              'shadowOffset': {'x': 3.0, 'y': 3.0},
-            },
-          ),
-          DesignElement(
-            id: 'spray_can',
-            type: 'sticker',
-            content: '🎨',
-            x: 60,
-            y: -10,
-            size: 30,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-    ),
-    DesignTemplate(
-      id: 'nature_lover',
-      name: 'Nature Lover',
-      description: 'Earth-friendly design with natural elements',
-      category: 'nature',
-      thumbnailUrl: 'assets/images/templates/nature.png',
-      tags: ['nature', 'eco', 'earth'],
-      design: CustomDesign(
-        baseColor: '0xFF22C55E',
-        elements: [
-          DesignElement(
-            id: 'nature_text',
-            type: 'text',
-            content: 'EARTH LOVER',
-            x: 0,
-            y: -20,
-            size: 26,
-            color: '0xFFFFFFFF',
-            properties: {
-              'fontFamily': 'Pacifico',
-              'bold': false,
-              'italic': false,
-            },
-          ),
-          DesignElement(
-            id: 'tree_icon',
-            type: 'sticker',
-            content: '🌱',
-            x: -40,
-            y: 20,
-            size: 50,
-            color: '0xFF16A34A',
-            properties: {},
-          ),
-          DesignElement(
-            id: 'earth_icon',
-            type: 'sticker',
-            content: '🌍',
-            x: 40,
-            y: 20,
-            size: 50,
-            color: '0xFF3B82F6',
-            properties: {},
-          ),
-        ],
-      ),
-    ),
-  ];
+  // Built-in templates are now managed in Sanity CMS (designTemplate document type).
+  // This list is kept as a local fallback only — populated from Sanity on first fetch.
+  static List<DesignTemplate> _cachedBuiltInTemplates = [];
 
   Future<List<DesignTemplate>> getAllTemplates() async {
+    if (_cachedBuiltInTemplates.isEmpty) {
+      _cachedBuiltInTemplates = await SanityService().fetchDesignTemplates();
+    }
     final customTemplates = await getCustomTemplates();
-    return [..._builtInTemplates, ...customTemplates];
+    return [..._cachedBuiltInTemplates, ...customTemplates];
   }
 
   Future<List<DesignTemplate>> getTemplatesByCategory(String category) async {
@@ -295,8 +84,8 @@ class DesignTemplateService {
 
   DesignTemplate? getTemplateById(String id) {
     try {
-      return _builtInTemplates.firstWhere((template) => template.id == id);
-    } catch (e) {
+      return _cachedBuiltInTemplates.firstWhere((t) => t.id == id);
+    } catch (_) {
       return null;
     }
   }

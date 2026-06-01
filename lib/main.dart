@@ -11,7 +11,6 @@ import 'services/cart_service.dart';
 import 'services/auth_service.dart';
 import 'services/api_service.dart';
 import 'config/app_config.dart';
-import 'config/demo_config.dart';
 import 'presentation/styles/app_theme.dart';
 import 'services/theme_provider.dart';
 import 'data/repositories/product_repository.dart';
@@ -31,9 +30,6 @@ Future<void> mainCommon(Flavor flavor) async {
 
   // Initialize config loader (loads env.json for web)
   await ConfigLoader.init();
-
-  // Initialize demo configuration
-  await DemoConfig().initializeDemoMode();
 
   // Load environment variables from .env (mobile/desktop only).
   // Web uses --dart-define build args or built-in defaults — .env is not

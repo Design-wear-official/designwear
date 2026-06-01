@@ -4,8 +4,6 @@ import '../../presentation/styles/app_colors.dart';
 import '../../services/theme_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/cart_service.dart';
-import '../../services/demo_navigation.dart';
-import '../../presentation/utils/responsive_utils.dart';
 import 'package:provider/provider.dart';
 import '../cart_screen.dart';
 import '../login_screen.dart';
@@ -100,11 +98,10 @@ class HomeAppBar extends StatelessWidget {
               Consumer<AuthService>(
                 builder: (context, auth, _) => _iconBtn(
                   auth.isLoggedIn ? Icons.person_rounded : Icons.person_outline_rounded,
-                  () => DemoNavigation.pushWithTransition(
-                    context,
-                    auth.isLoggedIn ? const ProfileScreen() : const LoginScreen(),
-                    routeName: auth.isLoggedIn ? '/profile' : '/login',
-                  ),
+                  () => Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => auth.isLoggedIn ? const ProfileScreen() : const LoginScreen(),
+                    settings: RouteSettings(name: auth.isLoggedIn ? '/profile' : '/login'),
+                  )),
                   context,
                 ),
               ),
@@ -115,7 +112,7 @@ class HomeAppBar extends StatelessWidget {
                   children: [
                     _iconBtn(
                       Icons.shopping_bag_outlined,
-                      () => DemoNavigation.pushWithTransition(context, const CartScreen(), routeName: '/cart'),
+                      () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CartScreen(), settings: const RouteSettings(name: '/cart'))),
                       context,
                     ),
                     if (cart.itemCount > 0)

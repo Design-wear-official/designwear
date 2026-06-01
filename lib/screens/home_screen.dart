@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../services/demo_navigation.dart';
-import '../services/demo_onboarding.dart';
-import '../config/demo_config.dart';
-import '../config/app_config.dart';
 import '../models/product.dart';
 import '../models/category.dart';
+import '../models/banner.dart';
+import '../models/deal.dart';
+import '../config/app_config.dart';
+import '../services/api_service.dart';
 import '../domain/usecases/product_use_cases.dart';
 import '../presentation/utils/responsive_utils.dart';
 import 'home/home_app_bar.dart';
@@ -29,14 +29,16 @@ class _HomeScreenState extends State<HomeScreen> {
   late GetCategoriesUseCase _getCategoriesUseCase;
   late GetFeaturedProductsUseCase _getFeaturedProductsUseCase;
   late GetProductsUseCase _getProductsUseCase;
+  late final ApiService _apiService;
 
   // ── Futures ───────────────────────────────────────────────────────────────
   late Future<List<Category>> _categoriesFuture;
   late Future<List<Product>> _featuredProductsFuture;
   late Future<List<Product>> _allProductsFuture;
+  late Future<List<Deal>> _dealsFuture;
 
   // ── State ─────────────────────────────────────────────────────────────────
-  bool _showDemoWelcome = true;
+  List<HomeBanner> _banners = HomeBanner.fallbacks;
   int _currentBannerPage = 0;
   int _selectedCategoryIndex = 0;
   String? _selectedCategoryId;
@@ -57,18 +59,20 @@ class _HomeScreenState extends State<HomeScreen> {
     _getCategoriesUseCase = Provider.of<GetCategoriesUseCase>(context, listen: false);
     _getFeaturedProductsUseCase = Provider.of<GetFeaturedProductsUseCase>(context, listen: false);
     _getProductsUseCase = Provider.of<GetProductsUseCase>(context, listen: false);
+    _apiService = WebApiConfig.useWebApi
+        ? ApiService.webApi(WebApiConfig.baseUrl)
+        : ApiService.sanity();
+
     _categoriesFuture = _getCategoriesUseCase();
     _featuredProductsFuture = _getFeaturedProductsUseCase();
     _allProductsFuture = _getProductsUseCase();
+    _dealsFuture = _apiService.fetchDeals();
+    _loadBanners();
 
     _searchFocusNode.addListener(() {
       setState(() => _searchFocused = _searchFocusNode.hasFocus);
     });
     _startBannerAutoScroll();
-
-    if (DemoConfig().isDemoMode) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => DemoOnboarding.showAppIntroduction(context));
-    }
   }
 
   @override
@@ -82,10 +86,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── Helpers ───────────────────────────────────────────────────────────────
 
+  Future<void> _loadBanners() async {
+    final banners = await _apiService.fetchBanners();
+    if (mounted) setState(() => _banners = banners);
+  }
+
   void _startBannerAutoScroll() {
     Future.delayed(const Duration(seconds: 4), () {
-      if (mounted && _bannerPageController.hasClients) {
-        final next = (_currentBannerPage + 1) % HomeConstants.banners.length;
+      if (mounted && _bannerPageController.hasClients && _banners.isNotEmpty) {
+        final next = (_currentBannerPage + 1) % _banners.length;
         _bannerPageController.animateToPage(next,
             duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
         _startBannerAutoScroll();
@@ -107,12 +116,14 @@ class _HomeScreenState extends State<HomeScreen> {
       _categoriesFuture = _getCategoriesUseCase();
       _featuredProductsFuture = _getFeaturedProductsUseCase();
       _allProductsFuture = _getProductsUseCase();
+      _dealsFuture = _apiService.fetchDeals();
     });
+    _loadBanners();
   }
 
   void _onNavTabTap(int i) {
     if (HomeConstants.navTabs[i] == 'Design Studio') {
-      DemoNavigation.pushWithScale(context, const DesignStudioScreen(), routeName: '/design-studio');
+      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DesignStudioScreen(), settings: const RouteSettings(name: '/design-studio')));
     } else {
       setState(() => _selectedCategoryIndex = i);
     }
@@ -180,6 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   hp: hp,
                                   scrollController: _scrollController,
                                   onPageChanged: (i) => setState(() => _currentBannerPage = i),
+                                  banners: _banners,
                                 ),
                                 HomeCategoryIconRow(
                                   isDesktop: isDesktop,
@@ -196,8 +208,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  if (_showDemoWelcome)
-                                    HomeDemoWelcomeBanner(onDismiss: () => setState(() => _showDemoWelcome = false)),
                                   const HomeDesignStudioBanner(),
                                   const HomeTrendingSection(),
                                 ],
@@ -209,8 +219,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     else
                       Column(
                         children: [
-                          if (_showDemoWelcome)
-                            HomeDemoWelcomeBanner(onDismiss: () => setState(() => _showDemoWelcome = false)),
                           HomeBannerCarousel(
                             controller: _bannerPageController,
                             currentPage: _currentBannerPage,
@@ -218,6 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             hp: hp,
                             scrollController: _scrollController,
                             onPageChanged: (i) => setState(() => _currentBannerPage = i),
+                            banners: _banners,
                           ),
                           HomeCategoryIconRow(
                             isDesktop: isDesktop,
@@ -228,7 +237,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                     // Deals
-                    HomeDealsSection(isDesktop: isDesktop, hp: hp),
+                    HomeDealsSection(isDesktop: isDesktop, hp: hp, dealsFuture: _dealsFuture),
 
                     // Categories
                     HomeSectionTitle(title: 'Categories', onSeeAll: () => setState(() => _selectedCategoryId = null)),

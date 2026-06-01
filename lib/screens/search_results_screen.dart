@@ -4,11 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../domain/usecases/product_use_cases.dart';
-import '../services/demo_navigation.dart';
 import '../presentation/styles/app_colors.dart';
 import '../presentation/utils/responsive_utils.dart';
 import '../presentation/widgets/safe_network_image.dart';
-import '../config/app_config.dart';
 import 'product_detail_screen.dart';
 
 enum _SortOption { relevance, priceLowHigh, priceHighLow, newest }
@@ -164,9 +162,6 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
   // ────────────────────────────────────────────────────────────────────────────
 
   Widget _buildTopBar(bool isDark, bool isDesktop, double hp) {
-    final bgColor = isDark ? const Color(0xFF303134) : Colors.white;
-    final double barH = 46;
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: hp, vertical: 12),
       child: Row(
@@ -558,11 +553,10 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
             children: products.map((product) {
               final heroTag = 'search_${product.id}';
               return GestureDetector(
-                onTap: () => DemoNavigation.pushWithTransition(
-                  context,
-                  ProductDetailScreen(product: product, heroTag: heroTag),
-                  routeName: '/product/${product.slug}',
-                ),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => ProductDetailScreen(product: product, heroTag: heroTag),
+                  settings: RouteSettings(name: '/product/${product.slug}'),
+                )),
                 child: SizedBox(
                   width: cardW,
                   height: cardH,

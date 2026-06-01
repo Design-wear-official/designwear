@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../presentation/styles/app_colors.dart';
 import '../../models/product.dart';
 import '../../models/category.dart';
-import '../../services/demo_navigation.dart';
+import '../../models/deal.dart';
 import '../../presentation/utils/responsive_utils.dart';
 import '../../presentation/widgets/safe_network_image.dart';
 import '../product_detail_screen.dart';
@@ -40,7 +40,7 @@ class HomeCategoryIconRow extends StatelessWidget {
             return GestureDetector(
               onTap: () {
                 if (cat['label'] == 'Design') {
-                  DemoNavigation.pushWithScale(context, const DesignStudioScreen(), routeName: '/design-studio');
+                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DesignStudioScreen(), settings: const RouteSettings(name: '/design-studio')));
                 } else {
                   const labelToTab = {'Trending': 6, 'New In': 7, 'Sale': 8, 'T-Shirts': 2, 'Hoodies': 3, 'Polo': 4};
                   final idx = labelToTab[cat['label'] as String];
@@ -89,8 +89,14 @@ class HomeCategoryIconRow extends StatelessWidget {
 class HomeDealsSection extends StatelessWidget {
   final bool isDesktop;
   final double hp;
+  final Future<List<Deal>> dealsFuture;
 
-  const HomeDealsSection({super.key, required this.isDesktop, required this.hp});
+  const HomeDealsSection({
+    super.key,
+    required this.isDesktop,
+    required this.hp,
+    required this.dealsFuture,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -121,11 +127,17 @@ class HomeDealsSection extends StatelessWidget {
         ),
         SizedBox(
           height: isDesktop ? 200 : 180,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: EdgeInsets.symmetric(horizontal: outerPad),
-            itemCount: HomeConstants.dealItems.length,
-            itemBuilder: (context, i) => _DealCard(item: HomeConstants.dealItems[i], isDesktop: isDesktop, isDark: isDark),
+          child: FutureBuilder<List<Deal>>(
+            future: dealsFuture,
+            builder: (context, snapshot) {
+              final deals = snapshot.data ?? Deal.fallbacks;
+              return ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: EdgeInsets.symmetric(horizontal: outerPad),
+                itemCount: deals.length,
+                itemBuilder: (context, i) => _DealCard(deal: deals[i], isDesktop: isDesktop, isDark: isDark),
+              );
+            },
           ),
         ),
       ],
@@ -134,19 +146,19 @@ class HomeDealsSection extends StatelessWidget {
 }
 
 class _DealCard extends StatelessWidget {
-  final Map<String, Object> item;
+  final Deal deal;
   final bool isDesktop;
   final bool isDark;
 
-  const _DealCard({required this.item, required this.isDesktop, required this.isDark});
+  const _DealCard({required this.deal, required this.isDesktop, required this.isDark});
 
   @override
   Widget build(BuildContext context) {
-    final color = item['color'] as Color;
-    final off = item['off'] as int;
-    final sale = item['sale'] as int;
-    final original = item['original'] as int;
-    final label = item['label'] as String;
+    final color = deal.color;
+    final off = deal.discountPercent;
+    final sale = deal.salePrice;
+    final original = deal.originalPrice;
+    final label = deal.label;
 
     return Container(
       width: isDesktop ? 160 : 140,
@@ -375,7 +387,7 @@ class HomeFeaturedProductsRow extends StatelessWidget {
               final p = snapshot.data![i];
               final tag = 'featured_${p.id}';
               return GestureDetector(
-                onTap: () => DemoNavigation.pushWithTransition(context, ProductDetailScreen(product: p, heroTag: tag), routeName: '/product/${p.slug}'),
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p, heroTag: tag), settings: RouteSettings(name: '/product/${p.slug}'))),
                 child: Container(
                   width: cardW,
                   margin: const EdgeInsets.only(right: 14),

@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../presentation/styles/app_colors.dart';
-import '../../services/demo_navigation.dart';
-import '../../presentation/utils/responsive_utils.dart';
+import '../../models/banner.dart';
 import '../design_studio_screen.dart';
-import 'home_constants.dart';
 
 class HomeBannerCarousel extends StatelessWidget {
   final PageController controller;
@@ -14,6 +12,7 @@ class HomeBannerCarousel extends StatelessWidget {
   final double hp;
   final ScrollController scrollController;
   final ValueChanged<int> onPageChanged;
+  final List<HomeBanner> banners;
 
   const HomeBannerCarousel({
     super.key,
@@ -23,6 +22,7 @@ class HomeBannerCarousel extends StatelessWidget {
     required this.hp,
     required this.scrollController,
     required this.onPageChanged,
+    required this.banners,
   });
 
   @override
@@ -42,9 +42,9 @@ class HomeBannerCarousel extends StatelessWidget {
             child: PageView.builder(
               controller: controller,
               onPageChanged: onPageChanged,
-              itemCount: HomeConstants.banners.length,
+              itemCount: banners.length,
               itemBuilder: (ctx, i) => _BannerSlide(
-                banner: HomeConstants.banners[i],
+                banner: banners[i],
                 isDesktop: isDesktop,
                 scrollController: scrollController,
               ),
@@ -55,7 +55,7 @@ class HomeBannerCarousel extends StatelessWidget {
         // Dot indicators
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(HomeConstants.banners.length, (i) {
+          children: List.generate(banners.length, (i) {
             final active = currentPage == i;
             return AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -77,7 +77,7 @@ class HomeBannerCarousel extends StatelessWidget {
 }
 
 class _BannerSlide extends StatelessWidget {
-  final Map<String, Object> banner;
+  final HomeBanner banner;
   final bool isDesktop;
   final ScrollController scrollController;
 
@@ -88,14 +88,17 @@ class _BannerSlide extends StatelessWidget {
   });
 
   Color get _ctaColor {
-    if (banner['ctaColor'] == 'blue') return AppColors.accentBlue;
-    if (banner['ctaColor'] == 'orange') return Colors.orange;
+    if (banner.ctaColor == 'blue') return AppColors.accentBlue;
+    if (banner.ctaColor == 'orange') return Colors.orange;
     return AppColors.purple;
   }
 
   void _onCtaTap(BuildContext context) {
-    if (banner['ctaColor'] == 'blue') {
-      DemoNavigation.pushWithScale(context, const DesignStudioScreen(), routeName: '/design-studio');
+    if (banner.ctaAction == 'design') {
+      Navigator.of(context).push(MaterialPageRoute(
+        builder: (_) => const DesignStudioScreen(),
+        settings: const RouteSettings(name: '/design-studio'),
+      ));
     } else {
       scrollController.animateTo(
         scrollController.position.maxScrollExtent * 0.35,
@@ -111,7 +114,7 @@ class _BannerSlide extends StatelessWidget {
       fit: StackFit.expand,
       children: [
         CachedNetworkImage(
-          imageUrl: banner['image'] as String,
+          imageUrl: banner.imageUrl,
           fit: BoxFit.cover,
           errorWidget: (_, __, ___) => Container(color: AppColors.backgroundLight),
           placeholder: (_, __) => Container(color: AppColors.backgroundLight),
@@ -132,25 +135,18 @@ class _BannerSlide extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              // Badge
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(color: _ctaColor.withOpacity(0.85), borderRadius: BorderRadius.circular(20)),
-                child: Text(
-                  banner['badge'] as String,
-                  style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Colors.white),
-                ),
+                child: Text(banner.badge,
+                    style: GoogleFonts.outfit(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Colors.white)),
               ),
               SizedBox(height: isDesktop ? 14 : 8),
-              Text(
-                banner['title'] as String,
-                style: GoogleFonts.outfit(fontSize: isDesktop ? 44 : 26, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1),
-              ),
+              Text(banner.title,
+                  style: GoogleFonts.outfit(fontSize: isDesktop ? 44 : 26, fontWeight: FontWeight.w900, color: Colors.white, height: 1.1)),
               SizedBox(height: isDesktop ? 10 : 6),
-              Text(
-                banner['sub'] as String,
-                style: GoogleFonts.outfit(fontSize: isDesktop ? 15 : 12, color: Colors.white.withOpacity(0.75)),
-              ),
+              Text(banner.subtitle,
+                  style: GoogleFonts.outfit(fontSize: isDesktop ? 15 : 12, color: Colors.white.withOpacity(0.75))),
               SizedBox(height: isDesktop ? 24 : 14),
               Row(
                 children: [
@@ -163,10 +159,8 @@ class _BannerSlide extends StatelessWidget {
                         borderRadius: BorderRadius.circular(30),
                         boxShadow: [BoxShadow(color: _ctaColor.withOpacity(0.45), blurRadius: 14, offset: const Offset(0, 5))],
                       ),
-                      child: Text(
-                        banner['cta'] as String,
-                        style: GoogleFonts.outfit(fontSize: isDesktop ? 14 : 12, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Colors.white),
-                      ),
+                      child: Text(banner.ctaLabel,
+                          style: GoogleFonts.outfit(fontSize: isDesktop ? 14 : 12, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: Colors.white)),
                     ),
                   ),
                   if (isDesktop) ...[

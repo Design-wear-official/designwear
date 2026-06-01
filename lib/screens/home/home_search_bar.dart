@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../presentation/styles/app_colors.dart';
-import '../../presentation/utils/responsive_utils.dart';
 
 /// Reusable premium search bar used in the home app bar.
 class HomeSearchBar extends StatelessWidget {
