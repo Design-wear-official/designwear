@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Device type enumeration for responsive design
 enum DeviceType { mobile, tablet, desktop }
@@ -24,11 +25,12 @@ class ResponsiveBreakpoints {
   static const double phoneLarge = 412;
 }
 
-/// Core responsive utilities for device detection and responsive values
+/// Core responsive utilities backed by flutter_screenutil (390×844 canvas).
+/// Use the `.w`, `.h`, `.sp`, `.r` num extensions directly for new code.
 class ResponsiveUtils {
   /// Get the current device type based on screen width
   static DeviceType getDeviceType(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
+    final width = ScreenUtil().screenWidth;
 
     if (width < ResponsiveBreakpoints.tablet) {
       return DeviceType.mobile;
@@ -41,7 +43,7 @@ class ResponsiveUtils {
 
   /// Get phone size sub-type (only meaningful on mobile)
   static PhoneSize getPhoneSize(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
+    final width = ScreenUtil().screenWidth;
     if (width < ResponsiveBreakpoints.phoneSmall) return PhoneSize.small;
     if (width < ResponsiveBreakpoints.phoneMedium) return PhoneSize.medium;
     if (width < ResponsiveBreakpoints.phoneLarge) return PhoneSize.large;
@@ -49,19 +51,16 @@ class ResponsiveUtils {
   }
 
   /// Check if current device is mobile
-  static bool isMobile(BuildContext context) {
-    return getDeviceType(context) == DeviceType.mobile;
-  }
+  static bool isMobile(BuildContext context) =>
+      getDeviceType(context) == DeviceType.mobile;
 
   /// Check if current device is tablet
-  static bool isTablet(BuildContext context) {
-    return getDeviceType(context) == DeviceType.tablet;
-  }
+  static bool isTablet(BuildContext context) =>
+      getDeviceType(context) == DeviceType.tablet;
 
   /// Check if current device is desktop
-  static bool isDesktop(BuildContext context) {
-    return getDeviceType(context) == DeviceType.desktop;
-  }
+  static bool isDesktop(BuildContext context) =>
+      getDeviceType(context) == DeviceType.desktop;
 
   /// Get responsive value based on device type
   static T getResponsiveValue<T>(
@@ -70,9 +69,7 @@ class ResponsiveUtils {
     T? tablet,
     T? desktop,
   }) {
-    final deviceType = getDeviceType(context);
-
-    switch (deviceType) {
+    switch (getDeviceType(context)) {
       case DeviceType.mobile:
         return mobile;
       case DeviceType.tablet:
@@ -108,326 +105,48 @@ class ResponsiveUtils {
     }
   }
 
-  /// Get screen width
-  static double getScreenWidth(BuildContext context) {
-    return MediaQuery.sizeOf(context).width;
-  }
+  /// Screen width in logical pixels (from ScreenUtil)
+  static double getScreenWidth(BuildContext context) =>
+      ScreenUtil().screenWidth;
 
-  /// Get screen height
-  static double getScreenHeight(BuildContext context) {
-    return MediaQuery.sizeOf(context).height;
-  }
+  /// Screen height in logical pixels (from ScreenUtil)
+  static double getScreenHeight(BuildContext context) =>
+      ScreenUtil().screenHeight;
 
   /// Check if screen width is greater than a specific breakpoint
-  static bool isWidthGreaterThan(BuildContext context, double breakpoint) {
-    return getScreenWidth(context) > breakpoint;
-  }
+  static bool isWidthGreaterThan(BuildContext context, double breakpoint) =>
+      ScreenUtil().screenWidth > breakpoint;
 
   /// Check if screen width is less than a specific breakpoint
-  static bool isWidthLessThan(BuildContext context, double breakpoint) {
-    return getScreenWidth(context) < breakpoint;
-  }
+  static bool isWidthLessThan(BuildContext context, double breakpoint) =>
+      ScreenUtil().screenWidth < breakpoint;
 }
 
-/// Concrete size values for common UI elements — use these instead of
-/// hardcoded pixel heights to prevent overflow/overlap across phone sizes.
+/// Convenience class for common responsive sizes using ScreenUtil scaling.
+/// All values are scaled relative to the 390×844 design canvas.
 class ResponsiveSizes {
-  /// Hero/banner section height
-  /// Small phone: 180, Medium: 210, Large: 240, XLarge: 260, Tablet: 320
-  static double heroHeight(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 180,
-      medium: 210,
-      large: 240,
-      xlarge: 260,
-      tablet: 320,
-    );
-  }
+  static EdgeInsets contentPadding(BuildContext context) =>
+      EdgeInsets.all(16.w);
 
-  /// Design Studio / secondary banner height
-  /// Small: 110, Medium: 120, Large: 130, XLarge: 140, Tablet: 180
-  static double bannerHeight(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 110,
-      medium: 120,
-      large: 130,
-      xlarge: 140,
-      tablet: 180,
-    );
-  }
+  static EdgeInsets pagePadding(BuildContext context) =>
+      EdgeInsets.symmetric(horizontal: 16.w, vertical: 20.h);
 
-  /// Product carousel card height
-  /// Small: 300, Medium: 340, Large: 370, XLarge: 400, Tablet: 480
-  static double carouselHeight(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 300,
-      medium: 340,
-      large: 370,
-      xlarge: 400,
-      tablet: 480,
-    );
-  }
+  static EdgeInsets horizontalPaddingOnly(BuildContext context) =>
+      EdgeInsets.symmetric(horizontal: 16.w);
 
-  /// Product card height (grid items)
-  /// Small: 220, Medium: 250, Large: 270, XLarge: 290, Tablet: 340
-  static double cardHeight(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 220,
-      medium: 250,
-      large: 270,
-      xlarge: 290,
-      tablet: 340,
-    );
-  }
+  static double horizontalPadding(BuildContext context) => 16.w;
 
-  /// Horizontal screen padding
-  /// Small: 12, Medium: 16, Large: 18, XLarge: 20, Tablet: 32
-  static double horizontalPadding(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 12,
-      medium: 16,
-      large: 18,
-      xlarge: 20,
-      tablet: 32,
-    );
-  }
+  static double verticalPadding(BuildContext context) => 12.h;
 
-  /// Vertical section padding
-  /// Small: 8, Medium: 10, Large: 12, XLarge: 12, Tablet: 16
-  static double verticalPadding(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 8,
-      medium: 10,
-      large: 12,
-      xlarge: 12,
-      tablet: 16,
-    );
-  }
+  static double buttonPaddingVertical(BuildContext context) => 14.h;
 
-  /// Page EdgeInsets (horizontal + vertical combined)
-  static EdgeInsets pagePadding(BuildContext context) {
-    final h = horizontalPadding(context);
-    final v = verticalPadding(context);
-    return EdgeInsets.symmetric(horizontal: h, vertical: v);
-  }
+  static double cardBorderRadius(BuildContext context) => 12.r;
 
-  /// Standard content padding (inside cards / sections)
-  static EdgeInsets contentPadding(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<EdgeInsets>(
-      context,
-      small: const EdgeInsets.all(12),
-      medium: const EdgeInsets.all(14),
-      large: const EdgeInsets.all(16),
-      xlarge: const EdgeInsets.all(20),
-      tablet: const EdgeInsets.all(28),
-    );
-  }
+  static double iconSize(BuildContext context) => 24.w;
 
-  /// Button vertical padding
-  static double buttonPaddingVertical(BuildContext context) {
-    return ResponsiveUtils.getPhoneValue<double>(
-      context,
-      small: 12,
-      medium: 14,
-      large: 15,
-      xlarge: 16,
-      tablet: 18,
-    );
-  }
-}
+  /// Height for promotional banners (sidebar / mobile)
+  static double bannerHeight(BuildContext context) => 160.h;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RESPONSIVE TEXT STYLES
-// Context-aware font sizes that scale across phone breakpoints.
-// Use these instead of AppTextStyles.* when you need phone-adaptive sizes.
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Responsive text styles — mirrors AppTextStyles but scales per phone size.
-/// All methods return a [TextStyle] using the Google Fonts Outfit family.
-class ResponsiveTextStyles {
-  ResponsiveTextStyles._();
-
-  // Display / Hero
-  static TextStyle displayLarge(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 36, medium: 40, large: 44, xlarge: 48, tablet: 56,
-    ),
-    fontWeight: FontWeight.bold,
-    height: 1.2,
-  );
-
-  static TextStyle displaySmall(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 24, medium: 28, large: 30, xlarge: 32, tablet: 38,
-    ),
-    fontWeight: FontWeight.bold,
-    height: 1.2,
-  );
-
-  // Headings
-  static TextStyle h1(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 22, medium: 24, large: 26, xlarge: 28, tablet: 34,
-    ),
-    fontWeight: FontWeight.bold,
-    height: 1.3,
-  );
-
-  static TextStyle h2(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 19, medium: 21, large: 22, xlarge: 24, tablet: 28,
-    ),
-    fontWeight: FontWeight.bold,
-    height: 1.3,
-  );
-
-  static TextStyle h3(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 16, medium: 17, large: 18, xlarge: 20, tablet: 24,
-    ),
-    fontWeight: FontWeight.w600,
-    height: 1.4,
-  );
-
-  static TextStyle h4(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 14, medium: 15, large: 16, xlarge: 18, tablet: 22,
-    ),
-    fontWeight: FontWeight.w600,
-    height: 1.4,
-  );
-
-  // Body
-  static TextStyle bodyLarge(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 15, medium: 16, large: 17, xlarge: 18, tablet: 20,
-    ),
-    fontWeight: FontWeight.normal,
-    height: 1.6,
-  );
-
-  static TextStyle bodyMedium(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 13, medium: 14, large: 15, xlarge: 16, tablet: 18,
-    ),
-    fontWeight: FontWeight.normal,
-    height: 1.6,
-  );
-
-  static TextStyle bodySmall(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 11, medium: 12, large: 13, xlarge: 14, tablet: 16,
-    ),
-    fontWeight: FontWeight.normal,
-    height: 1.6,
-  );
-
-  // Price
-  static TextStyle priceLarge(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 19, medium: 20, large: 22, xlarge: 24, tablet: 28,
-    ),
-    fontWeight: FontWeight.bold,
-  );
-
-  static TextStyle priceSmall(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 14, medium: 15, large: 16, xlarge: 18, tablet: 20,
-    ),
-    fontWeight: FontWeight.bold,
-  );
-
-  // Button label
-  static TextStyle button(BuildContext context) => TextStyle(
-    fontFamily: 'Outfit',
-    fontSize: ResponsiveUtils.getPhoneValue<double>(
-      context, small: 13, medium: 14, large: 15, xlarge: 16, tablet: 18,
-    ),
-    fontWeight: FontWeight.bold,
-    letterSpacing: 1.0,
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// RESPONSIVE DIMENSIONS
-// Context-aware replacements for AppDimensions layout-critical constants.
-// Use these for padding/spacing values that need to shrink on small phones.
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Context-aware spacing and dimension helpers.
-/// Mirrors the API of [AppDimensions] but adapts to phone screen size.
-class ResponsiveDimensions {
-  ResponsiveDimensions._();
-
-  // Spacing scale
-  static double spacingXs(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 3, medium: 4, large: 4, xlarge: 4, tablet: 6,
-      );
-
-  static double spacingSm(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 6, medium: 8, large: 8, xlarge: 8, tablet: 12,
-      );
-
-  static double spacingMd(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 12, medium: 14, large: 16, xlarge: 16, tablet: 24,
-      );
-
-  static double spacingLg(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 18, medium: 20, large: 22, xlarge: 24, tablet: 32,
-      );
-
-  static double spacingXl(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 24, medium: 28, large: 30, xlarge: 32, tablet: 48,
-      );
-
-  // Button
-  static EdgeInsets buttonPadding(BuildContext context) {
-    final v = ResponsiveSizes.buttonPaddingVertical(context);
-    final h = ResponsiveSizes.horizontalPadding(context);
-    return EdgeInsets.symmetric(horizontal: h, vertical: v);
-  }
-
-  static double buttonHeight(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 44, medium: 48, large: 52, xlarge: 56, tablet: 60,
-      );
-
-  // Input field padding
-  static EdgeInsets inputPadding(BuildContext context) {
-    final h = ResponsiveSizes.horizontalPadding(context);
-    return EdgeInsets.symmetric(horizontal: h, vertical: spacingSm(context));
-  }
-
-  // Icon sizes
-  static double iconMd(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 20, medium: 22, large: 24, xlarge: 24, tablet: 28,
-      );
-
-  static double iconLg(BuildContext context) =>
-      ResponsiveUtils.getPhoneValue<double>(
-        context, small: 26, medium: 28, large: 30, xlarge: 32, tablet: 40,
-      );
+  /// Height for image carousels (virtual try-on, product gallery)
+  static double carouselHeight(BuildContext context) => 260.h;
 }

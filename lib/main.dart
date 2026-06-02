@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -126,10 +127,15 @@ class DesignWearApp extends StatelessWidget {
             darkTheme: AppTheme.darkTheme,
             themeMode: themeProvider.themeMode,
             builder: (context, child) {
-              // Fill full viewport with scaffold bg color
+              // Initialise ScreenUtil once per build with 390×844 design canvas
+              ScreenUtil.init(
+                context,
+                designSize: const Size(390, 844),
+                minTextAdapt: true,
+                splitScreenMode: true,
+              );
               final bg = Theme.of(context).scaffoldBackgroundColor;
               final screenW = MediaQuery.sizeOf(context).width;
-              // If screen is very wide use full width; just cap at 1440 for ultra-wide
               final maxW = screenW > 1440 ? 1440.0 : double.infinity;
               return DecoratedBox(
                 decoration: BoxDecoration(color: bg),
