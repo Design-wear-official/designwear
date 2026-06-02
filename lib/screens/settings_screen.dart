@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../services/theme_provider.dart';
-import '../config/app_constants.dart';
-import '../presentation/utils/responsive_utils.dart';
-import '../presentation/styles/app_colors.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/config/config.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});

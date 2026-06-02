@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/order_service.dart';
-import '../presentation/utils/responsive_utils.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/utils/responsive_utils.dart';
 import 'package:intl/intl.dart';
 
 class MyOrdersScreen extends StatefulWidget {
@@ -136,11 +136,15 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Order #$orderId',
-                  style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                Flexible(
+                  child: Text(
+                    'Order #$orderId',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
                 Container(

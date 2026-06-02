@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../utils/responsive_utils.dart';
+import 'package:designwear/presentation/utils/responsive_utils.dart';
 
 /// Responsive typography utilities that scale based on device type
 class ResponsiveTypography {

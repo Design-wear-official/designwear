@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../../presentation/styles/app_colors.dart';
-import '../../services/auth_service.dart';
-import '../cart_screen.dart';
-import '../login_screen.dart';
-import '../profile_screen.dart';
-import '../search_results_screen.dart';
-import '../design_studio_screen.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/screens/cart_screen.dart';
+import 'package:designwear/screens/login_screen.dart';
+import 'package:designwear/screens/profile_screen.dart';
+import 'package:designwear/screens/search_results_screen.dart';
+import 'package:designwear/screens/design_studio_screen.dart';
 
 /// Mobile bottom navigation bar.
 class HomeBottomNav extends StatelessWidget {

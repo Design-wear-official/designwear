@@ -1,5 +1,4 @@
-import '../../models/product.dart';
-import '../../models/category.dart';
+import 'package:designwear/models/models.dart';
 
 abstract class ProductRepository {
   Future<List<Product>> fetchProducts();

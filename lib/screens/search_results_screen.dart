@@ -2,11 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../models/product.dart';
-import '../domain/usecases/product_use_cases.dart';
-import '../presentation/styles/app_colors.dart';
-import '../presentation/utils/responsive_utils.dart';
-import '../presentation/widgets/safe_network_image.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/domain/usecases/product_use_cases.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
 import 'product_detail_screen.dart';
 
 enum _SortOption { relevance, priceLowHigh, priceHighLow, newest }

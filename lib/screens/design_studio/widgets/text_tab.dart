@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../models/custom_design.dart';
-import '../../../services/design_template_service.dart';
-import '../../../presentation/styles/app_colors.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 import 'text_controls_widget.dart';
 import 'enhanced_text_editor.dart';
 

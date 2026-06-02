@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/cart_service.dart';
-import '../services/auth_service.dart';
-import '../services/order_service.dart';
-import '../services/razorpay_service.dart';
+import 'package:designwear/services/services.dart';
 import 'login_screen.dart';
 import 'my_orders_screen.dart';
-import '../presentation/utils/responsive_utils.dart';
+import 'package:designwear/presentation/utils/responsive_utils.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -265,6 +262,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 Expanded(
                                   child: Text(
                                     '${item.product.title} x${item.quantity}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.outfit(fontSize: 14),
                                   ),
                                 ),

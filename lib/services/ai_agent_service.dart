@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
-import '../models/custom_design.dart';
-import '../config/app_config.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/config/config.dart';
 
 class AIAgentService {
   String get _baseUrl =>

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../services/design_template_service.dart';
-import '../../../presentation/styles/app_colors.dart';
-import '../design_studio_utils.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/screens/design_studio/design_studio_utils.dart';
 
 class EnhancedTextEditor extends StatefulWidget {
   final DesignTemplateService templateService;

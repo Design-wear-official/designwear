@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/custom_design.dart';
+import 'package:designwear/models/models.dart';
 
 class DesignStudioUtils {
   static TextStyle getTextStyle(

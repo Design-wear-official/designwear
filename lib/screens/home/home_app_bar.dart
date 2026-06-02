@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../presentation/styles/app_colors.dart';
-import '../../services/theme_provider.dart';
-import '../../services/auth_service.dart';
-import '../../services/cart_service.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/services/services.dart';
 import 'package:provider/provider.dart';
-import '../cart_screen.dart';
-import '../login_screen.dart';
-import '../profile_screen.dart';
+import 'package:designwear/screens/cart_screen.dart';
+import 'package:designwear/screens/login_screen.dart';
+import 'package:designwear/screens/profile_screen.dart';
 import 'home_search_bar.dart';
 
 class HomeAppBar extends StatelessWidget {

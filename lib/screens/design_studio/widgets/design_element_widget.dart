@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../models/custom_design.dart';
-import '../design_studio_utils.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/screens/design_studio/design_studio_utils.dart';
 
 class DesignElementWidget extends StatelessWidget {
   final DesignElement element;

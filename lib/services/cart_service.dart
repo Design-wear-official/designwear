@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '../models/cart.dart';
-import '../models/product.dart';
-import '../models/custom_design.dart';
-import '../domain/usecases/product_use_cases.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/domain/usecases/product_use_cases.dart';
 
 class CartService extends ChangeNotifier {
   final Cart _cart = Cart();

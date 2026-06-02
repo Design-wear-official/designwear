@@ -1,6 +1,5 @@
-import '../../models/product.dart';
-import '../../models/category.dart';
-import '../../services/api_service.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/api_service.dart';
 import 'product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {

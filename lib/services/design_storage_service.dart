@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/custom_design.dart';
+import 'package:designwear/models/models.dart';
 
 class SavedDesign {
   final String id;

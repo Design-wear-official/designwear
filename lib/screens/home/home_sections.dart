@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../presentation/styles/app_colors.dart';
-import '../../models/product.dart';
-import '../../models/category.dart';
-import '../../models/deal.dart';
-import '../../presentation/utils/responsive_utils.dart';
-import '../../presentation/widgets/safe_network_image.dart';
-import '../product_detail_screen.dart';
-import '../design_studio_screen.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
+import 'package:designwear/screens/product_detail_screen.dart';
+import 'package:designwear/screens/design_studio_screen.dart';
 import 'home_constants.dart';
 
 // ── Category icon quick-access row ──────────────────────────────────────────

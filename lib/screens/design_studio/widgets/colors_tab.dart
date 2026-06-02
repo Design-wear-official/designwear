@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../models/custom_design.dart';
-import '../../../presentation/styles/app_colors.dart';
-import '../design_studio_constants.dart';
-import '../design_studio_utils.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/screens/design_studio/design_studio_constants.dart';
+import 'package:designwear/screens/design_studio/design_studio_utils.dart';
 
 class ColorsTab extends StatelessWidget {
   final CustomDesign design;

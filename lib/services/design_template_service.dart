@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/custom_design.dart';
-import '../services/sanity_service.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/sanity_service.dart';
 
 class DesignTemplate {
   final String id;

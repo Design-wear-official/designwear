@@ -1,23 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../models/custom_design.dart';
-import '../models/product.dart';
-import '../services/cart_service.dart';
-import '../services/design_template_service.dart';
-import '../services/design_history_service.dart';
-import '../services/design_storage_service.dart';
-import '../services/design_studio_demo_service.dart';
-import '../presentation/styles/app_colors.dart';
-import '../presentation/utils/responsive_utils.dart';
-import '../presentation/widgets/agent_chat_widget.dart';
-import 'design_studio/design_canvas.dart';
-import 'design_studio/tools_panel.dart';
-import 'design_studio/templates_panel.dart';
-import 'design_studio/layers_panel.dart';
-import 'design_studio/design_studio_constants.dart';
-import 'design_studio/design_studio_utils.dart';
-import 'design_studio/widgets/save_design_dialog.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
+import 'package:designwear/screens/design_studio/design_studio.dart';
+import 'package:designwear/screens/design_studio/widgets/widgets.dart';
 
 class DesignStudioScreen extends StatefulWidget {
   const DesignStudioScreen({super.key});

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import '../styles/app_colors.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 
 class AIImageAttachmentWidget extends StatefulWidget {
   final Function(List<File>) onImagesSelected;

@@ -1,4 +1,4 @@
-import '../models/custom_design.dart';
+import 'package:designwear/models/models.dart';
 
 class DesignHistoryService {
   final List<CustomDesign> _history = [];

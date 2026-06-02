@@ -1,19 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/product.dart';
-import '../models/category.dart';
-import '../models/banner.dart';
-import '../models/deal.dart';
-import '../config/app_config.dart';
-import '../services/api_service.dart';
-import '../domain/usecases/product_use_cases.dart';
-import '../presentation/utils/responsive_utils.dart';
-import 'home/home_app_bar.dart';
-import 'home/home_banner_carousel.dart';
-import 'home/home_constants.dart';
-import 'home/home_nav_widgets.dart';
-import 'home/home_sections.dart';
-import 'home/home_sidebar_widgets.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/config/config.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/domain/usecases/product_use_cases.dart';
+import 'package:designwear/presentation/utils/responsive_utils.dart';
+import 'package:designwear/screens/home/home.dart';
 import 'search_results_screen.dart';
 import 'design_studio_screen.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../presentation/styles/app_colors.dart';
-import '../../models/banner.dart';
-import '../design_studio_screen.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/screens/design_studio_screen.dart';
 
 class HomeBannerCarousel extends StatelessWidget {
   final PageController controller;

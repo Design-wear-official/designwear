@@ -2,12 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../presentation/widgets/safe_network_image.dart';
-import '../presentation/styles/app_colors.dart';
-import '../services/cart_service.dart';
-import '../models/cart.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/models/models.dart';
 import 'checkout_screen.dart';
-import '../presentation/utils/responsive_utils.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});

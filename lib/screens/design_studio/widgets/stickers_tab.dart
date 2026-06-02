@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../design_studio_constants.dart';
+import 'package:designwear/screens/design_studio/design_studio_constants.dart';
 
 class StickersTab extends StatelessWidget {
   final Function(String) onAddStickerElement;

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../services/auth_service.dart';
-import '../presentation/styles/app_colors.dart';
-import '../presentation/utils/responsive_utils.dart';
-import '../presentation/patterns/responsive_typography_pattern.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/presentation/patterns/responsive_typography_pattern.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

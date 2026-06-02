@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/custom_design.dart';
-import '../../services/ai_agent_service.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/services.dart';
 import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {

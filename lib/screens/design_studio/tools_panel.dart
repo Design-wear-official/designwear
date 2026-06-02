@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../models/custom_design.dart';
-import '../../services/design_template_service.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/services.dart';
 import 'design_studio_constants.dart';
 import 'widgets/colors_tab.dart';
 import 'widgets/text_tab.dart';

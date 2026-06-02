@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../services/auth_service.dart';
-import '../presentation/utils/responsive_utils.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/utils/responsive_utils.dart';
 
 class ShippingAddressesScreen extends StatelessWidget {
   const ShippingAddressesScreen({super.key});

@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../presentation/styles/app_colors.dart';
-import '../../models/product.dart';
-import '../../presentation/utils/responsive_utils.dart';
-import '../../presentation/widgets/safe_network_image.dart';
-import '../product_detail_screen.dart';
-import '../design_studio_screen.dart';
+import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
+import 'package:designwear/screens/product_detail_screen.dart';
+import 'package:designwear/screens/design_studio_screen.dart';
 
 // ── Design Studio banner ─────────────────────────────────────────────────────
 
@@ -175,8 +174,8 @@ class HomeTrendingSection extends StatelessWidget {
       Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
           child: Icon(icon, color: color, size: 18)),
       const SizedBox(width: 12),
-      Expanded(child: Text(label, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface))),
-      Text(rank, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
+      Expanded(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface))),
+      Text(rank, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w700, color: color)),
     ]),
   );
 
@@ -185,7 +184,7 @@ class HomeTrendingSection extends StatelessWidget {
     child: Row(children: [
       Icon(icon, size: 16, color: AppColors.accentBlue),
       const SizedBox(width: 10),
-      Text(text, style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.75))),
+      Expanded(child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontSize: 12, color: Theme.of(ctx).colorScheme.onSurface.withOpacity(0.75)))),
     ]),
   );
 }

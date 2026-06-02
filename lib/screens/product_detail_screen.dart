@@ -3,12 +3,11 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import '../presentation/widgets/safe_network_image.dart';
-import '../models/product.dart';
-import '../services/cart_service.dart';
-import '../presentation/utils/responsive_utils.dart';
-import '../presentation/patterns/responsive_typography_pattern.dart';
-import '../presentation/styles/app_colors.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/patterns/responsive_typography_pattern.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 import 'cart_screen.dart';
 import 'virtual_tryon_screen.dart';
 
@@ -59,9 +58,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 width: double.infinity,
                 height: ResponsiveUtils.getResponsiveValue<double>(
                   context,
-                  mobile: MediaQuery.of(context).size.height * 0.50,
-                  tablet: MediaQuery.of(context).size.height * 0.55,
-                  desktop: MediaQuery.of(context).size.height * 0.60,
+                  mobile: MediaQuery.sizeOf(context).height * 0.50,
+                  tablet: MediaQuery.sizeOf(context).height * 0.55,
+                  desktop: MediaQuery.sizeOf(context).height * 0.60,
                 ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surface,

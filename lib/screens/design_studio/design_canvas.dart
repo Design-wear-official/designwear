@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../models/custom_design.dart';
+import 'package:designwear/models/models.dart';
 import 'design_studio_constants.dart';
 import 'design_studio_utils.dart';
 import 'widgets/draggable_element_widget.dart';

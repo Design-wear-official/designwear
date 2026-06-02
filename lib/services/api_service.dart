@@ -2,12 +2,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/product.dart';
-import '../models/category.dart';
-import '../models/banner.dart';
-import '../models/deal.dart';
-import '../services/sanity_service.dart';
-import '../services/design_template_service.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/sanity_service.dart';
+import 'package:designwear/services/design_template_service.dart';
 
 /// Enhanced API service that works with both the Next.js backend and Sanity directly.
 /// When the web API is enabled but unreachable, it automatically falls back to Sanity.

@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_sanity/flutter_sanity.dart';
-import '../models/product.dart';
-import '../models/category.dart';
-import '../models/banner.dart';
-import '../models/deal.dart';
-import '../services/design_template_service.dart';
-import '../config/app_config.dart';
+import 'package:designwear/models/models.dart';
+import 'package:designwear/services/design_template_service.dart';
+import 'package:designwear/config/config.dart';
 
 class SanityService {
   final SanityClient client = SanityClient(

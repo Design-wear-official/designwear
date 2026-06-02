@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import '../config/app_config.dart';
+import 'package:designwear/config/config.dart';
 import 'cart_service.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 

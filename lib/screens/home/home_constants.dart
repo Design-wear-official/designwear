@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../presentation/styles/app_colors.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 
 // banners and dealItems are now managed in Sanity CMS.
 // See lib/models/banner.dart and lib/models/deal.dart for fallbacks.

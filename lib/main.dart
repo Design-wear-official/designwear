@@ -7,12 +7,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
-import 'services/cart_service.dart';
-import 'services/auth_service.dart';
-import 'services/api_service.dart';
-import 'config/app_config.dart';
-import 'presentation/styles/app_theme.dart';
-import 'services/theme_provider.dart';
+import 'package:designwear/services/services.dart';
+import 'package:designwear/config/config.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 import 'data/repositories/product_repository.dart';
 import 'data/repositories/product_repository_impl.dart';
 import 'domain/usecases/product_use_cases.dart';
@@ -131,7 +128,7 @@ class DesignWearApp extends StatelessWidget {
             builder: (context, child) {
               // Fill full viewport with scaffold bg color
               final bg = Theme.of(context).scaffoldBackgroundColor;
-              final screenW = MediaQuery.of(context).size.width;
+              final screenW = MediaQuery.sizeOf(context).width;
               // If screen is very wide use full width; just cap at 1440 for ultra-wide
               final maxW = screenW > 1440 ? 1440.0 : double.infinity;
               return DecoratedBox(

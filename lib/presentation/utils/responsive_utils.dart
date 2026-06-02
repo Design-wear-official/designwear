@@ -28,7 +28,7 @@ class ResponsiveBreakpoints {
 class ResponsiveUtils {
   /// Get the current device type based on screen width
   static DeviceType getDeviceType(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
 
     if (width < ResponsiveBreakpoints.tablet) {
       return DeviceType.mobile;
@@ -41,7 +41,7 @@ class ResponsiveUtils {
 
   /// Get phone size sub-type (only meaningful on mobile)
   static PhoneSize getPhoneSize(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    final width = MediaQuery.sizeOf(context).width;
     if (width < ResponsiveBreakpoints.phoneSmall) return PhoneSize.small;
     if (width < ResponsiveBreakpoints.phoneMedium) return PhoneSize.medium;
     if (width < ResponsiveBreakpoints.phoneLarge) return PhoneSize.large;
@@ -110,12 +110,12 @@ class ResponsiveUtils {
 
   /// Get screen width
   static double getScreenWidth(BuildContext context) {
-    return MediaQuery.of(context).size.width;
+    return MediaQuery.sizeOf(context).width;
   }
 
   /// Get screen height
   static double getScreenHeight(BuildContext context) {
-    return MediaQuery.of(context).size.height;
+    return MediaQuery.sizeOf(context).height;
   }
 
   /// Check if screen width is greater than a specific breakpoint
