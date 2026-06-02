@@ -79,77 +79,75 @@ class DesignWearApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        Provider<ProductRepository>(
-          create: (_) => ProductRepositoryImpl(
-            WebApiConfig.useWebApi
-                ? ApiService.webApi(WebApiConfig.baseUrl)
-                : ApiService.sanity(),
+    return ScreenUtilInit(
+      designSize: const Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child) => MultiProvider(
+        providers: [
+          Provider<ProductRepository>(
+            create: (_) => ProductRepositoryImpl(
+              WebApiConfig.useWebApi
+                  ? ApiService.webApi(WebApiConfig.baseUrl)
+                  : ApiService.sanity(),
+            ),
           ),
-        ),
-        Provider<GetCategoriesUseCase>(
-          create: (context) => GetCategoriesUseCase(context.read<ProductRepository>()),
-        ),
-        Provider<GetFeaturedProductsUseCase>(
-          create: (context) => GetFeaturedProductsUseCase(context.read<ProductRepository>()),
-        ),
-        Provider<GetProductsUseCase>(
-          create: (context) => GetProductsUseCase(context.read<ProductRepository>()),
-        ),
-        Provider<GetProductsByCategoryUseCase>(
-          create: (context) => GetProductsByCategoryUseCase(context.read<ProductRepository>()),
-        ),
-        Provider<GetProductByIdUseCase>(
-          create: (context) => GetProductByIdUseCase(context.read<ProductRepository>()),
-        ),
-        Provider<GetTaxRateUseCase>(
-          create: (context) => GetTaxRateUseCase(context.read<ProductRepository>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => CartService(context.read<GetTaxRateUseCase>()),
-        ),
-        ChangeNotifierProvider(
-          create: (_) {
-            final authService = AuthService();
-            authService.init();
-            return authService;
+          Provider<GetCategoriesUseCase>(
+            create: (ctx) => GetCategoriesUseCase(ctx.read<ProductRepository>()),
+          ),
+          Provider<GetFeaturedProductsUseCase>(
+            create: (ctx) => GetFeaturedProductsUseCase(ctx.read<ProductRepository>()),
+          ),
+          Provider<GetProductsUseCase>(
+            create: (ctx) => GetProductsUseCase(ctx.read<ProductRepository>()),
+          ),
+          Provider<GetProductsByCategoryUseCase>(
+            create: (ctx) => GetProductsByCategoryUseCase(ctx.read<ProductRepository>()),
+          ),
+          Provider<GetProductByIdUseCase>(
+            create: (ctx) => GetProductByIdUseCase(ctx.read<ProductRepository>()),
+          ),
+          Provider<GetTaxRateUseCase>(
+            create: (ctx) => GetTaxRateUseCase(ctx.read<ProductRepository>()),
+          ),
+          ChangeNotifierProvider(
+            create: (ctx) => CartService(ctx.read<GetTaxRateUseCase>()),
+          ),
+          ChangeNotifierProvider(
+            create: (_) {
+              final authService = AuthService();
+              authService.init();
+              return authService;
+            },
+          ),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ],
+        child: Consumer<ThemeProvider>(
+          builder: (context, themeProvider, _) {
+            return MaterialApp(
+              title: 'Design Wear',
+              debugShowCheckedModeBanner: flavor == Flavor.internal,
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: themeProvider.themeMode,
+              builder: (context, child) {
+                final bg = Theme.of(context).scaffoldBackgroundColor;
+                final screenW = MediaQuery.sizeOf(context).width;
+                final maxW = screenW > 1440 ? 1440.0 : double.infinity;
+                return DecoratedBox(
+                  decoration: BoxDecoration(color: bg),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxW),
+                      child: child,
+                    ),
+                  ),
+                );
+              },
+              home: const HomeScreen(),
+            );
           },
         ),
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-      ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp(
-            title: 'Design Wear',
-            debugShowCheckedModeBanner: flavor == Flavor.internal,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: themeProvider.themeMode,
-            builder: (context, child) {
-              // Initialise ScreenUtil once per build with 390×844 design canvas
-              ScreenUtil.init(
-                context,
-                designSize: const Size(390, 844),
-                minTextAdapt: true,
-                splitScreenMode: true,
-              );
-              final bg = Theme.of(context).scaffoldBackgroundColor;
-              final screenW = MediaQuery.sizeOf(context).width;
-              final maxW = screenW > 1440 ? 1440.0 : double.infinity;
-              return DecoratedBox(
-                decoration: BoxDecoration(color: bg),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: maxW),
-                    child: child,
-                  ),
-                ),
-              );
-            },
-            home: const HomeScreen(),
-          );
-        },
       ),
     );
   }
