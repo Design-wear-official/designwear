@@ -21,11 +21,22 @@ class CartItem {
   Map<String, dynamic> toJson() {
     return {
       'productId': product.id,
+      'product': product.toJson(),
       'quantity': quantity,
       'selectedSize': selectedSize,
       'selectedColor': selectedColor,
-      'hasCustomDesign': customDesign != null,
     };
+  }
+
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    final productData = json['product'];
+    if (productData == null) throw Exception('Missing product data in cart item');
+    return CartItem(
+      product: Product.fromApiMap(productData as Map<String, dynamic>),
+      quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+      selectedSize: json['selectedSize'] as String?,
+      selectedColor: json['selectedColor'] as String?,
+    );
   }
 }
 
