@@ -33,7 +33,9 @@ Future<void> mainCommon(Flavor flavor) async {
   // Web uses --dart-define build args or built-in defaults — .env is not
   // bundled in web builds and must not be served publicly (contains secrets).
   if (!kIsWeb) {
-    await dotenv.load(fileName: ".env", isOptional: true, mergeWith: {});
+    await dotenv.load(fileName: ".env", isOptional: true);
+    // .env.local overrides .env (production settings take precedence over dev defaults)
+    await dotenv.load(fileName: ".env.local", isOptional: true, mergeWith: dotenv.env);
   }
 
   // Skip Firebase when no credentials are configured (e.g. running without .env)
