@@ -59,7 +59,7 @@ class DesignElement {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'type': type,
+      'type': type.value,
       'content': content,
       'x': x,
       'y': y,
@@ -72,7 +72,7 @@ class DesignElement {
   factory DesignElement.fromJson(Map<String, dynamic> json) {
     return DesignElement(
       id: json['id'] ?? '',
-      type: json['type'] ?? 'text',
+      type: DesignElementType.fromString(json['type'] ?? 'text'),
       content: json['content'] ?? '',
       x: (json['x'] as num?)?.toDouble() ?? 0,
       y: (json['y'] as num?)?.toDouble() ?? 0,
