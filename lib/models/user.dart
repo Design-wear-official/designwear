@@ -1,6 +1,18 @@
 import 'address.dart';
 import 'payment_method.dart';
 
+enum AuthProvider {
+  email,
+  google,
+  phone;
+
+  static AuthProvider fromString(String v) => switch (v) {
+    'google' => AuthProvider.google,
+    'phone'  => AuthProvider.phone,
+    _        => AuthProvider.email,
+  };
+}
+
 class AppUser {
   final String id;
   final String? name;
@@ -9,7 +21,7 @@ class AppUser {
   final String? photoUrl;
   final bool isEmailVerified;
   final bool isPhoneVerified;
-  final String authProvider; // 'email', 'google', 'phone'
+  final AuthProvider authProvider;
   final List<Address> addresses;
   final List<PaymentMethod> paymentMethods;
   final int loyaltyPoints;
