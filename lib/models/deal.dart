@@ -7,6 +7,7 @@ class Deal {
   final int salePrice;
   final int discountPercent;
   final String colorHex;
+  final String? imageUrl;
 
   const Deal({
     required this.id,
@@ -15,6 +16,7 @@ class Deal {
     required this.salePrice,
     required this.discountPercent,
     required this.colorHex,
+    this.imageUrl,
   });
 
   Color get color {
@@ -33,6 +35,7 @@ class Deal {
     salePrice: (map['salePrice'] as num?)?.toInt() ?? 0,
     discountPercent: (map['discountPercent'] as num?)?.toInt() ?? 0,
     colorHex: map['colorHex'] as String? ?? '#3B82F6',
+    imageUrl: map['imageUrl'] as String?,
   );
 
   static const List<Map<String, Object>> fallbackRaw = [

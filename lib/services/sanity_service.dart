@@ -99,13 +99,26 @@ class SanityService {
   Future<List<Deal>> fetchDeals() async {
     try {
       const query = '*[_type == "deal" && active == true && (expiresAt == null || expiresAt > now())] '
-          '| order(_updatedAt desc) {_id, label, originalPrice, salePrice, discountPercent, colorHex}';
+          '| order(_updatedAt desc) {_id, label, originalPrice, salePrice, discountPercent, colorHex, "imageUrl": image.asset->url}';
       final List<dynamic> result = await client.fetch(query);
       final deals = result.map((m) => Deal.fromMap(m as Map<String, dynamic>)).toList();
       return deals.isNotEmpty ? deals : Deal.fallbacks;
     } catch (e) {
       debugPrint('Sanity fetchDeals failed: $e');
       return Deal.fallbacks;
+    }
+  }
+
+  Future<List<CategoryQuickLink>> fetchCategoryQuickLinks() async {
+    try {
+      const query =
+          '*[_type == "categoryQuickLink" && active == true] | order(order asc) '
+          '{_id, label, iconName, colorHex, action, tabIndex, order}';
+      final List<dynamic> result = await client.fetch(query);
+      return result.map((m) => CategoryQuickLink.fromMap(m as Map<String, dynamic>)).toList();
+    } catch (e) {
+      debugPrint('Sanity fetchCategoryQuickLinks failed: $e');
+      return [];
     }
   }
 

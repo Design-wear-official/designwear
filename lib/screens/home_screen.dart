@@ -31,10 +31,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // ── State ─────────────────────────────────────────────────────────────────
   List<HomeBanner> _banners = HomeBanner.fallbacks;
+  List<CategoryQuickLink> _quickLinks = const [];
   int _currentBannerPage = 0;
   int _selectedCategoryIndex = 0;
   String? _selectedCategoryId;
-  int _bottomNavIndex = 0;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   final PageController _bannerPageController = PageController();
@@ -60,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _allProductsFuture = _getProductsUseCase();
     _dealsFuture = _apiService.fetchDeals();
     _loadBanners();
+    _loadQuickLinks();
 
     _searchFocusNode.addListener(() {
       setState(() => _searchFocused = _searchFocusNode.hasFocus);
@@ -81,6 +82,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadBanners() async {
     final banners = await _apiService.fetchBanners();
     if (mounted) setState(() => _banners = banners);
+  }
+
+  Future<void> _loadQuickLinks() async {
+    final links = await _apiService.fetchCategoryQuickLinks();
+    if (mounted && links.isNotEmpty) setState(() => _quickLinks = links);
   }
 
   void _startBannerAutoScroll() {
@@ -130,12 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      bottomNavigationBar: isDesktop
-          ? null
-          : HomeBottomNav(
-              currentIndex: _bottomNavIndex,
-              onTap: (i) => setState(() => _bottomNavIndex = i),
-            ),
+      bottomNavigationBar: null,
       body: Column(
         children: [
           // App bar
@@ -189,6 +190,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   isDesktop: isDesktop,
                                   hp: hp,
                                   onCategoryTap: (i) => setState(() => _selectedCategoryIndex = i),
+                                  quickLinks: _quickLinks,
                                 ),
                               ],
                             ),

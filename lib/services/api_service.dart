@@ -86,6 +86,7 @@ class ApiService {
   // Content endpoints — always served from Sanity CMS
   Future<List<HomeBanner>> fetchBanners() => SanityService().fetchBanners();
   Future<List<Deal>> fetchDeals() => SanityService().fetchDeals();
+  Future<List<CategoryQuickLink>> fetchCategoryQuickLinks() => SanityService().fetchCategoryQuickLinks();
   Future<List<DesignTemplate>> fetchDesignTemplates() => SanityService().fetchDesignTemplates();
 
   Future<Map<String, String>> _getHeaders() async {

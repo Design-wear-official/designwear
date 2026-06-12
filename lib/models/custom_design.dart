@@ -1,6 +1,21 @@
+enum DesignElementType {
+  text,
+  sticker,
+  shape;
+
+  /// Serialised value written to/read from JSON.
+  String get value => name;
+
+  static DesignElementType fromString(String v) => switch (v) {
+    'sticker' => DesignElementType.sticker,
+    'shape'   => DesignElementType.shape,
+    _         => DesignElementType.text,
+  };
+}
+
 class DesignElement {
   final String id;
-  final String type; // 'text', 'sticker', 'shape'
+  final DesignElementType type;
   final String content;
   final double x;
   final double y;
@@ -10,7 +25,7 @@ class DesignElement {
 
   DesignElement({
     required this.id,
-    required this.type,
+    this.type = DesignElementType.text,
     this.content = '',
     this.x = 0,
     this.y = 0,
@@ -21,7 +36,7 @@ class DesignElement {
 
   DesignElement copyWith({
     String? id,
-    String? type,
+    DesignElementType? type,
     String? content,
     double? x,
     double? y,

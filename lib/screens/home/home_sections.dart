@@ -13,69 +13,123 @@ class HomeCategoryIconRow extends StatelessWidget {
   final bool isDesktop;
   final double hp;
   final ValueChanged<int> onCategoryTap;
+  /// Sanity-loaded quick links; if empty the static HomeConstants.catIcons are used as fallback.
+  final List<CategoryQuickLink> quickLinks;
 
   const HomeCategoryIconRow({
     super.key,
     required this.isDesktop,
     required this.hp,
     required this.onCategoryTap,
+    this.quickLinks = const [],
   });
 
   @override
   Widget build(BuildContext context) {
+    // Prefer Sanity data; fall back to compile-time constants
+    final useSanity = quickLinks.isNotEmpty;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: SizedBox(
         height: isDesktop ? 90 : 82,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          padding: EdgeInsets.symmetric(horizontal: isDesktop ? hp + 12 : hp),
-          itemCount: HomeConstants.catIcons.length,
-          itemBuilder: (context, i) {
-            final cat = HomeConstants.catIcons[i];
-            final color = cat['color'] as Color;
-            return GestureDetector(
-              onTap: () {
-                if (cat['label'] == 'Design') {
-                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DesignStudioScreen(), settings: const RouteSettings(name: '/design-studio')));
-                } else {
-                  const labelToTab = {'Trending': 6, 'New In': 7, 'Sale': 8, 'T-Shirts': 2, 'Hoodies': 3, 'Polo': 4};
-                  final idx = labelToTab[cat['label'] as String];
-                  if (idx != null) onCategoryTap(idx);
-                }
-              },
-              child: SizedBox(
-                width: isDesktop ? 88 : 76,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: isDesktop ? 52 : 46,
-                      height: isDesktop ? 52 : 46,
-                      decoration: BoxDecoration(
-                        color: color.withOpacity(0.13),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(cat['icon'] as IconData, color: color, size: isDesktop ? 24 : 21),
-                    ),
-                    const SizedBox(height: 7),
-                    Text(
-                      cat['label'] as String,
-                      style: GoogleFonts.outfit(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                        height: 1.1,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                    ),
-                  ],
-                ),
-              ),
-            );
+        child: useSanity
+            ? _buildFromSanity(context)
+            : _buildFromConstants(context),
+      ),
+    );
+  }
+
+  Widget _buildFromSanity(BuildContext context) {
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? hp + 12 : hp),
+      itemCount: quickLinks.length,
+      itemBuilder: (context, i) {
+        final link = quickLinks[i];
+        final color = link.color;
+        return GestureDetector(
+          onTap: () {
+            if (link.action == 'design-studio') {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const DesignStudioScreen(),
+                settings: const RouteSettings(name: '/design-studio'),
+              ));
+            } else {
+              onCategoryTap(link.tabIndex);
+            }
           },
-        ),
+          child: _IconCell(label: link.label, icon: link.icon, color: color, isDesktop: isDesktop),
+        );
+      },
+    );
+  }
+
+  Widget _buildFromConstants(BuildContext context) {
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      padding: EdgeInsets.symmetric(horizontal: isDesktop ? hp + 12 : hp),
+      itemCount: HomeConstants.catIcons.length,
+      itemBuilder: (context, i) {
+        final cat = HomeConstants.catIcons[i];
+        final color = cat['color'] as Color;
+        return GestureDetector(
+          onTap: () {
+            if (cat['label'] == 'Design') {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => const DesignStudioScreen(),
+                settings: const RouteSettings(name: '/design-studio'),
+              ));
+            } else {
+              const labelToTab = {'Trending': 6, 'New In': 7, 'Sale': 8, 'T-Shirts': 2, 'Hoodies': 3, 'Polo': 4};
+              final idx = labelToTab[cat['label'] as String];
+              if (idx != null) onCategoryTap(idx);
+            }
+          },
+          child: _IconCell(label: cat['label'] as String, icon: cat['icon'] as IconData, color: color, isDesktop: isDesktop),
+        );
+      },
+    );
+  }
+}
+
+class _IconCell extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+  final bool isDesktop;
+
+  const _IconCell({required this.label, required this.icon, required this.color, required this.isDesktop});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: isDesktop ? 88 : 76,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: isDesktop ? 52 : 46,
+            height: isDesktop ? 52 : 46,
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.13),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: isDesktop ? 24 : 21),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            label,
+            style: GoogleFonts.outfit(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              height: 1.1,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+        ],
       ),
     );
   }
@@ -179,7 +233,9 @@ class _DealCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  Center(child: Icon(Icons.checkroom_outlined, color: color, size: isDesktop ? 40 : 34)),
+                  deal.imageUrl != null
+                      ? SafeNetworkImage(imageUrl: deal.imageUrl!, fit: BoxFit.cover)
+                      : Center(child: Icon(Icons.checkroom_outlined, color: color, size: isDesktop ? 40 : 34)),
                   Positioned(
                     top: 8, left: 8,
                     child: Container(
