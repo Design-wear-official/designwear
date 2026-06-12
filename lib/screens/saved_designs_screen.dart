@@ -216,9 +216,9 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
 
     if (design.elements.isNotEmpty) {
       for (final element in design.elements) {
-        if (element.type == 'text') {
+        if (element.type == DesignElementType.text) {
           previewElements.add('Text: "${element.content}"');
-        } else if (element.type == 'sticker') {
+        } else if (element.type == DesignElementType.sticker) {
           previewElements.add('Sticker: ${element.content}');
         }
       }

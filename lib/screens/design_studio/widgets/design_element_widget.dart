@@ -9,14 +9,11 @@ class DesignElementWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    switch (element.type) {
-      case 'text':
-        return _buildTextElement();
-      case 'sticker':
-        return _buildStickerElement();
-      default:
-        return Container();
-    }
+    return switch (element.type) {
+      DesignElementType.text    => _buildTextElement(),
+      DesignElementType.sticker => _buildStickerElement(),
+      DesignElementType.shape   => Container(),
+    };
   }
 
   Widget _buildTextElement() {

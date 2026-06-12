@@ -33,7 +33,7 @@ class TextControlsWidget extends StatelessWidget {
         .where((e) => e.id == selectedElementId)
         .firstOrNull;
 
-    if (element?.type == 'text') {
+    if (element?.type == DesignElementType.text) {
       return _buildNewTextControls(element!);
     }
 

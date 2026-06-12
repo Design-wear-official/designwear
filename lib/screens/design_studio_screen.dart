@@ -362,8 +362,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
 
   void _addTextElement(String text, {String? fontFamily, double? fontSize}) {
     final element = DesignElement(
-      id: DesignStudioUtils.generateElementId('text'),
-      type: 'text',
+      id: DesignStudioUtils.generateElementId(DesignElementType.text),
+      type: DesignElementType.text,
       content: text,
       x: 0,
       y: 0,
@@ -385,8 +385,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
 
   void _addStickerElement(String sticker) {
     final element = DesignElement(
-      id: DesignStudioUtils.generateElementId('sticker'),
-      type: 'sticker',
+      id: DesignStudioUtils.generateElementId(DesignElementType.sticker),
+      type: DesignElementType.sticker,
       content: sticker,
       x: 0,
       y: 0,

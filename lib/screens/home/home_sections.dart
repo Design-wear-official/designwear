@@ -50,7 +50,7 @@ class HomeCategoryIconRow extends StatelessWidget {
         final color = link.color;
         return GestureDetector(
           onTap: () {
-            if (link.action == 'design-studio') {
+            if (link.action == QuickLinkAction.designStudio) {
               Navigator.of(context).push(MaterialPageRoute(
                 builder: (_) => const DesignStudioScreen(),
                 settings: const RouteSettings(name: '/design-studio'),

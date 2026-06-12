@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 
+enum QuickLinkAction {
+  designStudio,
+  tab;
+
+  static QuickLinkAction fromString(String v) =>
+      v == 'design-studio' ? QuickLinkAction.designStudio : QuickLinkAction.tab;
+
+  /// Sanity-compatible string value.
+  String get value => this == QuickLinkAction.designStudio ? 'design-studio' : 'tab';
+}
+
 class CategoryQuickLink {
   final String id;
   final String label;
   final String iconName;
   final String colorHex;
-  final String action;
+  final QuickLinkAction action;
   final int tabIndex;
   final int order;
 
@@ -51,7 +62,7 @@ class CategoryQuickLink {
         label: map['label'] as String? ?? '',
         iconName: map['iconName'] as String? ?? 'category',
         colorHex: map['colorHex'] as String? ?? '#3B82F6',
-        action: map['action'] as String? ?? 'tab',
+        action: QuickLinkAction.fromString(map['action'] as String? ?? 'tab'),
         tabIndex: (map['tabIndex'] as num?)?.toInt() ?? 0,
         order: (map['order'] as num?)?.toInt() ?? 0,
       );
