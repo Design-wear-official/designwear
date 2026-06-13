@@ -12,7 +12,7 @@ class ToolsPanel extends StatefulWidget {
   final String? selectedElementId;
   final DesignTemplateService templateService;
   final Function(CustomDesign) onDesignUpdate;
-  final Function(String) onAddTextElement;
+  final Function(String text, String fontFamily) onAddTextElement;
   final Function(String) onAddStickerElement;
   final Function(DesignElement, String) onToggleTextEffect;
 
@@ -135,20 +135,7 @@ class _ToolsPanelState extends State<ToolsPanel> {
         return TemplatesTab(
           templateService: widget.templateService,
           onApplyTemplate: (template) {
-            widget.onDesignUpdate(
-              template.design.copyWith(
-                // Preserve any existing legacy elements
-                text: widget.design.text,
-                textX: widget.design.textX,
-                textY: widget.design.textY,
-                fontSize: widget.design.fontSize,
-                textColor: widget.design.textColor,
-                sticker: widget.design.sticker,
-                stickerX: widget.design.stickerX,
-                stickerY: widget.design.stickerY,
-                stickerSize: widget.design.stickerSize,
-              ),
-            );
+            widget.onDesignUpdate(template.design);
           },
         );
       default:

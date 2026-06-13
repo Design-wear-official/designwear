@@ -10,6 +10,7 @@ class LayersPanel extends StatelessWidget {
   final Function(String?) onElementSelected;
   final Function(String) onDuplicateElement;
   final Function(String) onDeleteElement;
+  final Function(int oldIndex, int newIndex) onReorderElements;
   final VoidCallback onClose;
 
   const LayersPanel({
@@ -19,6 +20,7 @@ class LayersPanel extends StatelessWidget {
     required this.onElementSelected,
     required this.onDuplicateElement,
     required this.onDeleteElement,
+    required this.onReorderElements,
     required this.onClose,
   });
 
@@ -78,12 +80,17 @@ class LayersPanel extends StatelessWidget {
   Widget _buildLayersList(BuildContext context) {
     final allLayers = DesignStudioUtils.generateLayersData(design);
 
+    // Legacy elements sit at the front of allLayers but are not part of
+    // design.elements — only reorder within the new elements portion.
+    final legacyCount = allLayers.length - design.elements.length;
+
     return ReorderableListView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       onReorder: (oldIndex, newIndex) {
-        // Handle reordering logic here
         if (newIndex > oldIndex) newIndex--;
-        // Implementation depends on your layer system
+        // Ignore drags that involve legacy elements
+        if (oldIndex < legacyCount || newIndex < legacyCount) return;
+        onReorderElements(oldIndex - legacyCount, newIndex - legacyCount);
       },
       children: allLayers.map((layer) {
         final isSelected = selectedElementId == layer['id'];

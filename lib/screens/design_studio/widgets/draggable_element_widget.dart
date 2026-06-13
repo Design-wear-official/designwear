@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 
-class DraggableElementWidget extends StatelessWidget {
+class DraggableElementWidget extends StatefulWidget {
   final String id;
   final bool isSelected;
   final double currentX;
@@ -22,40 +22,67 @@ class DraggableElementWidget extends StatelessWidget {
   });
 
   @override
+  State<DraggableElementWidget> createState() => _DraggableElementWidgetState();
+}
+
+class _DraggableElementWidgetState extends State<DraggableElementWidget> {
+  Offset _dragDelta = Offset.zero;
+  bool _isDragging = false;
+
+  @override
+  void didUpdateWidget(DraggableElementWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset delta when position is committed from outside (after drag end)
+    if (oldWidget.currentX != widget.currentX ||
+        oldWidget.currentY != widget.currentY) {
+      _dragDelta = Offset.zero;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        onElementSelected(isSelected ? null : id);
+      onTap: () => widget.onElementSelected(widget.isSelected ? null : widget.id),
+      onPanStart: (_) {
+        setState(() {
+          _isDragging = true;
+          _dragDelta = Offset.zero;
+        });
       },
-      child: Draggable(
-        feedback: Material(
-          color: Colors.transparent,
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: AppColors.accentBlue.withValues(alpha: 0.5),
-              ),
-            ),
-            child: child,
-          ),
-        ),
-        childWhenDragging: Container(),
-        onDragEnd: (details) {
-          final RenderBox renderBox = context.findRenderObject() as RenderBox;
-          final localPosition = renderBox.globalToLocal(details.offset);
-
-          onPositionUpdate(localPosition.dx - 150, localPosition.dy - 220);
-        },
+      onPanUpdate: (details) {
+        setState(() => _dragDelta += details.delta);
+      },
+      onPanEnd: (_) {
+        final newX = widget.currentX + _dragDelta.dx;
+        final newY = widget.currentY + _dragDelta.dy;
+        setState(() {
+          _isDragging = false;
+          _dragDelta = Offset.zero;
+        });
+        widget.onPositionUpdate(newX, newY);
+      },
+      onPanCancel: () {
+        setState(() {
+          _isDragging = false;
+          _dragDelta = Offset.zero;
+        });
+      },
+      child: Transform.translate(
+        offset: _isDragging ? _dragDelta : Offset.zero,
         child: Container(
           decoration: BoxDecoration(
-            border: isSelected
+            border: widget.isSelected
                 ? Border.all(color: AppColors.accentBlue, width: 2)
-                : null,
+                : _isDragging
+                    ? Border.all(
+                        color: AppColors.accentBlue.withValues(alpha: 0.4),
+                        width: 1,
+                      )
+                    : null,
           ),
-          child: child,
+          child: widget.child,
         ),
       ),
     );
   }
 }
-

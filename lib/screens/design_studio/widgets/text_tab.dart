@@ -11,7 +11,7 @@ class TextTab extends StatelessWidget {
   final String? selectedElementId;
   final DesignTemplateService templateService;
   final Function(CustomDesign) onDesignUpdate;
-  final Function(String) onAddTextElement;
+  final Function(String text, String fontFamily) onAddTextElement;
   final Function(DesignElement, String) onToggleTextEffect;
 
   const TextTab({

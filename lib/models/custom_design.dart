@@ -234,4 +234,11 @@ class CustomDesign {
           .toList(),
     );
   }
+
+  CustomDesign reorderElements(int oldIndex, int newIndex) {
+    final list = List<DesignElement>.from(elements);
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    return copyWith(elements: list);
+  }
 }

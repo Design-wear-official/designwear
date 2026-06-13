@@ -138,6 +138,52 @@ class TextControlsWidget extends StatelessWidget {
           }).toList(),
         ),
 
+        // Text color
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const Icon(Icons.format_color_text, size: 18),
+              const SizedBox(width: 8),
+              ...[
+                Colors.black,
+                Colors.white,
+                Colors.red,
+                Colors.orange,
+                Colors.yellow,
+                Colors.green,
+                Colors.blue,
+                Colors.purple,
+                Colors.pink,
+                Colors.brown,
+              ].map((color) {
+                final hex = '0x${color.value.toRadixString(16).toUpperCase().padLeft(8, '0')}';
+                final isSelected = element.color == hex;
+                return GestureDetector(
+                  onTap: () {
+                    final updatedElement = element.copyWith(color: hex);
+                    onDesignUpdate(design.updateElement(element.id, updatedElement));
+                  },
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? AppColors.accentBlue : Colors.grey.shade400,
+                        width: isSelected ? 2.5 : 1,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+
         // Text effects
         const SizedBox(height: 12),
         Row(

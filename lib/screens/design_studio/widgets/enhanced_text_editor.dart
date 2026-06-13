@@ -6,7 +6,7 @@ import 'package:designwear/screens/design_studio/design_studio_utils.dart';
 
 class EnhancedTextEditor extends StatefulWidget {
   final DesignTemplateService templateService;
-  final Function(String) onAddTextElement;
+  final Function(String text, String fontFamily) onAddTextElement;
 
   const EnhancedTextEditor({
     super.key,
@@ -142,7 +142,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_textController.text.isNotEmpty) {
-                      widget.onAddTextElement(_textController.text);
+                      widget.onAddTextElement(_textController.text, _selectedFont);
                     }
                     Navigator.pop(context);
                   },

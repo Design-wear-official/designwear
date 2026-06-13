@@ -132,6 +132,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                         child: DesignCanvas(
                           design: _design,
                           selectedElementId: _selectedElementId,
+                          garmentType: _selectedGarmentType,
                           onElementSelected: (id) =>
                               setState(() => _selectedElementId = id),
                           onDesignUpdate: _updateDesign,
@@ -147,6 +148,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                               setState(() => _selectedElementId = id),
                           onDuplicateElement: _duplicateElement,
                           onDeleteElement: _deleteElement,
+                          onReorderElements: _reorderElements,
                           onClose: () => setState(() => _showLayers = false),
                         ),
 
@@ -170,7 +172,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                   selectedElementId: _selectedElementId,
                   templateService: _templateService,
                   onDesignUpdate: _updateDesign,
-                  onAddTextElement: _addTextElement,
+                  onAddTextElement: (text, font) => _addTextElement(text, fontFamily: font),
                   onAddStickerElement: _addStickerElement,
                   onToggleTextEffect: _toggleTextEffect,
                 ),
@@ -345,20 +347,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   // Helper methods for element management
 
   void _applyTemplate(DesignTemplate template) {
-    _updateDesign(
-      template.design.copyWith(
-        // Preserve any existing legacy elements
-        text: _design.text,
-        textX: _design.textX,
-        textY: _design.textY,
-        fontSize: _design.fontSize,
-        textColor: _design.textColor,
-        sticker: _design.sticker,
-        stickerX: _design.stickerX,
-        stickerY: _design.stickerY,
-        stickerSize: _design.stickerSize,
-      ),
-    );
+    _updateDesign(template.design);
   }
 
   void _addTextElement(String text, {String? fontFamily, double? fontSize}) {
@@ -436,6 +425,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         _selectedElementId = null;
       });
     }
+  }
+
+  void _reorderElements(int oldIndex, int newIndex) {
+    _updateDesign(_design.reorderElements(oldIndex, newIndex));
   }
 
 
