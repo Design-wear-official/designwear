@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -307,7 +308,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
               // Generated Result
               if (_generatedImage != null) _buildResultSection(),
 
-              const SizedBox(height: 100), // Space for bottom button
+              SizedBox(height: 100.h), // Space for bottom button
             ],
           ),
         ),
@@ -337,13 +338,13 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             child: widget.product.imageUrl != null
                 ? SafeNetworkImage(
                     imageUrl: widget.product.imageUrl!,
-                    width: 80,
-                    height: 80,
+                    width: 80.r,
+                    height: 80.r,
                     fit: BoxFit.cover,
                   )
                 : Container(
-                    width: 80,
-                    height: 80,
+                    width: 80.r,
+                    height: 80.r,
                     color: AppColors.gray200,
                     child: const Icon(Icons.image_not_supported),
                   ),

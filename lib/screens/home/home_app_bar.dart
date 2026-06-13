@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/services/services.dart';
@@ -33,7 +34,7 @@ class HomeAppBar extends StatelessWidget {
 
     return SafeArea(
       child: Container(
-        height: isDesktop ? 68 : 62,
+        height: isDesktop ? 68.h : 62.h,
         decoration: BoxDecoration(
           color: Theme.of(context).scaffoldBackgroundColor,
           border: Border(
@@ -49,13 +50,13 @@ class HomeAppBar extends StatelessWidget {
             children: [
               // Logo mark
               Container(
-                width: isDesktop ? 36 : 32,
-                height: isDesktop ? 36 : 32,
+                width: isDesktop ? 36.r : 32.r,
+                height: isDesktop ? 36.r : 32.r,
                 decoration: BoxDecoration(
                   gradient: AppColors.neonGradient,
                   borderRadius: BorderRadius.circular(9),
                 ),
-                child: Icon(Icons.style, color: Colors.white, size: isDesktop ? 19 : 17),
+                child: Icon(Icons.style, color: Colors.white, size: isDesktop ? 19.r : 17.r),
               ),
               SizedBox(width: isDesktop ? 10 : 7),
               // Brand name — desktop only
@@ -138,15 +139,15 @@ class HomeAppBar extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        width: 38,
-        height: 38,
+        width: 38.r,
+        height: 38.r,
         decoration: BoxDecoration(
           color: Theme.of(context).brightness == Brightness.dark
               ? Colors.white.withOpacity(0.07)
               : Colors.black.withOpacity(0.05),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Icon(icon, size: 20, color: Theme.of(context).colorScheme.onSurface),
+        child: Icon(icon, size: 20.r, color: Theme.of(context).colorScheme.onSurface),
       ),
     );
   }

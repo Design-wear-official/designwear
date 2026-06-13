@@ -67,6 +67,7 @@ Future<void> mainCommon(Flavor flavor) async {
     debugPrint('ℹ️ Firebase credentials not configured — running without Firebase');
   }
 
+  FlavorConfig.init(flavor);
   runApp(DesignWearApp(flavor: flavor));
 }
 

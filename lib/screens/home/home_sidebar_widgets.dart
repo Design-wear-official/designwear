@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:designwear/presentation/styles/styles.dart';
@@ -21,7 +22,7 @@ class HomeDesignStudioBanner extends StatelessWidget {
       onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const DesignStudioScreen(), settings: const RouteSettings(name: '/design-studio'))),
       child: Container(
         margin: EdgeInsets.fromLTRB(isDesktop ? 8 : hp, 12, hp, 12),
-        height: isDesktop ? 200 : ResponsiveSizes.bannerHeight(context),
+        height: isDesktop ? 200.h : ResponsiveSizes.bannerHeight(context),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
           boxShadow: [BoxShadow(color: AppColors.purple.withOpacity(0.18), blurRadius: 20, offset: const Offset(0, 6))],
@@ -171,7 +172,7 @@ class HomeTrendingSection extends StatelessWidget {
   Widget _trendItem(String label, String rank, IconData icon, Color color, BuildContext ctx) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
     child: Row(children: [
-      Container(width: 36, height: 36, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+      Container(width: 36.r, height: 36.r, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
           child: Icon(icon, color: color, size: 18)),
       const SizedBox(width: 12),
       Expanded(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: GoogleFonts.outfit(fontSize: 13, fontWeight: FontWeight.w600, color: Theme.of(ctx).colorScheme.onSurface))),

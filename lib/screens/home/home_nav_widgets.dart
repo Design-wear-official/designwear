@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:designwear/presentation/styles/styles.dart';
@@ -36,7 +37,7 @@ class HomeBottomNav extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: 60.h,
           child: Row(
             children: List.generate(_items.length, (i) {
               final active = currentIndex == i;
@@ -118,7 +119,7 @@ class HomeSubNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
-      height: 42,
+      height: 42.h,
       decoration: BoxDecoration(
         color: isDark ? Theme.of(context).colorScheme.surface : Theme.of(context).scaffoldBackgroundColor,
         border: Border(

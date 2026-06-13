@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
-import 'design_studio_constants.dart';
 import 'design_studio_utils.dart';
 
 class LayersPanel extends StatelessWidget {
@@ -29,7 +28,7 @@ class LayersPanel extends StatelessWidget {
       right: 0,
       top: 0,
       bottom: 0,
-      width: DesignStudioConstants.layersPanelWidth,
+      width: (MediaQuery.sizeOf(context).width * 0.70).clamp(180.0, 280.0),
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,

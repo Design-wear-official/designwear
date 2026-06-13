@@ -110,6 +110,11 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final screenW = MediaQuery.sizeOf(context).width;
+    final screenH = MediaQuery.sizeOf(context).height;
+    final chatW = (screenW * 0.82).clamp(240.0, 340.0);
+    final chatH = (screenH * 0.45).clamp(280.0, 480.0);
+
     return Positioned(
       bottom: 20,
       right: 20,
@@ -120,8 +125,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           // Chat Window
           if (_isOpen)
             Container(
-              width: 300,
-              height: 400,
+              width: chatW,
+              height: chatH,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: colorScheme.surface,

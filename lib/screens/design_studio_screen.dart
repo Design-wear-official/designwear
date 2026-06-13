@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:designwear/models/models.dart';
@@ -197,8 +198,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 28,
-            height: 28,
+            width: 28.r,
+            height: 28.r,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [Color(0xFFF97316), Color(0xFFEC4899)],
@@ -294,7 +295,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
 
   Widget _buildGarmentTypeSelector() {
     return SizedBox(
-      height: 48,
+      height: 48.h,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

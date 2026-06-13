@@ -139,6 +139,9 @@ class _HomeScreenState extends State<HomeScreen> {
       bottomNavigationBar: null,
       body: Column(
         children: [
+          // Internal-flavor debug strip (zero height for external builds)
+          const HomeDebugBanner(),
+
           // App bar
           HomeAppBar(
             isDesktop: isDesktop,
@@ -195,18 +198,24 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-                          SizedBox(
-                            width: 420,
-                            child: Padding(
-                              padding: const EdgeInsets.only(top: 10),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const HomeDesignStudioBanner(),
-                                  const HomeTrendingSection(),
-                                ],
-                              ),
-                            ),
+                          Builder(
+                            builder: (ctx) {
+                              final sw = MediaQuery.sizeOf(ctx).width;
+                              final sidebarW = (sw * 0.32).clamp(280.0, 420.0);
+                              return SizedBox(
+                                width: sidebarW,
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 10),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const HomeDesignStudioBanner(),
+                                      const HomeTrendingSection(),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       )
