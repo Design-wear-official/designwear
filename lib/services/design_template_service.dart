@@ -142,6 +142,85 @@ class DesignTemplateService {
     ];
   }
 
+  /// Built-in auto-start designs shown when the studio opens on a blank canvas.
+  List<CustomDesign> getStarterDesigns() {
+    return [
+      CustomDesign(
+        baseColor: '0xFFE65100',
+        name: 'Sunset Vibes',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'sv_t', type: DesignElementType.text, content: 'SUNSET VIBES', x: -60, y: -30, size: 30, color: '0xFFFFFFFF', properties: {'fontFamily': 'Oswald', 'bold': true, 'shadow': true}),
+          DesignElement(id: 'sv_s', type: DesignElementType.sticker, content: '🌅', x: -15, y: 40, size: 60, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFF111111',
+        name: 'Midnight',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'mn_t', type: DesignElementType.text, content: 'MIDNIGHT', x: -55, y: -20, size: 36, color: '0xFFFFFFFF', properties: {'fontFamily': 'Oswald', 'bold': true}),
+          DesignElement(id: 'mn_s', type: DesignElementType.sticker, content: '🌙', x: -15, y: 45, size: 55, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFF1B5E20',
+        name: 'Wild & Free',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'wf_t', type: DesignElementType.text, content: 'WILD & FREE', x: -60, y: -25, size: 26, color: '0xFFFFFFFF', properties: {'fontFamily': 'Pacifico', 'shadow': true}),
+          DesignElement(id: 'wf_s', type: DesignElementType.sticker, content: '🌿', x: -15, y: 45, size: 58, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFF880E4F',
+        name: 'Hustle',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'hu_t1', type: DesignElementType.text, content: 'HUSTLE', x: -45, y: -35, size: 42, color: '0xFFFFFFFF', properties: {'fontFamily': 'Oswald', 'bold': true}),
+          DesignElement(id: 'hu_t2', type: DesignElementType.text, content: 'HARDER', x: -38, y: 20, size: 32, color: '0xFFFF80AB', properties: {'fontFamily': 'Oswald', 'bold': true}),
+          DesignElement(id: 'hu_s', type: DesignElementType.sticker, content: '🔥', x: -15, y: 70, size: 50, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFF006064',
+        name: 'Zen Mode',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'zm_t', type: DesignElementType.text, content: 'ZEN MODE', x: -50, y: -20, size: 32, color: '0xFFE0F7FA', properties: {'fontFamily': 'Comfortaa', 'italic': true}),
+          DesignElement(id: 'zm_s', type: DesignElementType.sticker, content: '☮️', x: -15, y: 40, size: 60, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFF1A237E',
+        name: 'Galaxy',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'gx_t', type: DesignElementType.text, content: 'GALAXY', x: -45, y: -25, size: 40, color: '0xFFE8EAF6', properties: {'fontFamily': 'Oswald', 'bold': true, 'shadow': true}),
+          DesignElement(id: 'gx_s', type: DesignElementType.sticker, content: '✨', x: -15, y: 42, size: 58, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFFF06292',
+        name: 'Summer Days',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'sd_t', type: DesignElementType.text, content: 'SUMMER DAYS', x: -65, y: -25, size: 24, color: '0xFFFFFFFF', properties: {'fontFamily': 'Pacifico', 'shadow': true}),
+          DesignElement(id: 'sd_s', type: DesignElementType.sticker, content: '🌊', x: -15, y: 42, size: 58, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+      CustomDesign(
+        baseColor: '0xFF0D47A1',
+        name: 'Champion',
+        productType: 'T-Shirt',
+        elements: [
+          DesignElement(id: 'ch_t', type: DesignElementType.text, content: 'CHAMPION', x: -55, y: -20, size: 34, color: '0xFFFFD700', properties: {'fontFamily': 'Oswald', 'bold': true, 'shadow': true}),
+          DesignElement(id: 'ch_s', type: DesignElementType.sticker, content: '🏆', x: -15, y: 42, size: 60, color: '0xFFFFFFFF', properties: {}),
+        ],
+      ),
+    ];
+  }
+
   List<String> getAvailableFonts() {
     return [
       'Outfit',

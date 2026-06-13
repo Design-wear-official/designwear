@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
@@ -74,6 +75,22 @@ class DesignCanvas extends StatelessWidget {
           )
         else
           _buildComingSoonPlaceholder(context),
+
+        // AI-generated design graphic in the chest print area
+        if (_hasAsset && design.designImageBase64 != null)
+          Positioned(
+            left: 86,
+            top: 78,
+            width: 160,
+            height: 160,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: Image.memory(
+                base64Decode(design.designImageBase64!),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
 
         // Only render editable elements on supported garment types
         if (_hasAsset) ...[

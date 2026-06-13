@@ -101,6 +101,8 @@ class CustomDesign {
   final String? thumbnailPath; // Local path to saved thumbnail
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  // Runtime-only: AI-generated design graphic (base64, not persisted to JSON)
+  final String? designImageBase64;
 
   CustomDesign({
     this.baseColor = "0xFFFFFFFF",
@@ -120,6 +122,7 @@ class CustomDesign {
     this.thumbnailPath,
     this.createdAt,
     this.updatedAt,
+    this.designImageBase64,
   });
 
   CustomDesign copyWith({
@@ -140,6 +143,7 @@ class CustomDesign {
     String? thumbnailPath,
     DateTime? createdAt,
     DateTime? updatedAt,
+    Object? designImageBase64 = _keepExisting,
   }) {
     return CustomDesign(
       baseColor: baseColor ?? this.baseColor,
@@ -159,8 +163,13 @@ class CustomDesign {
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      designImageBase64: identical(designImageBase64, _keepExisting)
+          ? this.designImageBase64
+          : designImageBase64 as String?,
     );
   }
+
+  static const Object _keepExisting = Object();
 
   Map<String, dynamic> toJson() {
     return {

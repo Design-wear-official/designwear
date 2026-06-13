@@ -8,9 +8,34 @@ import 'package:designwear/config/config.dart';
 
 class AIAgentService {
   String get _baseUrl =>
-      ConfigLoader.get('WEB_API_BASE_URL') ?? 'http://10.0.2.2:3000/api';
+      ConfigLoader.get('WEB_API_BASE_URL') ??
+      'https://designwear-backend.vishwamai.com/api';
 
   final List<Map<String, dynamic>> _history = [];
+
+  /// Generates a graphic design image for the given theme.
+  /// Returns base64-encoded PNG string, or null on failure.
+  Future<String?> generateDesignImage(String prompt) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$_baseUrl/ai/generate-design'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'prompt': prompt}),
+          )
+          .timeout(const Duration(seconds: 45));
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200 && data['success'] == true) {
+        return data['imageData'] as String?;
+      }
+      debugPrint('Image gen error: ${data['error']}');
+      return null;
+    } catch (e) {
+      debugPrint('generateDesignImage: $e');
+      return null;
+    }
+  }
 
   Future<AgentResponse> sendMessage(
     String userMessage,
@@ -24,22 +49,24 @@ class AIAgentService {
         jsonEncode(currentDesign.toJson()),
       );
 
-      // Prepare image attachments
       List<Map<String, String>>? imageData;
       if (imageAttachments != null && imageAttachments.isNotEmpty) {
         imageData = [];
         for (final image in imageAttachments) {
           try {
             final bytes = await image.readAsBytes();
-            final base64Image = base64Encode(bytes);
-            imageData.add({'mimeType': 'image/jpeg', 'data': base64Image});
+            imageData.add({
+              'mimeType': 'image/jpeg',
+              'data': base64Encode(bytes),
+            });
           } catch (e) {
-            debugPrint('Error processing image attachment: $e');
+            debugPrint('Error encoding attachment: $e');
           }
         }
       }
 
-      final response = await http.post(
+      // Fire both requests in parallel — agent for design JSON, image gen for graphic
+      final agentFuture = http.post(
         Uri.parse('$_baseUrl/ai/agent'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
@@ -49,30 +76,33 @@ class AIAgentService {
           'imageAttachments': imageData,
         }),
       );
+      final imageFuture = generateDesignImage(userMessage);
 
-      final responseData = jsonDecode(response.body);
+      final agentHttpResponse = await agentFuture;
+      final imageBase64 = await imageFuture;
 
-      if (response.statusCode == 200 && responseData['success'] == true) {
-        // Add user message locally now that request succeeded
+      final responseData = jsonDecode(agentHttpResponse.body);
+
+      if (agentHttpResponse.statusCode == 200 &&
+          responseData['success'] == true) {
         final List<Map<String, dynamic>> userParts = [
           {'text': userMessage},
         ];
-
-        // Add image attachments to history if provided
         if (imageAttachments != null && imageAttachments.isNotEmpty) {
           for (final image in imageAttachments) {
             try {
               final bytes = await image.readAsBytes();
-              final base64Image = base64Encode(bytes);
               userParts.add({
-                'inline_data': {'mime_type': 'image/jpeg', 'data': base64Image},
+                'inline_data': {
+                  'mime_type': 'image/jpeg',
+                  'data': base64Encode(bytes),
+                },
               });
             } catch (e) {
-              debugPrint('Error adding image to history: $e');
+              debugPrint('Error adding attachment to history: $e');
             }
           }
         }
-
         _history.add({'role': 'user', 'parts': userParts});
 
         final data = responseData['data'];
@@ -83,8 +113,7 @@ class AIAgentService {
           final parts = content['parts'] as List?;
 
           if (parts != null && parts.isNotEmpty) {
-            String textResponse = parts[0]['text'];
-
+            final String textResponse = parts[0]['text'];
             _history.add({
               'role': 'model',
               'parts': [
@@ -92,9 +121,9 @@ class AIAgentService {
               ],
             });
 
-            // Extract JSON from response
+            // Greedy match captures full nested JSON object
             final jsonRegex = RegExp(
-              r'```json\s*(\{.*?\})\s*```',
+              r'```json\s*(\{.*\})\s*```',
               dotAll: true,
             );
             final match = jsonRegex.firstMatch(textResponse);
@@ -105,18 +134,21 @@ class AIAgentService {
                 final jsonResponse = jsonDecode(jsonString);
                 if (jsonResponse is Map<String, dynamic> &&
                     jsonResponse.containsKey('design')) {
-                  final newDesign = CustomDesign.fromJson(
+                  var newDesign = CustomDesign.fromJson(
                     jsonResponse['design'],
                   );
-                  final conversationalText = textResponse
-                      .split('```json')
-                      .first
-                      .trim();
-
+                  // Attach AI-generated graphic when available
+                  if (imageBase64 != null) {
+                    newDesign = newDesign.copyWith(
+                      designImageBase64: imageBase64,
+                    );
+                  }
+                  final conversationalText =
+                      textResponse.split('```json').first.trim();
                   return AgentResponse(
                     text: conversationalText.isNotEmpty
                         ? conversationalText
-                        : "I've updated the design for you!",
+                        : 'Design created! ✨',
                     updatedDesign: newDesign,
                   );
                 }
@@ -126,18 +158,16 @@ class AIAgentService {
           }
         }
       } else {
-        return AgentResponse(text: "API Error: ${responseData['error']}");
+        return AgentResponse(text: 'API Error: ${responseData['error']}');
       }
-      return AgentResponse(text: "No response from AI API.");
+      return AgentResponse(text: 'No response from AI.');
     } catch (e) {
-      debugPrint('Exception: $e');
-      return AgentResponse(text: "Error: $e");
+      debugPrint('sendMessage exception: $e');
+      return AgentResponse(text: 'Error: $e');
     }
   }
 
-  void clearHistory() {
-    _history.clear();
-  }
+  void clearHistory() => _history.clear();
 }
 
 class AgentResponse {
