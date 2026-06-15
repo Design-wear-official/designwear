@@ -72,10 +72,10 @@ class _DraggableElementWidgetState extends State<DraggableElementWidget> {
         child: Container(
           decoration: BoxDecoration(
             border: widget.isSelected
-                ? Border.all(color: AppColors.accentBlue, width: 2)
+                ? Border.all(color: AppColors.marigold, width: 2)
                 : _isDragging
                     ? Border.all(
-                        color: AppColors.accentBlue.withValues(alpha: 0.4),
+                        color: AppColors.marigold.withValues(alpha: 0.4),
                         width: 1,
                       )
                     : null,

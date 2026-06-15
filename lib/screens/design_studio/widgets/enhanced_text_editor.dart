@@ -101,7 +101,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue
+                          ? AppColors.marigold
                           : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -147,8 +147,10 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
+                    backgroundColor: AppColors.marigold,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
                   ),
                   child: const Text('ADD TEXT'),
                 ),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,8 +17,9 @@ import 'package:designwear/presentation/styles/styles.dart';
 
 class VirtualTryOnScreen extends StatefulWidget {
   final Product product;
+  final Uint8List? customClothingBytes;
 
-  const VirtualTryOnScreen({super.key, required this.product});
+  const VirtualTryOnScreen({super.key, required this.product, this.customClothingBytes});
 
   @override
   State<VirtualTryOnScreen> createState() => _VirtualTryOnScreenState();
@@ -119,7 +121,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                     child: _buildSourceOption(
                       icon: Icons.camera_alt_rounded,
                       label: 'Camera',
-                      color: AppColors.purple,
+                      color: AppColors.marigold,
                       onTap: () {
                         Navigator.pop(context);
                         _pickImage(ImageSource.camera);
@@ -131,7 +133,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                   child: _buildSourceOption(
                     icon: Icons.photo_library_rounded,
                     label: 'Gallery',
-                    color: AppColors.purple,
+                    color: AppColors.marigold,
                     onTap: () {
                       Navigator.pop(context);
                       _pickImage(ImageSource.gallery);
@@ -203,9 +205,11 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
     });
 
     try {
-      // Get clothing image bytes from URL
+      // Get clothing image bytes
       Uint8List clothingBytes;
-      if (widget.product.imageUrl != null) {
+      if (widget.customClothingBytes != null) {
+        clothingBytes = widget.customClothingBytes!;
+      } else if (widget.product.imageUrl != null) {
         final response = await http.get(Uri.parse(widget.product.imageUrl!));
         if (response.statusCode == 200) {
           clothingBytes = response.bodyBytes;
@@ -213,7 +217,12 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
           throw Exception('Failed to fetch product image');
         }
       } else {
-        throw Exception('Product image not available');
+        try {
+          final byteData = await rootBundle.load('assets/images/tshirt_white.png');
+          clothingBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          throw Exception('Product image and default asset not available');
+        }
       }
 
       // Generate try-on
@@ -369,7 +378,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.purple,
+                    color: AppColors.marigold,
                   ),
                 ),
               ],
@@ -404,7 +413,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _userPhotoBytes != null
-                    ? AppColors.purple.withOpacity(0.5)
+                    ? AppColors.marigold.withOpacity(0.5)
                     : AppColors.gray300,
                 width: 2,
                 strokeAlign: BorderSide.strokeAlignCenter,
@@ -438,7 +447,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                           child: IconButton(
                             icon: const Icon(
                               Icons.edit,
-                              color: AppColors.purple,
+                              color: AppColors.marigold,
                             ),
                             onPressed: _showImageSourceDialog,
                           ),
@@ -452,13 +461,13 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withOpacity(0.1),
+                          color: AppColors.marigold.withOpacity(0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.add_a_photo_rounded,
                           size: 48,
-                          color: AppColors.purple,
+                          color: AppColors.marigold,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -467,7 +476,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.purple,
+                          color: AppColors.marigold,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -533,7 +542,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             IconButton(
               onPressed: _shareResult,
               icon: const Icon(Icons.share_rounded),
-              color: AppColors.purple,
+              color: AppColors.marigold,
             ),
           ],
         ),
@@ -544,7 +553,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.purple.withOpacity(0.2),
+                color: AppColors.marigold.withOpacity(0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -579,8 +588,8 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
           child: ElevatedButton(
             onPressed: _isLoading ? null : _generateTryOn,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.purple,
-              foregroundColor: AppColors.white,
+              backgroundColor: AppColors.marigold,
+              foregroundColor: AppColors.marigoldInk,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

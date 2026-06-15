@@ -98,6 +98,7 @@ class CustomDesign {
   final String templateId;
   final String name; // User-given name for the design
   final String productType; // 'T-Shirt', 'Hoodie', 'Cap', etc.
+  final String printLocation; // 'centre_chest', 'left_chest', etc.
   final String? thumbnailPath; // Local path to saved thumbnail
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -119,6 +120,7 @@ class CustomDesign {
     this.templateId = '',
     this.name = '',
     this.productType = 'T-Shirt',
+    this.printLocation = 'centre_chest',
     this.thumbnailPath,
     this.createdAt,
     this.updatedAt,
@@ -140,6 +142,7 @@ class CustomDesign {
     String? templateId,
     String? name,
     String? productType,
+    String? printLocation,
     String? thumbnailPath,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -160,6 +163,7 @@ class CustomDesign {
       templateId: templateId ?? this.templateId,
       name: name ?? this.name,
       productType: productType ?? this.productType,
+      printLocation: printLocation ?? this.printLocation,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -187,6 +191,7 @@ class CustomDesign {
       'templateId': templateId,
       'name': name,
       'productType': productType,
+      'printLocation': printLocation,
       'thumbnailPath': thumbnailPath,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
@@ -212,6 +217,7 @@ class CustomDesign {
       templateId: json['templateId'] ?? '',
       name: json['name'] ?? '',
       productType: json['productType'] ?? 'T-Shirt',
+      printLocation: json['printLocation'] ?? 'centre_chest',
       thumbnailPath: json['thumbnailPath'],
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])

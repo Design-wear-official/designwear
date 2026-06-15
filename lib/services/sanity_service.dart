@@ -15,7 +15,7 @@ class SanityService {
   Future<List<Product>> fetchProducts() async {
     try {
       const query =
-          '*[_type == "product"] | order(_updatedAt desc) {_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+          '*[_type == "product"] | order(_updatedAt desc) {_id, title, slug, description, price, featured, "imageUrl": coalesce(image.asset->url, images[0].asset->url), category, stock}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
@@ -29,7 +29,7 @@ class SanityService {
   Future<List<Product>> fetchFeaturedProducts() async {
     try {
       const query =
-          '*[_type == "product" && featured == true]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+          '*[_type == "product" && featured == true]{_id, title, slug, description, price, featured, "imageUrl": coalesce(image.asset->url, images[0].asset->url), category, stock}';
       final List<dynamic> result = await client.fetch(query);
       if (result.isNotEmpty) {
         return result.map((item) => Product.fromMap(item)).toList();
@@ -39,7 +39,7 @@ class SanityService {
         'No featured products found in Sanity — falling back to first 6 products',
       );
       const fallbackQuery =
-          '*[_type == "product"][0..5]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+          '*[_type == "product"][0..5]{_id, title, slug, description, price, featured, "imageUrl": coalesce(image.asset->url, images[0].asset->url), category, stock}';
       final List<dynamic> fallback = await client.fetch(fallbackQuery);
       return fallback.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
@@ -51,7 +51,7 @@ class SanityService {
   Future<List<Category>> fetchCategories() async {
     try {
       const query =
-          '*[_type == "category"] | order(title asc) {_id, title, slug, description, "imageUrl": image.asset->url}';
+          '*[_type == "category"] | order(title asc) {_id, title, slug, description, "imageUrl": coalesce(image.asset->url, images[0].asset->url)}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Category.fromMap(item)).toList();
     } catch (e) {
@@ -63,7 +63,7 @@ class SanityService {
   Future<List<Product>> fetchProductsByCategory(String categoryId) async {
     try {
       final query =
-          '*[_type == "product" && category._ref == "$categoryId"]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+          '*[_type == "product" && category._ref == "$categoryId"]{_id, title, slug, description, price, featured, "imageUrl": coalesce(image.asset->url, images[0].asset->url), category, stock}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {

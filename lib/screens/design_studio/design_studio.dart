@@ -4,3 +4,5 @@ export 'design_studio_utils.dart';
 export 'layers_panel.dart';
 export 'templates_panel.dart';
 export 'tools_panel.dart';
+export 'color_panel.dart';
+export 'placement_panel.dart';

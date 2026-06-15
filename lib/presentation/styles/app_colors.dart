@@ -133,6 +133,49 @@ class AppColors {
   static const Color shimmerHighlight = Color(0xFFF5F5F5);
 
   // ============================================================================
+  // DEMO DESIGN-SYSTEM TOKENS (matching designwear_studio.html)
+  // ============================================================================
+
+  /// Marigold — primary remix/CTA accent from demo
+  static const Color marigold = Color(0xFFE2A33C);
+
+  /// Marigold ink — dark text on marigold backgrounds
+  static const Color marigoldInk = Color(0xFF6F4710);
+
+  /// Like / heart accent
+  static const Color like = Color(0xFFE5654B);
+
+  /// Default garment fill colour
+  static const Color garmentDefault = Color(0xFF27314F);
+
+  /// Paper — warm light-mode background (demo --paper light)
+  static const Color paperLight = Color(0xFFF1F0EC);
+
+  /// Paper — dark-mode background (demo --paper dark)
+  static const Color paperDark = Color(0xFF0D0F16);
+
+  /// Card — light-mode card surface
+  static const Color cardLight = Color(0xFFFFFFFF);
+
+  /// Card — dark-mode card surface
+  static const Color cardDark = Color(0xFF151824);
+
+  /// Ink — light-mode near-black
+  static const Color inkLight = Color(0xFF15182B);
+
+  /// Ink — dark-mode near-white
+  static const Color inkDark = Color(0xFFF1F0EC);
+
+  /// Hair — light-mode hairline border
+  static const Color hairLight = Color(0xFFE4E2DA);
+
+  /// Hair — dark-mode hairline border
+  static const Color hairDark = Color(0xFF262B3D);
+
+  /// Stone — secondary text
+  static const Color stone = Color(0xFF7A7B82);
+
+  // ============================================================================
   // GRADIENT COLORS
   // ============================================================================
 

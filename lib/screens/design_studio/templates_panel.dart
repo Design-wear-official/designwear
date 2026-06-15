@@ -79,7 +79,7 @@ class TemplatesPanel extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: AppColors.accentBlue,
+                            backgroundColor: AppColors.marigold,
                             child: Text(
                               template.name[0].toUpperCase(),
                               style: const TextStyle(
@@ -125,4 +125,3 @@ class TemplatesPanel extends StatelessWidget {
     );
   }
 }
-

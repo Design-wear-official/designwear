@@ -23,10 +23,7 @@ class TextControlsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Handle legacy text element
-    if (selectedElementId == 'legacy_text') {
-      return _buildLegacyTextControls();
-    }
+
 
     // Handle new text elements
     final element = design.elements
@@ -40,31 +37,7 @@ class TextControlsWidget extends StatelessWidget {
     return Container();
   }
 
-  Widget _buildLegacyTextControls() {
-    return Column(
-      children: [
-        // Font size slider
-        Row(
-          children: [
-            const Icon(Icons.format_size, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Slider(
-                value: design.fontSize,
-                min: DesignStudioConstants.minFontSize,
-                max: DesignStudioConstants.maxFontSize,
-                activeColor: AppColors.accentBlue,
-                onChanged: (value) {
-                  onDesignUpdate(design.copyWith(fontSize: value));
-                },
-              ),
-            ),
-            Text('${design.fontSize.round()}'),
-          ],
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildNewTextControls(DesignElement element) {
     return Column(
@@ -79,7 +52,7 @@ class TextControlsWidget extends StatelessWidget {
                 value: element.size,
                 min: DesignStudioConstants.minFontSize,
                 max: DesignStudioConstants.maxFontSize,
-                activeColor: AppColors.accentBlue,
+                activeColor: AppColors.marigold,
                 onChanged: (value) {
                   final updatedElement = element.copyWith(size: value);
                   onDesignUpdate(
@@ -119,7 +92,7 @@ class TextControlsWidget extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.accentBlue
+                      ? AppColors.marigold
                       : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -173,7 +146,7 @@ class TextControlsWidget extends StatelessWidget {
                       color: color,
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? AppColors.accentBlue : Colors.grey.shade400,
+                        color: isSelected ? AppColors.marigold : Colors.grey.shade400,
                         width: isSelected ? 2.5 : 1,
                       ),
                     ),
@@ -233,7 +206,7 @@ class TextControlsWidget extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: isActive ? AppColors.accentBlue : Colors.grey.shade200,
+          color: isActive ? AppColors.marigold : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(

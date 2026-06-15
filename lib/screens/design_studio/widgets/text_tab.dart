@@ -37,17 +37,18 @@ class TextTab extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: const Text('ADD TEXT'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accentBlue,
+                  backgroundColor: AppColors.marigold,
                   foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  elevation: 0,
                 ),
               ),
             ),
           ],
         ),
 
-        if (selectedElementId != null &&
-            (selectedElementId!.startsWith('text') ||
-                selectedElementId == 'legacy_text')) ...[
+        if (selectedElementId != null && selectedElementId!.startsWith('text')) ...[
           const SizedBox(height: 16),
           Text(
             'Text Properties',

@@ -1,41 +1,81 @@
 ---
-description: How to run the Flutter App with flavors
+description: How to run the Flutter app and Next.js backend with flavors
 ---
 
-# Running the App with Flavors
+# Running DesignWear
 
-The Flutter app is configured to use two product flavors: `internal` and `external`. 
-Because flavors are defined in `android/app/build.gradle.kts`, you must specify the flavor explicitly when running or building the app, otherwise the build will fail.
-
-## Running the App
-
-To run the app on an active emulator or connected device:
-
-### Internal Flavor
-```bash
-flutter run --flavor internal -t lib/main.dart
-```
-
-### External Flavor (Default)
-```bash
-flutter run --flavor external -t lib/main.dart
-```
+**Flutter:** 3.44.1 (stable) · **Gradle:** 8.14 · **Next.js:** 16.2.9
 
 ---
 
-## Building the App
+## Flutter App
 
-To build APK files:
+The Flutter app uses two product flavors: `internal` and `external`.  
+You must always pass `--flavor` and `-t` together — omitting either will fail.
 
-### Build Internal APK
+### Run (debug)
+
 ```bash
-flutter build apk --flavor internal -t lib/main.dart
+# Internal flavor (appId: com.vishwamai.designwear.internal)
+flutter run --flavor internal -t lib/main_internal.dart
+
+# External flavor (appId: com.vishwamai.designwear)
+flutter run --flavor external -t lib/main_external.dart
 ```
 
-### Build External APK
+### Run (release)
+
 ```bash
-flutter build apk --flavor external -t lib/main.dart
+flutter run --release --flavor internal -t lib/main_internal.dart
+flutter run --release --flavor external -t lib/main_external.dart
 ```
+
+### Build APK
+
+```bash
+flutter build apk --flavor internal -t lib/main_internal.dart
+flutter build apk --flavor external -t lib/main_external.dart
+```
+
+### Build App Bundle (Play Store)
+
+```bash
+flutter build appbundle --flavor external -t lib/main_external.dart
+```
+
+---
+
+## Next.js Backend (`designwear-backend/`)
+
+```bash
+cd designwear-backend
+
+# Development server (http://localhost:3000)
+npm run dev
+
+# Production build
+npm run build
+
+# Start production server (after build)
+npm run start
+
+# Lint
+npm run lint
+```
+
+> Required env vars: `FIREBASE_SERVICE_ACCOUNT_KEY`, `FIREBASE_API_KEY`,
+> `NEXT_PUBLIC_SANITY_PROJECT_ID`, `NEXT_PUBLIC_SANITY_DATASET`,
+> `NEXT_PUBLIC_FIREBASE_PROJECT_ID` — set in `.env.local` or Vercel dashboard.
+
+---
 
 ## Troubleshooting
-If you encounter `Unresolved reference: filePermissions` building on Android, ensure that your Gradle setup (in `android/gradle/wrapper/gradle-wrapper.properties` and `android/settings.gradle.kts`) is up to date with the installed Flutter framework version.
+
+**`Unresolved reference: filePermissions`** — update `android/gradle/wrapper/gradle-wrapper.properties` to `gradle-8.14-all.zip` and sync `android/settings.gradle.kts`.
+
+**`Another next build process is already running`** — delete `.next/` and retry:
+```bash
+rm -rf designwear-backend/.next && npm run build
+```
+
+**Firebase Admin `auth` not found** — all routes import `{ auth }` from `@/lib/config/database`, not `firebase-admin` directly. Set `FIREBASE_SERVICE_ACCOUNT_KEY` in env.

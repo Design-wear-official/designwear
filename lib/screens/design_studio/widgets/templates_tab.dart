@@ -56,7 +56,7 @@ class TemplatesTab extends StatelessWidget {
                           Icon(
                             Icons.style,
                             size: 32,
-                            color: AppColors.accentBlue,
+                            color: AppColors.marigold,
                           ),
                           const SizedBox(height: 8),
                           Text(
@@ -82,4 +82,3 @@ class TemplatesTab extends StatelessWidget {
     );
   }
 }
-

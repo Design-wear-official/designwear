@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
@@ -367,12 +368,12 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
               ),
             ),
 
-          // Floating Button
-          FloatingActionButton(
+          // Floating Button (Small, secondary-styled to not dominate the screen)
+          FloatingActionButton.small(
             onPressed: () => setState(() => _isOpen = !_isOpen),
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            child: const Icon(Icons.auto_awesome),
+            backgroundColor: isDark ? const Color(0xFF262B3D) : const Color(0xFFE4E2DA),
+            foregroundColor: AppColors.marigold,
+            child: const Icon(Icons.auto_awesome, size: 18),
           ),
         ],
       ),
