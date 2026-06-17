@@ -652,7 +652,9 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
         Text(
           _product.lineage.isNotEmpty
               ? 'Every remix keeps its thread. This design is ${_product.lineage.length} fork${_product.lineage.length == 1 ? '' : 's'} deep.'
-              : 'Every remix keeps its thread.',
+              : (_product.remixedFromHandle?.isNotEmpty == true
+                  ? 'Every remix keeps its thread. This is one fork deep.'
+                  : 'Every remix keeps its thread.'),
           style: GoogleFonts.outfit(
             fontSize: 12,
             color: AppColors.stone,
@@ -669,14 +671,19 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
 
   Widget _buildLineageRow() {
     final lineage = _product.lineage;
-    if (lineage.isEmpty) {
-      // Lineage not yet filled in Sanity — show current design as the origin
+    final remixHandle = _product.remixedFromHandle;
+    final remixVersion = _product.remixedFromVersion;
+
+    final nodes = <Widget>[];
+
+    if (lineage.isEmpty && (remixHandle == null || remixHandle.isEmpty)) {
+      // No lineage data and no remix info → this IS the origin
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           LineageNode(
             garmentColor: _garmentColor,
-            handle: _creatorHandle.isNotEmpty ? _creatorHandle : '@creator',
+            handle: _creatorHandle,
             version: 'origin · v0',
             isCurrent: true,
             artText: _artText,
@@ -684,20 +691,33 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
         ],
       );
     }
-    final nodes = <Widget>[];
-    for (int i = 0; i < lineage.length; i++) {
-      final entry = lineage[i];
-      final hex = entry['baseColor'] ?? '';
-      final clean = hex.replaceAll('#', '');
-      final color = Color(int.tryParse('FF$clean', radix: 16) ?? 0xFF1C2541);
+
+    // Add ancestors from the stored lineage array
+    for (final entry in lineage) {
+      final hex = (entry['baseColor'] ?? '').replaceAll('#', '');
+      final color = Color(int.tryParse('FF$hex', radix: 16) ?? 0xFF1C2541);
       nodes.add(LineageNode(
         garmentColor: color,
         handle: entry['handle'] ?? '',
         version: entry['version'] ?? '',
-        artText: entry['artText'],
+        artText: entry['artText']?.isNotEmpty == true ? entry['artText'] : null,
       ));
       nodes.add(const LineageStitch());
     }
+
+    // If lineage array is empty but remixedFromHandle is set, add the parent as origin node
+    if (lineage.isEmpty && remixHandle != null && remixHandle.isNotEmpty) {
+      final parentHandle = remixHandle.startsWith('@') ? remixHandle : '@$remixHandle';
+      // Use a visible medium-blue for the parent when we don't have its actual color
+      nodes.add(LineageNode(
+        garmentColor: const Color(0xFF4A5568),
+        handle: parentHandle,
+        version: remixVersion?.isNotEmpty == true ? remixVersion! : 'origin · v0',
+        artText: parentHandle.replaceFirst('@', '').toUpperCase(),
+      ));
+      nodes.add(const LineageStitch());
+    }
+
     // Current design is always the last node
     nodes.add(LineageNode(
       garmentColor: _garmentColor,
@@ -706,6 +726,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
       isCurrent: true,
       artText: _artText,
     ));
+
     return Row(crossAxisAlignment: CrossAxisAlignment.start, children: nodes);
   }
 

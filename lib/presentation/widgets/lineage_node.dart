@@ -33,14 +33,14 @@ class LineageNode extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 96,
+        width: 112,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Thumb
             Container(
-              width: 72,
-              height: 84,
+              width: 96,
+              height: 112,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
@@ -48,14 +48,14 @@ class LineageNode extends StatelessWidget {
                   width: isCurrent ? 1.6 : 1.4,
                 ),
                 boxShadow: isCurrent
-                    ? [BoxShadow(color: AppColors.marigold.withOpacity(0.32), blurRadius: 8, spreadRadius: 2)]
+                    ? [BoxShadow(color: AppColors.marigold.withValues(alpha: 0.32), blurRadius: 8, spreadRadius: 2)]
                     : null,
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: GarmentTile(
                   garmentColor: garmentColor,
-                  showArt: artText != null,
+                  showArt: artText != null && artText!.isNotEmpty,
                   artText: artText,
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -101,9 +101,9 @@ class LineageStitch extends StatelessWidget {
     final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
 
     return SizedBox(
-      width: 30,
+      width: 24,
       child: Padding(
-        padding: const EdgeInsets.only(top: 42),
+        padding: const EdgeInsets.only(top: 56),
         child: CustomPaint(painter: _DashLinePainter(color: hair)),
       ),
     );

@@ -107,7 +107,7 @@ class _GridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.45)
+      ..color = color.withValues(alpha:0.45)
       ..strokeWidth = 1;
 
     const spacing = 24.0;
@@ -125,7 +125,7 @@ class _GridPainter extends CustomPainter {
       ..shader = RadialGradient(
         center: Alignment.center,
         radius: 0.8,
-        colors: [Colors.transparent, color.withOpacity(0.2)],
+        colors: [Colors.transparent, color.withValues(alpha:0.2)],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height))
       ..blendMode = BlendMode.dstIn;
     canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), maskPaint);
@@ -230,14 +230,14 @@ class _GarmentPainter extends CustomPainter {
     canvas.drawPath(
       bodyPath,
       Paint()
-        ..color = Colors.black.withOpacity(isDark ? 0.35 : 0.18)
+        ..color = Colors.black.withValues(alpha:isDark ? 0.35 : 0.18)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
     canvas.drawPath(bodyPath, Paint()..color = color);
 
     // Seam lines
     final seamPaint = Paint()
-      ..color = Colors.black.withOpacity(isDark ? 0.1 : 0.2)
+      ..color = Colors.black.withValues(alpha:isDark ? 0.1 : 0.2)
       ..strokeWidth = 1.4 * sx
       ..style = PaintingStyle.stroke;
     // Collar seam curve
@@ -257,13 +257,13 @@ class _GarmentPainter extends CustomPainter {
         width: 68 * sx,
         height: 24 * sy,
       ),
-      Paint()..color = Colors.black.withOpacity(0.15),
+      Paint()..color = Colors.black.withValues(alpha:0.15),
     );
 
     // Print zone dashed outline
     if (showPrint) {
       final printPaint = Paint()
-        ..color = Colors.white.withOpacity(0.7)
+        ..color = Colors.white.withValues(alpha:0.7)
         ..strokeWidth = 1.6 * sx
         ..style = PaintingStyle.stroke;
       final printRect = RRect.fromRectAndRadius(
@@ -307,7 +307,7 @@ class _GarmentPainter extends CustomPainter {
     canvas.drawPath(
       body,
       Paint()
-        ..color = Colors.black.withOpacity(isDark ? 0.35 : 0.18)
+        ..color = Colors.black.withValues(alpha:isDark ? 0.35 : 0.18)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
     canvas.drawPath(body, Paint()..color = color);
@@ -321,7 +321,7 @@ class _GarmentPainter extends CustomPainter {
     pocket.close();
     canvas.drawPath(
       pocket,
-      Paint()..color = Colors.black.withOpacity(0.12),
+      Paint()..color = Colors.black.withValues(alpha:0.12),
     );
 
     if (showArt) _drawArt(canvas, size, sx, sy);
@@ -344,7 +344,7 @@ class _GarmentPainter extends CustomPainter {
     canvas.drawPath(
       body,
       Paint()
-        ..color = Colors.black.withOpacity(isDark ? 0.35 : 0.18)
+        ..color = Colors.black.withValues(alpha:isDark ? 0.35 : 0.18)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
     canvas.drawPath(body, Paint()..color = color);
@@ -357,7 +357,7 @@ class _GarmentPainter extends CustomPainter {
     collar.lineTo(218 * sx, 28 * sy);
     collar.lineTo(182 * sx, 28 * sy);
     collar.close();
-    canvas.drawPath(collar, Paint()..color = Colors.black.withOpacity(0.18));
+    canvas.drawPath(collar, Paint()..color = Colors.black.withValues(alpha:0.18));
 
     if (showArt) _drawArt(canvas, size, sx, sy);
   }
@@ -388,7 +388,7 @@ class _GarmentPainter extends CustomPainter {
       Offset(200 * sx, 80 * sy),
       Offset(200 * sx, 230 * sy),
       Paint()
-        ..color = Colors.black.withOpacity(0.15)
+        ..color = Colors.black.withValues(alpha:0.15)
         ..strokeWidth = 1.2 * sx,
     );
 
@@ -432,20 +432,26 @@ class _GarmentPainter extends CustomPainter {
   }
 
   void _drawArt(Canvas canvas, Size size, double sx, double sy) {
+    // Clamp font sizes so text is legible even at small thumbnail sizes.
+    final artFontSize = (20 * sx).clamp(7.0, 20.0);
+    final subFontSize = (9 * sx).clamp(5.0, 9.0);
+    final artLetterSpacing = (2 * sx).clamp(0.5, 2.0);
+    final subLetterSpacing = (3 * sx).clamp(0.5, 3.0);
+
     final textPainter = TextPainter(
       text: TextSpan(
         text: artText ?? 'PETRICHOR',
         style: TextStyle(
-          color: Colors.white.withOpacity(0.9),
-          fontSize: 20 * sx,
+          color: Colors.white.withValues(alpha:0.9),
+          fontSize: artFontSize,
           fontWeight: FontWeight.w900,
-          letterSpacing: 2 * sx,
+          letterSpacing: artLetterSpacing,
           fontFamily: 'Archivo',
         ),
       ),
       textDirection: TextDirection.ltr,
     );
-    textPainter.layout();
+    textPainter.layout(maxWidth: size.width);
     textPainter.paint(
       canvas,
       Offset(
@@ -454,38 +460,42 @@ class _GarmentPainter extends CustomPainter {
       ),
     );
 
-    // Sub-label
-    final subPainter = TextPainter(
-      text: TextSpan(
-        text: "MONSOON '26",
-        style: TextStyle(
-          color: AppColors.marigold,
-          fontSize: 9 * sx,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 3 * sx,
+    // Sub-label — only draw if canvas is wide enough to avoid total overlap
+    if (size.width > 80) {
+      final subPainter = TextPainter(
+        text: TextSpan(
+          text: "MONSOON '26",
+          style: TextStyle(
+            color: AppColors.marigold,
+            fontSize: subFontSize,
+            fontWeight: FontWeight.w700,
+            letterSpacing: subLetterSpacing,
+          ),
         ),
-      ),
-      textDirection: TextDirection.ltr,
-    );
-    subPainter.layout();
-    subPainter.paint(
-      canvas,
-      Offset(
-        size.width / 2 - subPainter.width / 2,
-        size.height * 0.52 + textPainter.height + 4 * sy,
-      ),
-    );
+        textDirection: TextDirection.ltr,
+      );
+      subPainter.layout(maxWidth: size.width);
+      subPainter.paint(
+        canvas,
+        Offset(
+          size.width / 2 - subPainter.width / 2,
+          size.height * 0.52 + textPainter.height + 4 * sy,
+        ),
+      );
+    }
 
-    // Decorative wave marks
-    final wavePaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
-      ..strokeWidth = 2.2 * sx
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-    _drawWave(canvas, Offset(168 * sx, 150 * sy), wavePaint, sx);
-    _drawWave(canvas, Offset(168 * sx, 168 * sy), wavePaint, sx);
-    _drawWave(canvas, Offset(208 * sx, 150 * sy), wavePaint, sx);
-    _drawWave(canvas, Offset(208 * sx, 168 * sy), wavePaint, sx);
+    // Decorative wave marks — skip at thumbnail sizes (canvas < 80px wide)
+    if (size.width > 80) {
+      final wavePaint = Paint()
+        ..color = Colors.white.withValues(alpha:0.8)
+        ..strokeWidth = 2.2 * sx
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round;
+      _drawWave(canvas, Offset(168 * sx, 150 * sy), wavePaint, sx);
+      _drawWave(canvas, Offset(168 * sx, 168 * sy), wavePaint, sx);
+      _drawWave(canvas, Offset(208 * sx, 150 * sy), wavePaint, sx);
+      _drawWave(canvas, Offset(208 * sx, 168 * sy), wavePaint, sx);
+    }
   }
 
   void _drawWave(Canvas canvas, Offset start, Paint paint, double sx) {
