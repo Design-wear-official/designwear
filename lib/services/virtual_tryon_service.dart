@@ -8,7 +8,7 @@ import 'package:designwear/config/config.dart';
 /// Service to handle Virtual Try-On using the local Node API proxy
 class VirtualTryOnService {
   String get _baseUrl =>
-      ConfigLoader.get('WEB_API_BASE_URL') ?? 'http://10.0.2.2:3000/api';
+      ConfigLoader.get('WEB_API_BASE_URL') ?? 'https://designwear-backend.vishwamai.com/api';
 
   /// Generate a virtual try-on image
   Future<Uint8List?> generateTryOn({

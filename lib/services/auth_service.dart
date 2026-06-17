@@ -309,6 +309,16 @@ class AuthService extends ChangeNotifier {
       throw Exception(
         'No internet connection. Please check your WiFi or mobile data.',
       );
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('ApiException: 10') || msg.contains('DEVELOPER_ERROR')) {
+        throw Exception(
+          'Google Sign-In is not configured for this build. '
+          'Add this app\'s SHA-1 fingerprint to Firebase Console → '
+          'Project Settings → Your Apps → com.vishwamai.designwear.',
+        );
+      }
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
