@@ -36,9 +36,14 @@ class _DesignCanvasState extends State<DesignCanvas> {
   // Asset map — add entries here as new garment images are added
   static const _garmentAssets = <String, String>{
     'tshirt': 'assets/images/tshirt_white.png',
+    'shirt':  'assets/images/tshirt_white.png', // Sanity category slug alias
+    't-shirt': 'assets/images/tshirt_white.png',
   };
 
   static const _garmentLabels = <String, String>{
+    'tshirt':  'T-Shirt',
+    'shirt':   'T-Shirt',
+    't-shirt': 'T-Shirt',
     'hoodie':  'Hoodie',
     'polo':    'Polo Shirt',
     'cap':     'Cap',
@@ -70,7 +75,7 @@ class _DesignCanvasState extends State<DesignCanvas> {
         border: Border.all(color: hair, width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.35 : 0.1),
+            color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
             blurRadius: 28,
             offset: const Offset(0, 8),
           ),
@@ -239,7 +244,7 @@ class _DesignCanvasState extends State<DesignCanvas> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF151824).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+                color: isDark ? const Color(0xFF151824).withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: hair),
               ),
@@ -300,14 +305,14 @@ class _DesignCanvasState extends State<DesignCanvas> {
         children: [
           Icon(Icons.checkroom_outlined,
               size: 64,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.25)),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25)),
           const SizedBox(height: 12),
           Text(
             label,
             style: GoogleFonts.outfit(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ),
           const SizedBox(height: 6),
@@ -315,7 +320,7 @@ class _DesignCanvasState extends State<DesignCanvas> {
             'Coming Soon',
             style: GoogleFonts.outfit(
               fontSize: 13,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
         ],
@@ -334,7 +339,7 @@ class _CanvasGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.35)
+      ..color = color.withValues(alpha: 0.35)
       ..strokeWidth = 1;
 
     const spacing = 24.0;

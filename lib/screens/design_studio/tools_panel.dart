@@ -34,6 +34,12 @@ class ToolsPanel extends StatelessWidget {
       'iconFilled': Icons.title,
     },
     {
+      'id': 'emoji',
+      'label': 'Emoji',
+      'iconOutline': Icons.emoji_emotions_outlined,
+      'iconFilled': Icons.emoji_emotions,
+    },
+    {
       'id': 'place',
       'label': 'Placement',
       'iconOutline': Icons.aspect_ratio_outlined,
@@ -117,7 +123,7 @@ class ToolsPanel extends StatelessWidget {
             : const EdgeInsets.symmetric(vertical: 2),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? Colors.white.withOpacity(0.04) : const Color(0xFF15182B).withOpacity(0.04))
+              ? (isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFF15182B).withValues(alpha: 0.04))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),

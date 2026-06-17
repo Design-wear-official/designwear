@@ -385,6 +385,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           onAddTextElement: (text, font) => _addTextElement(text, fontFamily: font),
           onToggleTextEffect: _toggleTextEffect,
         );
+      case 'emoji':
+        return StickersTab(
+          onAddStickerElement: _addStickerElement,
+        );
       case 'place':
         return PlacementPanel(
           design: _design,
@@ -637,6 +641,21 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     setState(() {
       _selectedElementId = element.id;
     });
+  }
+
+  void _addStickerElement(String emoji) {
+    final element = DesignElement(
+      id: DesignStudioUtils.generateElementId(DesignElementType.sticker),
+      type: DesignElementType.sticker,
+      content: emoji,
+      x: 0,
+      y: 0,
+      size: DesignStudioConstants.defaultStickerSize,
+      color: '0xFF000000',
+      properties: const {},
+    );
+    _updateDesign(_design.addElement(element));
+    setState(() => _selectedElementId = element.id);
   }
 
   void _duplicateElement(String elementId) {

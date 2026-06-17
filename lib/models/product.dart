@@ -20,6 +20,18 @@ class Product {
   final List<String> availableSizes;
   final List<String> availableColors;
 
+  // Community / social fields (populated from Sanity "community" group)
+  final String? creatorName;
+  final String? creatorHandle;
+  final int creatorFollowerCount;
+  final String? garmentBaseColor; // hex e.g. "#2C5F5A"
+  final String? artText;          // text printed on garment preview
+  final String? remixedFromHandle;
+  final String? remixedFromVersion;
+  final int likeCount;
+  final int remixCount;
+  final List<Map<String, String>> lineage; // [{handle, version, baseColor, artText}]
+
   Product({
     required this.id,
     required this.title,
@@ -41,6 +53,16 @@ class Product {
     this.productType,
     this.availableSizes = const ['S', 'M', 'L', 'XL', 'XXL'],
     this.availableColors = const [],
+    this.creatorName,
+    this.creatorHandle,
+    this.creatorFollowerCount = 0,
+    this.garmentBaseColor,
+    this.artText,
+    this.remixedFromHandle,
+    this.remixedFromVersion,
+    this.likeCount = 0,
+    this.remixCount = 0,
+    this.lineage = const [],
   });
 
   bool get isOnSale => discountPercent != null && discountPercent! > 0;
@@ -67,6 +89,16 @@ class Product {
     String? productType,
     List<String>? availableSizes,
     List<String>? availableColors,
+    String? creatorName,
+    String? creatorHandle,
+    int? creatorFollowerCount,
+    String? garmentBaseColor,
+    String? artText,
+    String? remixedFromHandle,
+    String? remixedFromVersion,
+    int? likeCount,
+    int? remixCount,
+    List<Map<String, String>>? lineage,
   }) {
     return Product(
       id: id ?? this.id,
@@ -89,6 +121,16 @@ class Product {
       productType: productType ?? this.productType,
       availableSizes: availableSizes ?? List.from(this.availableSizes),
       availableColors: availableColors ?? List.from(this.availableColors),
+      creatorName: creatorName ?? this.creatorName,
+      creatorHandle: creatorHandle ?? this.creatorHandle,
+      creatorFollowerCount: creatorFollowerCount ?? this.creatorFollowerCount,
+      garmentBaseColor: garmentBaseColor ?? this.garmentBaseColor,
+      artText: artText ?? this.artText,
+      remixedFromHandle: remixedFromHandle ?? this.remixedFromHandle,
+      remixedFromVersion: remixedFromVersion ?? this.remixedFromVersion,
+      likeCount: likeCount ?? this.likeCount,
+      remixCount: remixCount ?? this.remixCount,
+      lineage: lineage ?? List.from(this.lineage),
     );
   }
 
@@ -147,6 +189,23 @@ class Product {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      creatorName: map['creatorName']?.toString(),
+      creatorHandle: map['creatorHandle']?.toString(),
+      creatorFollowerCount: (map['creatorFollowers'] as num?)?.toInt() ?? 0,
+      garmentBaseColor: map['garmentBaseColor']?.toString(),
+      artText: map['artText']?.toString(),
+      remixedFromHandle: map['remixedFromHandle']?.toString(),
+      remixedFromVersion: map['remixedFromVersion']?.toString(),
+      likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
+      remixCount: (map['remixCount'] as num?)?.toInt() ?? 0,
+      lineage: (map['lineage'] as List<dynamic>?)
+              ?.map((e) => Map<String, String>.from(
+                    (e as Map<String, dynamic>).map(
+                      (k, v) => MapEntry(k, v?.toString() ?? ''),
+                    ),
+                  ))
+              .toList() ??
+          [],
     );
   }
 
@@ -188,6 +247,23 @@ class Product {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      creatorName: map['creatorName']?.toString(),
+      creatorHandle: map['creatorHandle']?.toString(),
+      creatorFollowerCount: (map['creatorFollowerCount'] as num?)?.toInt() ?? 0,
+      garmentBaseColor: map['garmentBaseColor']?.toString(),
+      artText: map['artText']?.toString(),
+      remixedFromHandle: map['remixedFromHandle']?.toString(),
+      remixedFromVersion: map['remixedFromVersion']?.toString(),
+      likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
+      remixCount: (map['remixCount'] as num?)?.toInt() ?? 0,
+      lineage: (map['lineage'] as List<dynamic>?)
+              ?.map((e) => Map<String, String>.from(
+                    (e as Map<String, dynamic>).map(
+                      (k, v) => MapEntry(k, v?.toString() ?? ''),
+                    ),
+                  ))
+              .toList() ??
+          [],
     );
   }
 
@@ -213,6 +289,16 @@ class Product {
       'productType': productType,
       'availableSizes': availableSizes,
       'availableColors': availableColors,
+      'creatorName': creatorName,
+      'creatorHandle': creatorHandle,
+      'creatorFollowerCount': creatorFollowerCount,
+      'garmentBaseColor': garmentBaseColor,
+      'artText': artText,
+      'remixedFromHandle': remixedFromHandle,
+      'remixedFromVersion': remixedFromVersion,
+      'likeCount': likeCount,
+      'remixCount': remixCount,
+      'lineage': lineage,
     };
   }
 }

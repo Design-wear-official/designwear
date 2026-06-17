@@ -19,24 +19,71 @@ class DesignDetailScreen extends StatefulWidget {
 class _DesignDetailScreenState extends State<DesignDetailScreen> {
   bool _isFollowing = false;
   bool _isLiked = false;
-  int _likeCount = 3184;
+  late int _likeCount;
   late final Product _product;
-
-  final Product _baseProduct = Product(
-    id: "petrichor-tee-001",
-    title: "Petrichor Tee",
-    slug: "petrichor-tee",
-    description: "A community design by @aanya, remixed from @kabir.",
-    price: 9.99, // ₹699 roughly
-    imageUrl: null,
-    categoryId: "custom",
-    stockStatus: 'inStock',
-  );
 
   @override
   void initState() {
     super.initState();
-    _product = widget.product ?? _baseProduct;
+    _product = widget.product ?? Product(
+      id: "petrichor-tee-001",
+      title: "Petrichor Tee",
+      slug: "petrichor-tee",
+      description: "A community design remixed from the DesignWear feed.",
+      price: 9.99,
+      categoryId: "custom",
+      stockStatus: 'inStock',
+    );
+    _likeCount = _product.likeCount;
+  }
+
+  // ── Derived helpers that fall back to defaults when Sanity field is absent ──
+
+  String get _creatorName => _product.creatorName ?? 'Unknown';
+  String get _creatorHandle => _product.creatorHandle ?? '@unknown';
+
+  String get _followerLabel {
+    final n = _product.creatorFollowerCount;
+    if (n == 0) return '';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}k followers';
+    return '$n followers';
+  }
+
+  String? get _provenanceBadge {
+    final h = _product.remixedFromHandle;
+    final v = _product.remixedFromVersion;
+    if (h == null || h.isEmpty) return null;
+    return 'Remixed from $h${v != null && v.isNotEmpty ? ' · $v' : ''}';
+  }
+
+  Color get _garmentColor {
+    final hex = _product.garmentBaseColor;
+    if (hex == null) return const Color(0xFF2C5F5A);
+    final clean = hex.replaceAll('#', '');
+    return Color(int.tryParse('FF$clean', radix: 16) ?? 0xFF2C5F5A);
+  }
+
+  String get _artText {
+    final a = _product.artText;
+    if (a != null && a.isNotEmpty) return a;
+    final t = _product.title;
+    if (t.isNotEmpty) return t.toUpperCase();
+    return 'DESIGN';
+  }
+
+  GarmentShape get _garmentShape {
+    switch (_product.productType?.toLowerCase()) {
+      case 'hoodie':
+        return GarmentShape.hoodie;
+      case 'polo':
+        return GarmentShape.polo;
+      case 'cap':
+        return GarmentShape.cap;
+      case 'totebag':
+        return GarmentShape.totebag;
+      default:
+        return GarmentShape.tshirt;
+    }
   }
 
   @override
@@ -170,11 +217,11 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
               borderRadius: const BorderRadius.all(Radius.circular(24)),
               child: _product.imageUrl != null
                   ? SafeNetworkImage(imageUrl: _product.imageUrl!, fit: BoxFit.cover)
-                  : const GarmentTile(
-                      garmentColor: Color(0xFF2C5F5A),
-                      shape: GarmentShape.tshirt,
+                  : GarmentTile(
+                      garmentColor: _garmentColor,
+                      shape: _garmentShape,
                       showArt: true,
-                      artText: 'PETRICHOR',
+                      artText: _artText,
                     ),
             ),
           ),
@@ -252,11 +299,11 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
                     borderRadius: const BorderRadius.all(Radius.circular(24)),
                     child: _product.imageUrl != null
                         ? SafeNetworkImage(imageUrl: _product.imageUrl!, fit: BoxFit.cover)
-                        : const GarmentTile(
-                            garmentColor: Color(0xFF2C5F5A),
-                            shape: GarmentShape.tshirt,
+                        : GarmentTile(
+                            garmentColor: _garmentColor,
+                            shape: _garmentShape,
                             showArt: true,
-                            artText: 'PETRICHOR',
+                            artText: _artText,
                           ),
                   ),
                 ),
@@ -397,7 +444,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
               ),
               child: Center(
                 child: Text(
-                  'Aa',
+                  _creatorName.isNotEmpty ? _creatorName[0].toUpperCase() : '?',
                   style: GoogleFonts.archivo(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -411,7 +458,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Aanya R.',
+                  _creatorName,
                   style: GoogleFonts.outfit(
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
@@ -420,7 +467,9 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '@aanya · 4.2k followers',
+                  _followerLabel.isNotEmpty
+                      ? '$_creatorHandle · $_followerLabel'
+                      : _creatorHandle,
                   style: GoogleFonts.spaceMono(
                     fontWeight: FontWeight.w600,
                     fontSize: 11,
@@ -464,43 +513,45 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
             style: GoogleFonts.inter(
               fontSize: 13.5,
               height: 1.4,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.85),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
             ),
           ),
         ],
         const SizedBox(height: 16),
 
-        // Provenance Badge
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF261D15) : const Color(0xFFF4E6CD),
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(
-              color: isDark ? const Color(0xFF4C3B24) : const Color(0xFFECD6A8),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.fork_right,
-                size: 13,
-                color: isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710),
+        // Provenance Badge (only shown when remixed from another creator)
+        if (_provenanceBadge != null) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF261D15) : const Color(0xFFF4E6CD),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: isDark ? const Color(0xFF4C3B24) : const Color(0xFFECD6A8),
               ),
-              const SizedBox(width: 6),
-              Text(
-                'Remixed from @kabir · v3',
-                style: GoogleFonts.spaceMono(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.fork_right,
+                  size: 13,
                   color: isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710),
                 ),
-              ),
-            ],
+                const SizedBox(width: 6),
+                Text(
+                  _provenanceBadge!,
+                  style: GoogleFonts.spaceMono(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 11,
+                    color: isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 16),
+        ],
 
         // Stats Row
         Row(
@@ -513,7 +564,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
             const SizedBox(width: 20),
             _buildStatItem(
               icon: Icons.fork_right,
-              value: '412',
+              value: _product.remixCount.toString(),
               color: AppColors.marigold,
             ),
           ],
@@ -595,7 +646,9 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Every remix keeps its thread. This design is three forks deep.',
+          _product.lineage.isNotEmpty
+              ? 'Every remix keeps its thread. This design is ${_product.lineage.length} fork${_product.lineage.length == 1 ? '' : 's'} deep.'
+              : 'Every remix keeps its thread.',
           style: GoogleFonts.outfit(
             fontSize: 12,
             color: AppColors.stone,
@@ -604,43 +657,77 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
         const SizedBox(height: 16),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              LineageNode(
-                garmentColor: Color(0xFF1C2541),
-                handle: '@maya',
-                version: 'origin · v0',
-              ),
-              LineageStitch(),
-              LineageNode(
-                garmentColor: Color(0xFF3A4668),
-                handle: '@kabir',
-                version: 'v3',
-              ),
-              LineageStitch(),
-              LineageNode(
-                garmentColor: Color(0xFF2C5F5A),
-                handle: '@aanya',
-                version: 'this design',
-                isCurrent: true,
-                artText: 'PETRICHOR',
-              ),
-            ],
-          ),
+          child: _buildLineageRow(),
         ),
       ],
     );
   }
 
+  Widget _buildLineageRow() {
+    final lineage = _product.lineage;
+    if (lineage.isEmpty) {
+      // No lineage data — show only the current design as origin
+      return Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          LineageNode(
+            garmentColor: _garmentColor,
+            handle: _creatorHandle,
+            version: 'origin · v0',
+            isCurrent: true,
+            artText: _artText,
+          ),
+        ],
+      );
+    }
+    final nodes = <Widget>[];
+    for (int i = 0; i < lineage.length; i++) {
+      final entry = lineage[i];
+      final hex = entry['baseColor'] ?? '';
+      final clean = hex.replaceAll('#', '');
+      final color = Color(int.tryParse('FF$clean', radix: 16) ?? 0xFF1C2541);
+      nodes.add(LineageNode(
+        garmentColor: color,
+        handle: entry['handle'] ?? '',
+        version: entry['version'] ?? '',
+        artText: entry['artText'],
+      ));
+      nodes.add(const LineageStitch());
+    }
+    // Current design is always the last node
+    nodes.add(LineageNode(
+      garmentColor: _garmentColor,
+      handle: _creatorHandle,
+      version: 'this design',
+      isCurrent: true,
+      artText: _artText,
+    ));
+    return Row(crossAxisAlignment: CrossAxisAlignment.start, children: nodes);
+  }
+
   // ── Remixes Section ────────────────────────────────────────────────────────
   Widget _buildRemixesSection() {
-    final remixes = [
-      {'handle': '@maya', 'color': const Color(0xFF1C2541)},
-      {'handle': '@rhea', 'color': const Color(0xFFB65D3C)},
-      {'handle': '@kabir', 'color': const Color(0xFF3A4668)},
-      {'handle': '@imran', 'color': const Color(0xFF7E8B6B)},
-    ];
+    // Build remix cards from lineage; fall back to placeholder palette if empty
+    final lineage = _product.lineage;
+    final List<Map<String, dynamic>> remixes = lineage.isNotEmpty
+        ? lineage.map((e) {
+            final hex = e['baseColor'] ?? '';
+            final clean = hex.replaceAll('#', '');
+            return <String, dynamic>{
+              'handle': e['handle'] ?? '',
+              'color': Color(int.tryParse('FF$clean', radix: 16) ?? 0xFF1C2541),
+            };
+          }).toList()
+        : [
+            {'handle': '@maya', 'color': const Color(0xFF1C2541)},
+            {'handle': '@rhea', 'color': const Color(0xFFB65D3C)},
+            {'handle': '@kabir', 'color': const Color(0xFF3A4668)},
+            {'handle': '@imran', 'color': const Color(0xFF7E8B6B)},
+          ];
+
+    final totalLabel = _product.remixCount > 0
+        ? '${_product.remixCount} total'
+        : '${remixes.length} total';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -659,7 +746,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
             ),
             const SizedBox(width: 8),
             Text(
-              '12 total',
+              totalLabel,
               style: GoogleFonts.spaceMono(
                 fontSize: 11,
                 color: AppColors.stone,
@@ -706,7 +793,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
                       ),
                       child: GarmentTile(
                         garmentColor: color,
-                        shape: GarmentShape.tshirt,
+                        shape: _garmentShape,
                         showArt: true,
                       ),
                     ),
@@ -761,7 +848,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0D0F16).withOpacity(0.9) : Colors.white.withOpacity(0.9),
+        color: isDark ? const Color(0xFF0D0F16).withValues(alpha: 0.9) : Colors.white.withValues(alpha: 0.9),
         border: Border(top: BorderSide(color: hair)),
       ),
       child: Row(

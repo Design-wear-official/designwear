@@ -130,7 +130,7 @@ class LayersPanel extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? AppColors.marigold.withOpacity(0.08)
+                  ? AppColors.marigold.withValues(alpha: 0.08)
                   : paper,
               borderRadius: BorderRadius.circular(11),
               border: Border.all(
