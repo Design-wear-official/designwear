@@ -29,7 +29,8 @@ class SanityService {
     creatorName, creatorHandle, creatorFollowers,
     garmentBaseColor, artText,
     remixedFromHandle, remixedFromVersion,
-    likeCount, remixCount, lineage
+    likeCount, remixCount,
+    "lineage": lineage[]{handle, version, baseColor, artText}
   ''';
 
   Future<List<Product>> fetchProducts() async {

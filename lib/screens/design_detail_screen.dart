@@ -40,7 +40,11 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
   // ── Derived helpers that fall back to defaults when Sanity field is absent ──
 
   String get _creatorName => _product.creatorName ?? 'Unknown';
-  String get _creatorHandle => _product.creatorHandle ?? '@unknown';
+  String get _creatorHandle {
+    final h = _product.creatorHandle;
+    if (h == null || h.isEmpty) return '@unknown';
+    return h.startsWith('@') ? h : '@$h';
+  }
 
   String get _followerLabel {
     final n = _product.creatorFollowerCount;
@@ -666,13 +670,13 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
   Widget _buildLineageRow() {
     final lineage = _product.lineage;
     if (lineage.isEmpty) {
-      // No lineage data — show only the current design as origin
+      // Lineage not yet filled in Sanity — show current design as the origin
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           LineageNode(
             garmentColor: _garmentColor,
-            handle: _creatorHandle,
+            handle: _creatorHandle.isNotEmpty ? _creatorHandle : '@creator',
             version: 'origin · v0',
             isCurrent: true,
             artText: _artText,
@@ -707,27 +711,22 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
 
   // ── Remixes Section ────────────────────────────────────────────────────────
   Widget _buildRemixesSection() {
-    // Build remix cards from lineage; fall back to placeholder palette if empty
-    final lineage = _product.lineage;
-    final List<Map<String, dynamic>> remixes = lineage.isNotEmpty
-        ? lineage.map((e) {
-            final hex = e['baseColor'] ?? '';
-            final clean = hex.replaceAll('#', '');
-            return <String, dynamic>{
-              'handle': e['handle'] ?? '',
-              'color': Color(int.tryParse('FF$clean', radix: 16) ?? 0xFF1C2541),
-            };
-          }).toList()
-        : [
-            {'handle': '@maya', 'color': const Color(0xFF1C2541)},
-            {'handle': '@rhea', 'color': const Color(0xFFB65D3C)},
-            {'handle': '@kabir', 'color': const Color(0xFF3A4668)},
-            {'handle': '@imran', 'color': const Color(0xFF7E8B6B)},
-          ];
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final remixCount = _product.remixCount;
 
-    final totalLabel = _product.remixCount > 0
-        ? '${_product.remixCount} total'
-        : '${remixes.length} total';
+    // Build cards from lineage; no fake placeholders
+    final List<Map<String, dynamic>> remixes = _product.lineage
+        .map((e) {
+          final hex = (e['baseColor'] ?? '').replaceAll('#', '');
+          return <String, dynamic>{
+            'handle': e['handle'] ?? '',
+            'color': Color(int.tryParse('FF$hex', radix: 16) ?? 0xFF1C2541),
+          };
+        })
+        .where((e) => (e['handle'] as String).isNotEmpty)
+        .toList();
+
+    final totalLabel = '$remixCount total';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -755,87 +754,112 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
           ],
         ),
         const SizedBox(height: 14),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: remixes.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: ResponsiveUtils.isMobile(context) ? 2 : 4,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 0.8,
-          ),
-          itemBuilder: (context, index) {
-            final remix = remixes[index];
-            final handle = remix['handle'] as String;
-            final color = remix['color'] as Color;
-
-            return Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.cardDark
-                    : AppColors.cardLight,
-                border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.hairDark
-                      : AppColors.hairLight,
+        if (remixes.isEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 28),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDark ? AppColors.hairDark : AppColors.hairLight,
+              ),
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.fork_right, size: 28, color: AppColors.stone),
+                const SizedBox(height: 8),
+                Text(
+                  'No remixes yet — be the first!',
+                  style: GoogleFonts.outfit(fontSize: 13, color: AppColors.stone),
                 ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(11),
-                        topRight: Radius.circular(11),
-                      ),
-                      child: GarmentTile(
-                        garmentColor: color,
-                        shape: _garmentShape,
-                        showArt: true,
+              ],
+            ),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: remixes.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: ResponsiveUtils.isMobile(context) ? 2 : 4,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 0.8,
+            ),
+            itemBuilder: (context, index) {
+              final remix = remixes[index];
+              final handle = remix['handle'] as String;
+              final color = remix['color'] as Color;
+
+              return Container(
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                  border: Border.all(
+                    color: isDark ? AppColors.hairDark : AppColors.hairLight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(11),
+                          topRight: Radius.circular(11),
+                        ),
+                        child: GarmentTile(
+                          garmentColor: color,
+                          shape: _garmentShape,
+                          showArt: true,
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(9),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 18,
-                          height: 18,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.blueGrey,
+                    Padding(
+                      padding: const EdgeInsets.all(9),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 18,
+                            height: 18,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Colors.blueGrey,
+                            ),
+                            child: Center(
+                              child: Text(
+                                handle.replaceFirst('@', '').isNotEmpty
+                                    ? handle.replaceFirst('@', '')[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
                           ),
-                          child: Center(
+                          const SizedBox(width: 6),
+                          Expanded(
                             child: Text(
-                              handle.substring(1, 2).toUpperCase(),
-                              style: const TextStyle(fontSize: 8, color: Colors.white, fontWeight: FontWeight.bold),
+                              handle,
+                              style: GoogleFonts.spaceMono(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            handle,
-                            style: GoogleFonts.spaceMono(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
+                  ],
+                ),
+              );
+            },
+          ),
       ],
     );
   }
@@ -891,7 +915,9 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
   void _navigateToStudio() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const DesignStudioScreen()),
+      MaterialPageRoute(
+        builder: (context) => DesignStudioScreen(remixSource: _product),
+      ),
     );
   }
 

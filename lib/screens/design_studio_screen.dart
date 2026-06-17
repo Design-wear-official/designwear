@@ -12,9 +12,14 @@ import 'package:designwear/presentation/widgets/widgets.dart';
 import 'package:designwear/screens/design_studio/design_studio.dart';
 import 'package:designwear/screens/design_studio/widgets/widgets.dart';
 import 'package:designwear/screens/virtual_tryon_screen.dart';
+import 'package:designwear/config/config.dart';
 
 class DesignStudioScreen extends StatefulWidget {
-  const DesignStudioScreen({super.key});
+  /// When set, the studio opens in "remix" mode — provenance chip shows the
+  /// parent's creator info and PUBLISH creates a new product linked to it.
+  final Product? remixSource;
+
+  const DesignStudioScreen({super.key, this.remixSource});
 
   @override
   State<DesignStudioScreen> createState() => _DesignStudioScreenState();
@@ -47,6 +52,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   ];
 
   late DateTime _lastAutoSave = DateTime.now();
+  bool _isPublishing = false;
 
   final Product _baseProduct = Product(
     id: "custom-tee-001",
@@ -66,6 +72,95 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     _loadAutoSavedDesign();
     _historyService.addToHistory(_design);
     _loadCategories();
+  }
+
+  Future<void> _publishAndSync() async {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    final user = authService.currentUser;
+    final creatorName = user?.name ?? 'Anonymous';
+    final rawHandle = (user?.name ?? 'user')
+        .split(' ')
+        .first
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final creatorHandle = '@$rawHandle';
+
+    // Build lineage: parent's ancestors + parent as a new entry
+    final remixSource = widget.remixSource;
+    final parentLineage = remixSource?.lineage ?? [];
+    final newLineage = [
+      ...parentLineage,
+      if (remixSource != null)
+        {
+          'handle': remixSource.creatorHandle ?? '',
+          'version': remixSource.title,
+          'baseColor': remixSource.garmentBaseColor ?? '',
+          'artText': remixSource.artText ?? '',
+        },
+    ];
+
+    // Convert Flutter '0xFFRRGGBB' → '#RRGGBB'
+    final baseColorHex = _design.baseColor.startsWith('0x')
+        ? '#${_design.baseColor.substring(4)}'
+        : _design.baseColor;
+
+    // First text element content as art text
+    final textEl = _design.elements
+        .where((e) => e.type == DesignElementType.text)
+        .firstOrNull;
+    final artText = (textEl != null && textEl.content.isNotEmpty)
+        ? textEl.content
+        : (_design.name.isNotEmpty ? _design.name : null);
+
+    final designName = _design.name.isNotEmpty ? _design.name : 'Remix by $creatorHandle';
+
+    setState(() => _isPublishing = true);
+    try {
+      final apiService = ApiService.webApi(WebApiConfig.baseUrl);
+      final productId = await apiService.publishRemix(
+        creatorHandle: creatorHandle,
+        creatorName: creatorName,
+        garmentType: _selectedGarmentType,
+        title: designName,
+        garmentBaseColor: baseColorHex,
+        artText: artText,
+        remixedFromId: remixSource?.id,
+        remixedFromHandle: remixSource?.creatorHandle,
+        remixedFromVersion: remixSource?.title,
+        lineage: newLineage,
+        tags: remixSource?.tags ?? [],
+      );
+
+      // Save to local storage so it's accessible offline
+      await _storageService.saveDesign(SavedDesign(
+        id: productId,
+        name: designName,
+        design: _design,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      ));
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Design published and synced to Sanity + Firebase!'),
+          backgroundColor: Color(0xFF2D8B57),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Publish failed: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isPublishing = false);
+    }
   }
 
   void _loadCategories() async {
@@ -490,7 +585,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                       style: GoogleFonts.outfit(fontSize: 11.5, color: isDark ? AppColors.stone : Colors.black54),
                     ),
                     Text(
-                      '@aanya\'s Tee',
+                      widget.remixSource != null
+                          ? '${widget.remixSource!.creatorHandle ?? widget.remixSource!.title}\'s ${widget.remixSource!.productType ?? 'Design'}'
+                          : 'New Design',
                       style: GoogleFonts.outfit(
                           fontSize: 11.5, fontWeight: FontWeight.bold, color: cs.onSurface),
                     ),
@@ -536,13 +633,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           padding: const EdgeInsets.only(right: 12, left: 6),
           child: Center(
             child: ElevatedButton(
-              onPressed: () {
-                context.read<CartService>().addToCart(_baseProduct, customDesign: _design);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Design published and added to cart!')),
-                );
-                Navigator.pop(context);
-              },
+              onPressed: _isPublishing ? null : _publishAndSync,
               style: ElevatedButton.styleFrom(
                 backgroundColor: isDark ? Colors.white : const Color(0xFF15182B),
                 foregroundColor: isDark ? const Color(0xFF15182B) : Colors.white,
@@ -550,14 +641,23 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 elevation: 0,
               ),
-              child: Text(
-                'PUBLISH',
-                style: GoogleFonts.outfit(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11.5,
-                  letterSpacing: 0.8,
-                ),
-              ),
+              child: _isPublishing
+                  ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: isDark ? const Color(0xFF15182B) : Colors.white,
+                      ),
+                    )
+                  : Text(
+                      'PUBLISH',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11.5,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
             ),
           ),
         ),

@@ -199,11 +199,13 @@ class Product {
       likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
       remixCount: (map['remixCount'] as num?)?.toInt() ?? 0,
       lineage: (map['lineage'] as List<dynamic>?)
-              ?.map((e) => Map<String, String>.from(
-                    (e as Map<String, dynamic>).map(
-                      (k, v) => MapEntry(k, v?.toString() ?? ''),
-                    ),
-                  ))
+              ?.whereType<Map>()
+              .map((e) => <String, String>{
+                    'handle':    e['handle']?.toString() ?? '',
+                    'version':   e['version']?.toString() ?? '',
+                    'baseColor': e['baseColor']?.toString() ?? '',
+                    'artText':   e['artText']?.toString() ?? '',
+                  })
               .toList() ??
           [],
     );
@@ -257,11 +259,13 @@ class Product {
       likeCount: (map['likeCount'] as num?)?.toInt() ?? 0,
       remixCount: (map['remixCount'] as num?)?.toInt() ?? 0,
       lineage: (map['lineage'] as List<dynamic>?)
-              ?.map((e) => Map<String, String>.from(
-                    (e as Map<String, dynamic>).map(
-                      (k, v) => MapEntry(k, v?.toString() ?? ''),
-                    ),
-                  ))
+              ?.whereType<Map>()
+              .map((e) => <String, String>{
+                    'handle':    e['handle']?.toString() ?? '',
+                    'version':   e['version']?.toString() ?? '',
+                    'baseColor': e['baseColor']?.toString() ?? '',
+                    'artText':   e['artText']?.toString() ?? '',
+                  })
               .toList() ??
           [],
     );
