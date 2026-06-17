@@ -400,7 +400,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       width: DesignStudioConstants.canvasWidth + 32,
       height: DesignStudioConstants.canvasWidth * 1.25 + 32,
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.45),
+        color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -499,7 +499,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           onPressed: _historyService.canUndo ? _undo : null,
           icon: Icon(
             Icons.undo,
-            color: _historyService.canUndo ? cs.onSurface : cs.onSurface.withOpacity(0.3),
+            color: _historyService.canUndo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.3),
             size: 20,
           ),
           tooltip: 'Undo',
@@ -508,7 +508,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           onPressed: _historyService.canRedo ? _redo : null,
           icon: Icon(
             Icons.redo,
-            color: _historyService.canRedo ? cs.onSurface : cs.onSurface.withOpacity(0.3),
+            color: _historyService.canRedo ? cs.onSurface : cs.onSurface.withValues(alpha: 0.3),
             size: 20,
           ),
           tooltip: 'Redo',
@@ -584,10 +584,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
                 border: Border.all(
                   color: isSelected
                       ? AppColors.marigold
-                      : Theme.of(context).colorScheme.outline.withOpacity(0.3),
+                      : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
                 ),
                 boxShadow: isSelected
-                    ? [BoxShadow(color: AppColors.marigold.withOpacity(0.25), blurRadius: 6, offset: const Offset(0, 2))]
+                    ? [BoxShadow(color: AppColors.marigold.withValues(alpha: 0.25), blurRadius: 6, offset: const Offset(0, 2))]
                     : null,
               ),
               child: Row(

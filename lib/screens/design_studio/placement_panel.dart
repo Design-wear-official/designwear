@@ -93,7 +93,7 @@ class PlacementPanel extends StatelessWidget {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
+                    color: Colors.black.withValues(alpha: 0.08),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -117,7 +117,7 @@ class PlacementPanel extends StatelessWidget {
               subtitle,
               style: GoogleFonts.outfit(
                 fontSize: 11,
-                color: isSelected ? AppColors.marigold : (isDark ? AppColors.stone.withOpacity(0.7) : Colors.black38),
+                color: isSelected ? AppColors.marigold : (isDark ? AppColors.stone.withValues(alpha: 0.7) : Colors.black38),
               ),
             ),
           ],

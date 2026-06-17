@@ -185,7 +185,7 @@ class _IconCell extends StatelessWidget {
             width: isDesktop ? 52 : 46,
             height: isDesktop ? 52 : 46,
             decoration: BoxDecoration(
-              color: color.withOpacity(0.13),
+              color: color.withValues(alpha: 0.13),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: isDesktop ? 24 : 21),
@@ -196,7 +196,7 @@ class _IconCell extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: ink.withOpacity(0.7),
+              color: ink.withValues(alpha: 0.7),
               height: 1.1,
             ),
             textAlign: TextAlign.center,
@@ -259,8 +259,8 @@ class HomeSectionTitle extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: isDark
-                    ? Colors.white.withOpacity(0.07)
-                    : Colors.black.withOpacity(0.05),
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : Colors.black.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
@@ -318,9 +318,9 @@ class HomeCategoryList extends StatelessWidget {
               height: 52,
               margin: const EdgeInsets.symmetric(horizontal: 20),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.08),
+                color: Colors.orange.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Icon(Icons.wifi_off, color: Colors.orange, size: 18),
@@ -358,7 +358,7 @@ class HomeCategoryList extends StatelessWidget {
                     border: Border.all(color: isSelected ? Colors.transparent : hair),
                     borderRadius: BorderRadius.circular(999),
                     boxShadow: isSelected
-                        ? [BoxShadow(color: ink.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, 4))]
+                        ? [BoxShadow(color: ink.withValues(alpha: 0.2), blurRadius: 10, offset: const Offset(0, 4))]
                         : null,
                   ),
                   child: Text(
@@ -496,7 +496,7 @@ class _DealCard extends StatelessWidget {
         color: card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: hair),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 10, offset: const Offset(0, 3))],
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 10, offset: const Offset(0, 3))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -508,7 +508,7 @@ class _DealCard extends StatelessWidget {
               width: double.infinity,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [color.withOpacity(0.3), color.withOpacity(0.1)],
+                  colors: [color.withValues(alpha: 0.3), color.withValues(alpha: 0.1)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -635,7 +635,7 @@ class HomeFeaturedProductsRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: hair),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 12, offset: const Offset(0, 4)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4)),
                     ],
                   ),
                   child: ClipRRect(
@@ -789,9 +789,9 @@ class HomeProductGrid extends StatelessWidget {
               height: 200,
               margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.08),
+                color: Colors.orange.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
               ),
               child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Icon(Icons.wifi_off, color: Colors.orange, size: 40),
@@ -828,14 +828,14 @@ class HomeProductGrid extends StatelessWidget {
             child: Column(children: [
               Icon(Icons.search_off_rounded,
                   size: 48,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
               const SizedBox(height: 12),
               Text(
                 q.isNotEmpty ? 'No results for "$q"' : 'No products in this category',
                 style: GoogleFonts.archivo(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -897,7 +897,7 @@ class HomeProductGrid extends StatelessWidget {
                         borderRadius: BorderRadius.circular(isDesktop ? 18 : 14),
                         border: Border.all(color: hair),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 14, offset: const Offset(0, 4)),
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 14, offset: const Offset(0, 4)),
                         ],
                       ),
                       child: ClipRRect(
@@ -911,7 +911,7 @@ class HomeProductGrid extends StatelessWidget {
                                 child: p.imageUrl != null
                                     ? SafeNetworkImage(imageUrl: p.imageUrl!, fit: BoxFit.cover)
                                     : Icon(Icons.image_not_supported,
-                                        color: ink.withOpacity(0.4), size: 36),
+                                        color: ink.withValues(alpha: 0.4), size: 36),
                               ),
                             ),
                           ),
@@ -920,7 +920,7 @@ class HomeProductGrid extends StatelessWidget {
                             child: Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.favorite_border, color: Colors.white, size: 14),
@@ -933,7 +933,7 @@ class HomeProductGrid extends StatelessWidget {
                                 gradient: LinearGradient(
                                   begin: Alignment.bottomCenter,
                                   end: Alignment.topCenter,
-                                  colors: [Colors.black.withOpacity(0.88), Colors.transparent],
+                                  colors: [Colors.black.withValues(alpha: 0.88), Colors.transparent],
                                 ),
                               ),
                               padding: const EdgeInsets.all(12),

@@ -256,7 +256,8 @@ class _DesignCanvasState extends State<DesignCanvas> {
           ),
         ],
       ),
-    ),);
+    ),
+    );
   }
 
   Widget _buildSideToggleButton({

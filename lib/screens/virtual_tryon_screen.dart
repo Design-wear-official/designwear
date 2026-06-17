@@ -88,9 +88,9 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -278,19 +278,23 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaceColor = theme.colorScheme.surface;
+    final onSurface = theme.colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: surfaceColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.black),
+          icon: Icon(Icons.arrow_back, color: onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Virtual Try-On',
           style: GoogleFonts.outfit(
-            color: AppColors.black,
+            color: onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -327,14 +331,15 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   }
 
   Widget _buildProductCard() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.blackOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -390,6 +395,9 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   }
 
   Widget _buildUserPhotoSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.hairDark : AppColors.hairLight;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -400,7 +408,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
         const SizedBox(height: 4),
         Text(
           'Upload a full-body photo for best results',
-          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.gray600),
+          style: GoogleFonts.outfit(fontSize: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
         const SizedBox(height: 16),
         GestureDetector(
@@ -409,18 +417,18 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             width: double.infinity,
             height: ResponsiveSizes.carouselHeight(context) * 0.75,
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _userPhotoBytes != null
-                    ? AppColors.marigold.withOpacity(0.5)
-                    : AppColors.gray300,
+                    ? AppColors.marigold.withValues(alpha: 0.5)
+                    : borderColor,
                 width: 2,
                 strokeAlign: BorderSide.strokeAlignCenter,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.blackOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -443,7 +451,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         top: 12,
                         right: 12,
                         child: CircleAvatar(
-                          backgroundColor: AppColors.white,
+                          backgroundColor: Theme.of(context).colorScheme.surface,
                           child: IconButton(
                             icon: const Icon(
                               Icons.edit,
@@ -461,7 +469,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.marigold.withOpacity(0.1),
+                          color: AppColors.marigold.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -553,7 +561,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.marigold.withOpacity(0.2),
+                color: AppColors.marigold.withValues(alpha: 0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -569,13 +577,14 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   }
 
   Widget _buildBottomBar() {
+    final theme = Theme.of(context);
     return Container(
       padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.blackOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             offset: const Offset(0, -5),
             blurRadius: 15,
           ),

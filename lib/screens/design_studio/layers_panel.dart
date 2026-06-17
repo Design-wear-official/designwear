@@ -28,8 +28,6 @@ class LayersPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
@@ -69,7 +67,7 @@ class LayersPanel extends StatelessWidget {
             style: GoogleFonts.spaceMono(
               fontWeight: FontWeight.bold,
               fontSize: 11.5,
-              color: isDark ? AppColors.stone : const Color(0xFF7A7B82),
+              color: AppColors.stone,
               letterSpacing: 0.5,
             ),
           ),
