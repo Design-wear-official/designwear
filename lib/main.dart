@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
@@ -38,9 +39,12 @@ Future<void> mainCommon(Flavor flavor) async {
     await dotenv.load(fileName: ".env.local", isOptional: true, mergeWith: dotenv.env);
   }
 
+  final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isLinux);
+
   // Skip Firebase when no credentials are configured (e.g. running without .env)
   final hasFirebaseCreds = kIsWeb ||
-      (dotenv.env['FIREBASE_ANDROID_API_KEY']?.isNotEmpty ?? false);
+      (dotenv.env['FIREBASE_ANDROID_API_KEY']?.isNotEmpty ?? false) ||
+      (isDesktop && (dotenv.env['FIREBASE_WEB_API_KEY']?.isNotEmpty ?? false));
 
   if (hasFirebaseCreds) {
     try {
@@ -48,7 +52,8 @@ Future<void> mainCommon(Flavor flavor) async {
         options: DefaultFirebaseOptions.currentPlatform,
       );
 
-      if (!kIsWeb) {
+      // Crashlytics is not supported on Windows/Linux.
+      if (!kIsWeb && !isDesktop) {
         FlutterError.onError =
             FirebaseCrashlytics.instance.recordFlutterFatalError;
         PlatformDispatcher.instance.onError = (error, stack) {
@@ -57,7 +62,10 @@ Future<void> mainCommon(Flavor flavor) async {
         };
       }
 
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      // FCM background handler is not supported on Windows/Linux.
+      if (!isDesktop) {
+        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      }
     } catch (e) {
       if (!e.toString().contains('duplicate-app')) {
         debugPrint('⚠️ Firebase init failed: $e');

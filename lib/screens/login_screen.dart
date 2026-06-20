@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -206,13 +208,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 24),
 
                     // Social SSO Buttons
-                    _buildSocialButton(
-                      label: 'Continue with Google',
-                      icon: Icons.g_mobiledata_rounded,
-                      iconColor: const Color(0xFF4285F4),
-                      onPressed: _isLoading ? null : _loginWithGoogle,
-                    ),
-                    const SizedBox(height: 10),
+                    if (kIsWeb || !Platform.isWindows) ...[
+                      _buildSocialButton(
+                        label: 'Continue with Google',
+                        icon: Icons.g_mobiledata_rounded,
+                        iconColor: const Color(0xFF4285F4),
+                        onPressed: _isLoading ? null : _loginWithGoogle,
+                      ),
+                      const SizedBox(height: 10),
+                    ],
                     _buildSocialButton(
                       label: 'Continue with Apple',
                       icon: Icons.apple,

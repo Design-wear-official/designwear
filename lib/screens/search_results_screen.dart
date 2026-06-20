@@ -6,7 +6,7 @@ import 'package:designwear/models/models.dart';
 import 'package:designwear/domain/usecases/product_use_cases.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/presentation/widgets/widgets.dart';
-import 'product_detail_screen.dart';
+import 'design_detail_screen.dart';
 
 enum _SortOption { relevance, priceLowHigh, priceHighLow, newest }
 
@@ -553,7 +553,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               final heroTag = 'search_${product.id}';
               return GestureDetector(
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => ProductDetailScreen(product: product, heroTag: heroTag),
+                  builder: (_) => DesignDetailScreen(product: product),
                   settings: RouteSettings(name: '/product/${product.slug}'),
                 )),
                 child: SizedBox(
