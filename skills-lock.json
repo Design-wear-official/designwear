@@ -25,6 +25,12 @@
       "skillPath": "skills/flutter-apply-architecture-best-practices/SKILL.md",
       "computedHash": "baeb208b1cab90c559677626dbd101b96ba93f803cbed85122abdadeb3283a8b"
     },
+    "flutter-barrel-imports": {
+      "source": "kasinadhsarma/flutter-skills",
+      "sourceType": "github",
+      "skillPath": "docs/flutter-barrel-imports.md",
+      "computedHash": "81f70f6630fbe3112cc061b017430df130cb0a7e55fda2e885bdf1f211a66763"
+    },
     "flutter-build-responsive-layout": {
       "source": "flutter/skills",
       "sourceType": "github",

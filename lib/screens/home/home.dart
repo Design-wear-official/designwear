@@ -1,5 +1,4 @@
 // Home module barrel exports
-export 'home.dart';
 export 'home_app_bar.dart';
 export 'home_challenge_banner.dart';
 export 'home_sections.dart';

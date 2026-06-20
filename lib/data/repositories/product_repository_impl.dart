@@ -1,5 +1,5 @@
 import 'package:designwear/models/models.dart';
-import 'package:designwear/services/api_service.dart';
+import 'package:designwear/services/services.dart';
 import 'product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/presentation/styles/styles.dart';
-import 'package:designwear/presentation/widgets/garment_tile.dart';
+import 'package:designwear/presentation/widgets/widgets.dart';
 
 /// Feed layout modes matching demo `.feed.layout-grid` and `.feed.layout-detail`.
 enum FeedLayout { grid, detail }
