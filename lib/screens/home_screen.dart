@@ -102,9 +102,6 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          // Internal debug strip (zero height for external builds)
-          const HomeDebugBanner(),
-
           // Sticky top bar
           HomeAppBar(
             isDesktop: isDesktop,
