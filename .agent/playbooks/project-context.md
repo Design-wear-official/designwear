@@ -17,6 +17,25 @@ The mobile application handles the entire end-user shopping, design, and trying-
   - **Razorpay** (`razorpay_flutter` for checkout)
 - **Deployment Mechanics**: Built structurally via flavors (`internal`, `dev`, `prod`). Relies extensively on an explicitly formatted assets directory (`assets/`, `assets/images`) and a root `.env` file for API resolution.
 
+### Key Feature Modules
+
+| Module | Entry Point | Playbook |
+|---|---|---|
+| Design Studio | `lib/screens/design_studio_screen.dart` | [design-studio.md](design-studio.md) |
+| Home Feed | `lib/screens/home_screen.dart` | — |
+| Auth / Profile | `lib/services/auth_service.dart` | — |
+| Cart / Checkout | `lib/services/cart_service.dart` | — |
+| Virtual Try-On | `lib/screens/` (AI screen) | — |
+
+#### Design Studio highlights
+- Real-time garment colour via `ColorFilter.modulate` on a white PNG asset
+- 41 preset fabric swatches + custom hex colour picker
+- Collar styles: Crew (default), V-Neck, Polo — drawn via `CustomPainter`
+- Pocket styles: None, Left, Right, Both — drawn via `CustomPainter`
+- Layered element system: text, stickers, AI-generated graphics
+- Front / Back view toggle on the canvas
+- Saves to local thumbnail + Publish flow
+
 ## 2. Next.js CMS & Backend API (`designwear-backend`)
 A centralized server-side repository hosting the Sanity CMS schema models and the Firebase Admin interfaces.
 - **Stack**: Next.js 16 (App Router), React 19, TypeScript
