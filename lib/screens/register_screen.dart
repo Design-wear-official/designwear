@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:designwear/services/services.dart';
 import 'package:designwear/presentation/styles/styles.dart';
-import 'package:designwear/presentation/patterns/responsive_typography_pattern.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -47,6 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _nameController.text.trim(),
       );
       if (mounted) {
+        // Pop twice to return to login or home screen if successful
         Navigator.pop(context, true);
       }
     } catch (e) {
@@ -60,99 +60,221 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
+    final card = isDark ? AppColors.cardDark : AppColors.cardLight;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: paper,
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, size: 16, color: Theme.of(context).colorScheme.onSurface),
+          onPressed: () => Navigator.pop(context),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
       ),
-      body: SafeArea(
+      body: Center(
         child: SingleChildScrollView(
-          padding: ResponsiveSizes.pagePadding(context).copyWith(
-            top: 8,
-            bottom: ResponsiveSizes.buttonPaddingVertical(context) * 2,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'Create Account',
-                style: ResponsiveTypography.h1(
-                  context,
-                  fontWeight: FontWeight.bold,
-                ).copyWith(color: Colors.black),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Sign up to get started',
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: AppColors.gray600,
-                ),
-              ),
-              const SizedBox(height: 40),
-
-              _buildTextField(
-                controller: _nameController,
-                label: 'Full Name',
-                hint: 'Enter your full name',
-                icon: Icons.person,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _emailController,
-                label: 'Email Address',
-                hint: 'Enter your email',
-                icon: Icons.email,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 16),
-              _buildTextField(
-                controller: _passwordController,
-                label: 'Password',
-                hint: 'Enter your password',
-                icon: Icons.lock,
-                obscureText: true,
-              ),
-
-              if (_error != null) ...[
-                const SizedBox(height: 16),
-                _buildErrorBox(),
-              ],
-
-              const SizedBox(height: 32),
-
-              SizedBox(
+              // Auth Card
+              Container(
                 width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _register,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.purple,
-                    foregroundColor: AppColors.white,
-                    padding: EdgeInsets.symmetric(
-                      vertical: ResponsiveSizes.buttonPaddingVertical(context),
+                constraints: const BoxConstraints(maxWidth: 380),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                decoration: BoxDecoration(
+                  color: card,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: hair),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.4 : 0.08),
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation(AppColors.white),
-                          ),
-                        )
-                      : Text(
-                          'Sign Up',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Brand Wordmark
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          'DESIGN',
+                          style: GoogleFonts.archivo(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 20,
+                            color: Theme.of(context).colorScheme.onSurface,
+                            letterSpacing: 1.5,
                           ),
                         ),
+                        Text(
+                          'WEAR',
+                          style: GoogleFonts.archivo(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 20,
+                            color: AppColors.marigold,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Join the community',
+                      style: GoogleFonts.archivo(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 22,
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Create an account to start remixing.',
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        color: AppColors.stone,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Social SSO Buttons
+                    _buildSocialButton(
+                      label: 'Continue with Google',
+                      icon: Icons.g_mobiledata_rounded,
+                      iconColor: const Color(0xFF4285F4),
+                      onPressed: () {}, // Google signup placeholder
+                    ),
+                    const SizedBox(height: 10),
+                    _buildSocialButton(
+                      label: 'Continue with Apple',
+                      icon: Icons.apple,
+                      iconColor: isDark ? Colors.white : Colors.black,
+                      onPressed: () {}, // Apple signup placeholder
+                    ),
+                    const SizedBox(height: 10),
+                    _buildSocialButton(
+                      label: 'Continue with Mobile',
+                      icon: Icons.phone_android_outlined,
+                      iconColor: AppColors.marigold,
+                      onPressed: () {}, // Mobile signup placeholder
+                    ),
+                    
+                    const SizedBox(height: 16),
+
+                    // Divider: or email
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: hair)),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            'OR EMAIL',
+                            style: GoogleFonts.spaceMono(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.stone,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: hair)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Form fields
+                    TextField(
+                      controller: _nameController,
+                      style: GoogleFonts.outfit(fontSize: 14),
+                      decoration: _buildInputDecoration(hintText: 'Full Name', prefixIcon: Icons.person_outline),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      style: GoogleFonts.outfit(fontSize: 14),
+                      decoration: _buildInputDecoration(hintText: 'Email address', prefixIcon: Icons.email_outlined),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _passwordController,
+                      obscureText: true,
+                      style: GoogleFonts.outfit(fontSize: 14),
+                      decoration: _buildInputDecoration(hintText: 'Password', prefixIcon: Icons.lock_outline),
+                    ),
+
+                    if (_error != null) ...[
+                      const SizedBox(height: 16),
+                      _buildErrorBox(),
+                    ],
+
+                    const SizedBox(height: 20),
+
+                    // Sign In Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _register,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark ? Colors.white : const Color(0xFF15182B),
+                          foregroundColor: isDark ? const Color(0xFF15182B) : Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : Text(
+                                'Create Account',
+                                style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                        ),
+                      ),
+
+                    const SizedBox(height: 24),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Already have an account? ",
+                          style: GoogleFonts.outfit(fontSize: 13, color: AppColors.stone),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            'Log in',
+                            style: GoogleFonts.outfit(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.onSurface,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -162,64 +284,88 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
+  Widget _buildSocialButton({
     required String label,
-    required String hint,
     required IconData icon,
-    bool obscureText = false,
-    TextInputType? keyboardType,
+    required Color iconColor,
+    required VoidCallback? onPressed,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: GoogleFonts.poppins(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          decoration: InputDecoration(
-            hintText: hint,
-            prefixIcon: Icon(icon, color: AppColors.gray500),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.gray300),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.gray300),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: AppColors.purple, width: 2),
-            ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: Theme.of(context).colorScheme.onSurface,
+          side: BorderSide(color: hair, width: 1.5),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
           ),
         ),
-      ],
+        icon: Icon(icon, size: 20, color: iconColor),
+        label: Text(
+          label,
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w700,
+            fontSize: 13.5,
+          ),
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _buildInputDecoration({required String hintText, required IconData prefixIcon}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+
+    return InputDecoration(
+      hintText: hintText,
+      prefixIcon: Icon(prefixIcon, size: 18, color: AppColors.stone),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      fillColor: paper,
+      filled: true,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: hair),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: hair),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: 1.5),
+      ),
     );
   }
 
   Widget _buildErrorBox() {
+    String msg = _error!;
+    if (msg.startsWith('Exception: ')) msg = msg.substring(11);
+    if (msg.length > 120) msg = '${msg.substring(0, 117)}...';
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.errorLight,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.like.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.like.withOpacity(0.3)),
       ),
       child: Row(
         children: [
-          Icon(Icons.error_outline, color: AppColors.errorDark),
+          const Icon(Icons.error_outline, color: AppColors.like),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              _error!,
-              style: GoogleFonts.poppins(
-                color: AppColors.errorDark,
+              msg,
+              style: GoogleFonts.outfit(
+                color: AppColors.like,
                 fontSize: 13,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -228,4 +374,3 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 }
-

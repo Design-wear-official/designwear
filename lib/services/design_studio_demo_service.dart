@@ -12,11 +12,6 @@ class DesignStudioDemoService {
   /// Demo tips for using the design studio
   List<Map<String, String>> get demoTips => [
         {
-          'title': 'Pro Tip: Layering',
-          'description': 'Use the layers panel to organize and reorder your design elements easily.',
-          'icon': '📚',
-        },
-        {
           'title': 'Color Harmony',
           'description': 'Try complementary colors for text and background to make your design pop!',
           'icon': '🎨',

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/services/services.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
@@ -110,6 +111,11 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final screenW = MediaQuery.sizeOf(context).width;
+    final screenH = MediaQuery.sizeOf(context).height;
+    final chatW = (screenW * 0.82).clamp(240.0, 340.0);
+    final chatH = (screenH * 0.45).clamp(280.0, 480.0);
+
     return Positioned(
       bottom: 20,
       right: 20,
@@ -120,8 +126,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           // Chat Window
           if (_isOpen)
             Container(
-              width: 300,
-              height: 400,
+              width: chatW,
+              height: chatH,
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: colorScheme.surface,
@@ -362,12 +368,12 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
               ),
             ),
 
-          // Floating Button
-          FloatingActionButton(
+          // Floating Button (Small, secondary-styled to not dominate the screen)
+          FloatingActionButton.small(
             onPressed: () => setState(() => _isOpen = !_isOpen),
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            child: const Icon(Icons.auto_awesome),
+            backgroundColor: isDark ? const Color(0xFF262B3D) : const Color(0xFFE4E2DA),
+            foregroundColor: AppColors.marigold,
+            child: const Icon(Icons.auto_awesome, size: 18),
           ),
         ],
       ),

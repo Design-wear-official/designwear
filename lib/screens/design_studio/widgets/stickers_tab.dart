@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/screens/design_studio/design_studio_constants.dart';
 
 class StickersTab extends StatelessWidget {
@@ -9,20 +10,29 @@ class StickersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Choose a Sticker',
-          style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+          'STICKERS & EMOJI',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w800,
+            fontSize: 13,
+            letterSpacing: 1.0,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
         ),
         const SizedBox(height: 12),
         Expanded(
           child: GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 6,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
             ),
             itemCount: DesignStudioConstants.availableStickers.length,
             itemBuilder: (context, index) {
@@ -31,11 +41,12 @@ class StickersTab extends StatelessWidget {
                 onTap: () => onAddStickerElement(sticker),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(12),
+                    color: paper,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: hair),
                   ),
                   child: Center(
-                    child: Text(sticker, style: const TextStyle(fontSize: 24)),
+                    child: Text(sticker, style: const TextStyle(fontSize: 22)),
                   ),
                 ),
               );

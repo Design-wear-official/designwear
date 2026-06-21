@@ -3,14 +3,11 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    if (kIsWeb) {
-      return web;
-    }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
@@ -19,30 +16,14 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
       case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       default:
         throw UnsupportedError(
           'DefaultFirebaseOptions are not supported for this platform.',
         );
     }
   }
-
-  static FirebaseOptions get web => const FirebaseOptions(
-    apiKey: 'AIzaSyBHsyXLrGgAazfZx0lxqhCOR5fJE-vo7ls',
-    appId: '1:653328426569:web:005abd63cc23b9a7628198',
-    messagingSenderId: '350351347585',
-    projectId: 'designwear-731c9',
-    authDomain: 'designwear-731c9.firebaseapp.com',
-    storageBucket: 'designwear-731c9.firebasestorage.app',
-  );
 
   static FirebaseOptions get android => FirebaseOptions(
     apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? '',
@@ -68,5 +49,16 @@ class DefaultFirebaseOptions {
     projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
     storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
     iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID'] ?? '',
+  );
+
+  // Windows/Linux use web credentials — firebase_auth on desktop uses REST APIs.
+  static FirebaseOptions get windows => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? dotenv.env['FIREBASE_API_KEY'] ?? '',
+    appId: dotenv.env['FIREBASE_WINDOWS_APP_ID']?.isNotEmpty == true
+        ? dotenv.env['FIREBASE_WINDOWS_APP_ID']!
+        : dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
+    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
+    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
   );
 }

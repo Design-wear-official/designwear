@@ -70,8 +70,8 @@ class DesignStudioUtils {
     }
   }
 
-  static String generateElementId(String type) {
-    return '${type}_${DateTime.now().millisecondsSinceEpoch}';
+  static String generateElementId(DesignElementType type) {
+    return '${type.value}_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   static Color parseColorFromHex(String colorHex) {
@@ -107,9 +107,9 @@ class DesignStudioUtils {
       ...design.elements.map(
         (element) => {
           'id': element.id,
-          'type': element.type,
+          'type': element.type.value,
           'name': element.content,
-          'icon': element.type == 'text'
+          'icon': element.type == DesignElementType.text
               ? Icons.text_fields
               : Icons.emoji_emotions,
         },

@@ -86,6 +86,7 @@ class ApiService {
   // Content endpoints — always served from Sanity CMS
   Future<List<HomeBanner>> fetchBanners() => SanityService().fetchBanners();
   Future<List<Deal>> fetchDeals() => SanityService().fetchDeals();
+  Future<List<CategoryQuickLink>> fetchCategoryQuickLinks() => SanityService().fetchCategoryQuickLinks();
   Future<List<DesignTemplate>> fetchDesignTemplates() => SanityService().fetchDesignTemplates();
 
   Future<Map<String, String>> _getHeaders() async {
@@ -277,4 +278,49 @@ class ApiService {
     final sanityService = SanityService();
     return await sanityService.fetchTaxRate();
   }
+
+  /// Publishes a remix design to Sanity and syncs it to Firebase.
+  /// Returns the new Sanity product ID on success, throws on failure.
+  Future<String> publishRemix({
+    required String creatorHandle,
+    required String creatorName,
+    required String garmentType,
+    String? title,
+    String? garmentBaseColor,
+    String? artText,
+    String? remixedFromId,
+    String? remixedFromHandle,
+    String? remixedFromVersion,
+    List<Map<String, String>> lineage = const [],
+    List<String> tags = const [],
+  }) async {
+    final uri = Uri.parse('${webApiBaseUrl ?? _fallbackBaseUrl}/publish-remix');
+    final response = await http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'title': title,
+            'garmentType': garmentType,
+            'garmentBaseColor': garmentBaseColor,
+            'artText': artText,
+            'creatorName': creatorName,
+            'creatorHandle': creatorHandle,
+            'remixedFromId': remixedFromId,
+            'remixedFromHandle': remixedFromHandle,
+            'remixedFromVersion': remixedFromVersion,
+            'lineage': lineage,
+            'tags': tags,
+          }),
+        )
+        .timeout(const Duration(seconds: 30));
+
+    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    if (response.statusCode == 200 && data['success'] == true) {
+      return data['productId'] as String;
+    }
+    throw Exception(data['error'] ?? 'Publish failed (${response.statusCode})');
+  }
+
+  static const _fallbackBaseUrl = 'https://designwear-backend.vishwamai.com/api';
 }

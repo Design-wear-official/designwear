@@ -2,6 +2,7 @@ export 'address.dart';
 export 'banner.dart';
 export 'cart.dart';
 export 'category.dart';
+export 'category_quick_link.dart';
 export 'custom_design.dart';
 export 'deal.dart';
 export 'order.dart';

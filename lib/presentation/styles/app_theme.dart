@@ -292,8 +292,8 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: AppDimensions.borderRadiusLgBR,
         ),
-        titleTextStyle: AppTextStyles.h3,
-        contentTextStyle: AppTextStyles.bodyMedium,
+        titleTextStyle: AppTextStyles.h3.copyWith(color: AppColors.black),
+        contentTextStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.black),
       ),
 
       // Progress Indicator Theme

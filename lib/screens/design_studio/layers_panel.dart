@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
-import 'design_studio_constants.dart';
 import 'design_studio_utils.dart';
 
 class LayersPanel extends StatelessWidget {
@@ -11,7 +10,9 @@ class LayersPanel extends StatelessWidget {
   final Function(String?) onElementSelected;
   final Function(String) onDuplicateElement;
   final Function(String) onDeleteElement;
-  final VoidCallback onClose;
+  final Function(int oldIndex, int newIndex) onReorderElements;
+  final VoidCallback? onClose;
+  final VoidCallback? onAddLayerTap;
 
   const LayersPanel({
     super.key,
@@ -20,122 +21,313 @@ class LayersPanel extends StatelessWidget {
     required this.onElementSelected,
     required this.onDuplicateElement,
     required this.onDeleteElement,
-    required this.onClose,
+    required this.onReorderElements,
+    this.onClose,
+    this.onAddLayerTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      right: 0,
-      top: 0,
-      bottom: 0,
-      width: DesignStudioConstants.layersPanelWidth,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            bottomLeft: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(-2, 0),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          if (onClose != null)
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(bottom: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'LAYERS',
                     style: GoogleFonts.outfit(
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       fontSize: 16,
-                      letterSpacing: 1,
+                      letterSpacing: 1.1,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                   IconButton(
                     onPressed: onClose,
                     icon: const Icon(Icons.close),
                     iconSize: 20,
+                    splashRadius: 20,
                   ),
                 ],
               ),
             ),
-            Expanded(child: _buildLayersList(context)),
-          ],
-        ),
+          
+          Text(
+            'Inherited from @aanya',
+            style: GoogleFonts.spaceMono(
+              fontWeight: FontWeight.bold,
+              fontSize: 11.5,
+              color: AppColors.stone,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // Layers List
+          Expanded(child: _buildLayersList(context)),
+        ],
       ),
     );
   }
 
   Widget _buildLayersList(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+
     final allLayers = DesignStudioUtils.generateLayersData(design);
 
-    return ReorderableListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      onReorder: (oldIndex, newIndex) {
-        // Handle reordering logic here
-        if (newIndex > oldIndex) newIndex--;
-        // Implementation depends on your layer system
-      },
-      children: allLayers.map((layer) {
-        final isSelected = selectedElementId == layer['id'];
+    // We build:
+    // 1. Base fabric color layer (Teal/Indigo...)
+    // 2. Custom elements layers
+    // 3. Add layer button (dashed)
 
-        return Card(
-          key: ValueKey(layer['id']),
-          margin: const EdgeInsets.only(bottom: 8),
-          color: isSelected
-              ? AppColors.accentBlue.withValues(alpha: 0.1)
-              : null,
-          child: ListTile(
-            leading: Icon(layer['icon'] as IconData),
-            title: Text(
-              layer['name'] as String,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.outfit(
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+    final List<Widget> listItems = [];
+
+    // Fabric Color Layer
+    listItems.add(
+      _buildLayerRow(
+        context: context,
+        icon: Icons.circle,
+        iconColor: DesignStudioUtils.parseColorFromHex(design.baseColor),
+        title: 'Tee colour — ${design.productType}',
+        sourceText: 'from original',
+        isLegacy: true,
+      ),
+    );
+
+    // Print Placement Layer
+    listItems.add(
+      _buildLayerRow(
+        context: context,
+        icon: Icons.center_focus_strong,
+        title: 'Print area — ${design.printLocation == 'centre_chest' ? 'Centre chest' : 'Left chest'}',
+        sourceText: 'from original',
+        isLegacy: true,
+      ),
+    );
+
+    // Draggable elements layers
+    for (int i = 0; i < allLayers.length; i++) {
+      final layer = allLayers[i];
+      final isSelected = selectedElementId == layer['id'];
+      final isLegacyItem = layer['id'] == 'legacy_text' || layer['id'] == 'legacy_sticker';
+
+      listItems.add(
+        GestureDetector(
+          onTap: () => onElementSelected(isSelected ? null : layer['id'] as String),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.marigold.withValues(alpha: 0.08)
+                  : paper,
+              borderRadius: BorderRadius.circular(11),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.marigold
+                    : hair,
+                width: isSelected ? 1.5 : 1,
               ),
             ),
-            subtitle: Text(
-              (layer['type'] as String).toUpperCase(),
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.6),
-              ),
-            ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  onPressed: () => onDuplicateElement(layer['id'] as String),
-                  icon: const Icon(Icons.copy, size: 16),
-                  tooltip: 'Duplicate',
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              dense: true,
+              leading: Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: hair),
                 ),
-                IconButton(
-                  onPressed: () => onDeleteElement(layer['id'] as String),
-                  icon: const Icon(Icons.delete, size: 16),
-                  tooltip: 'Delete',
+                child: Icon(layer['icon'] as IconData, size: 16, color: Theme.of(context).colorScheme.onSurface),
+              ),
+              title: Text(
+                layer['name'] as String,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              subtitle: Text(
+                isLegacyItem ? 'from original' : 'your remix',
+                style: GoogleFonts.spaceMono(
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.bold,
+                  color: isLegacyItem
+                      ? (isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710))
+                      : AppColors.stone,
+                ),
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: () => onDuplicateElement(layer['id'] as String),
+                    icon: const Icon(Icons.copy, size: 14),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    splashRadius: 16,
+                    tooltip: 'Duplicate',
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: () => onDeleteElement(layer['id'] as String),
+                    icon: const Icon(Icons.delete, size: 14),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    splashRadius: 16,
+                    tooltip: 'Delete',
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Add your layer row
+    listItems.add(
+      GestureDetector(
+        onTap: onAddLayerTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          decoration: BoxDecoration(
+            color: Colors.transparent,
+            borderRadius: BorderRadius.circular(11),
+            border: Border.all(
+              color: isDark ? const Color(0xFF262B3D) : const Color(0xFFE4E2DA),
+              width: 1.5,
+              style: BorderStyle.solid, // Flutter doesn't have native dashed border natively easily without custom paint
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.add, size: 18, color: AppColors.marigold),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Add your layer',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                        color: AppColors.marigold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'your remix',
+                      style: GoogleFonts.spaceMono(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.stone,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: listItems,
+    );
+  }
+
+  Widget _buildLayerRow({
+    required BuildContext context,
+    required IconData icon,
+    Color? iconColor,
+    required String title,
+    required String sourceText,
+    required bool isLegacy,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: paper,
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: hair),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: hair),
+            ),
+            child: Icon(
+              icon,
+              size: 16,
+              color: iconColor ?? Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  sourceText,
+                  style: GoogleFonts.spaceMono(
+                    fontSize: 9.5,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710),
+                  ),
                 ),
               ],
             ),
-            onTap: () {
-              onElementSelected(isSelected ? null : layer['id'] as String);
-            },
           ),
-        );
-      }).toList(),
+        ],
+      ),
     );
   }
 }
-

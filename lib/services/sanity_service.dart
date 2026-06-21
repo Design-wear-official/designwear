@@ -12,10 +12,31 @@ class SanityService {
     useCdn: true,
   );
 
+  // Shared GROQ projection for product fields including community data
+  // NOTE: Sanity schema uses "name" not "title"; coalesce handles both.
+  // "productType" aliases garmentType so Product.fromMap can read it.
+  static const _productProjection = '''
+    _id,
+    "title": coalesce(title, name),
+    "slug": slug.current,
+    description, price, featured, tags,
+    "imageUrl": coalesce(image.asset->url, images[0].asset->url),
+    "images": images[].asset->url,
+    category, stock,
+    "availableSizes": sizes,
+    "availableColors": colors,
+    "productType": garmentType,
+    creatorName, creatorHandle, creatorFollowers,
+    garmentBaseColor, artText,
+    remixedFromHandle, remixedFromVersion,
+    likeCount, remixCount,
+    "lineage": lineage[]{handle, version, baseColor, artText}
+  ''';
+
   Future<List<Product>> fetchProducts() async {
     try {
-      const query =
-          '*[_type == "product"] | order(_updatedAt desc) {_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+      final query =
+          '*[_type == "product"] | order(_updatedAt desc) {$_productProjection}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
@@ -28,18 +49,17 @@ class SanityService {
   /// Falls back to the first 6 products if none are marked featured.
   Future<List<Product>> fetchFeaturedProducts() async {
     try {
-      const query =
-          '*[_type == "product" && featured == true]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+      final query =
+          '*[_type == "product" && featured == true]{$_productProjection}';
       final List<dynamic> result = await client.fetch(query);
       if (result.isNotEmpty) {
         return result.map((item) => Product.fromMap(item)).toList();
       }
-      // If no products are marked featured yet, show the first 6 as a fallback
       debugPrint(
         'No featured products found in Sanity — falling back to first 6 products',
       );
-      const fallbackQuery =
-          '*[_type == "product"][0..5]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+      final fallbackQuery =
+          '*[_type == "product"][0..5]{$_productProjection}';
       final List<dynamic> fallback = await client.fetch(fallbackQuery);
       return fallback.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
@@ -51,7 +71,7 @@ class SanityService {
   Future<List<Category>> fetchCategories() async {
     try {
       const query =
-          '*[_type == "category"] | order(title asc) {_id, title, slug, description, "imageUrl": image.asset->url}';
+          '*[_type == "category"] | order(title asc) {_id, title, slug, description, "imageUrl": coalesce(image.asset->url, images[0].asset->url)}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Category.fromMap(item)).toList();
     } catch (e) {
@@ -63,7 +83,7 @@ class SanityService {
   Future<List<Product>> fetchProductsByCategory(String categoryId) async {
     try {
       final query =
-          '*[_type == "product" && category._ref == "$categoryId"]{_id, title, slug, description, price, featured, "imageUrl": image.asset->url, category, stock}';
+          '*[_type == "product" && category._ref == "$categoryId"]{$_productProjection}';
       final List<dynamic> result = await client.fetch(query);
       return result.map((item) => Product.fromMap(item)).toList();
     } catch (e) {
@@ -99,13 +119,26 @@ class SanityService {
   Future<List<Deal>> fetchDeals() async {
     try {
       const query = '*[_type == "deal" && active == true && (expiresAt == null || expiresAt > now())] '
-          '| order(_updatedAt desc) {_id, label, originalPrice, salePrice, discountPercent, colorHex}';
+          '| order(_updatedAt desc) {_id, label, originalPrice, salePrice, discountPercent, colorHex, "imageUrl": image.asset->url}';
       final List<dynamic> result = await client.fetch(query);
       final deals = result.map((m) => Deal.fromMap(m as Map<String, dynamic>)).toList();
       return deals.isNotEmpty ? deals : Deal.fallbacks;
     } catch (e) {
       debugPrint('Sanity fetchDeals failed: $e');
       return Deal.fallbacks;
+    }
+  }
+
+  Future<List<CategoryQuickLink>> fetchCategoryQuickLinks() async {
+    try {
+      const query =
+          '*[_type == "categoryQuickLink" && active == true] | order(order asc) '
+          '{_id, label, iconName, colorHex, action, tabIndex, order}';
+      final List<dynamic> result = await client.fetch(query);
+      return result.map((m) => CategoryQuickLink.fromMap(m as Map<String, dynamic>)).toList();
+    } catch (e) {
+      debugPrint('Sanity fetchCategoryQuickLinks failed: $e');
+      return [];
     }
   }
 

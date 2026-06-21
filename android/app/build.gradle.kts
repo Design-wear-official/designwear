@@ -12,7 +12,7 @@ plugins {
 android {
     namespace = "com.vishwamai.designwear"
     compileSdk = flutter.compileSdkVersion
-    // ndkVersion = flutter.ndkVersion // Not needed for pure Dart apps
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

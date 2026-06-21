@@ -23,48 +23,21 @@ class TextControlsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Handle legacy text element
-    if (selectedElementId == 'legacy_text') {
-      return _buildLegacyTextControls();
-    }
+
 
     // Handle new text elements
     final element = design.elements
         .where((e) => e.id == selectedElementId)
         .firstOrNull;
 
-    if (element?.type == 'text') {
+    if (element?.type == DesignElementType.text) {
       return _buildNewTextControls(element!);
     }
 
     return Container();
   }
 
-  Widget _buildLegacyTextControls() {
-    return Column(
-      children: [
-        // Font size slider
-        Row(
-          children: [
-            const Icon(Icons.format_size, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Slider(
-                value: design.fontSize,
-                min: DesignStudioConstants.minFontSize,
-                max: DesignStudioConstants.maxFontSize,
-                activeColor: AppColors.accentBlue,
-                onChanged: (value) {
-                  onDesignUpdate(design.copyWith(fontSize: value));
-                },
-              ),
-            ),
-            Text('${design.fontSize.round()}'),
-          ],
-        ),
-      ],
-    );
-  }
+
 
   Widget _buildNewTextControls(DesignElement element) {
     return Column(
@@ -79,7 +52,7 @@ class TextControlsWidget extends StatelessWidget {
                 value: element.size,
                 min: DesignStudioConstants.minFontSize,
                 max: DesignStudioConstants.maxFontSize,
-                activeColor: AppColors.accentBlue,
+                activeColor: AppColors.marigold,
                 onChanged: (value) {
                   final updatedElement = element.copyWith(size: value);
                   onDesignUpdate(
@@ -119,7 +92,7 @@ class TextControlsWidget extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? AppColors.accentBlue
+                      ? AppColors.marigold
                       : Colors.grey.shade200,
                   borderRadius: BorderRadius.circular(16),
                 ),
@@ -136,6 +109,52 @@ class TextControlsWidget extends StatelessWidget {
               ),
             );
           }).toList(),
+        ),
+
+        // Text color
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const Icon(Icons.format_color_text, size: 18),
+              const SizedBox(width: 8),
+              ...[
+                Colors.black,
+                Colors.white,
+                Colors.red,
+                Colors.orange,
+                Colors.yellow,
+                Colors.green,
+                Colors.blue,
+                Colors.purple,
+                Colors.pink,
+                Colors.brown,
+              ].map((color) {
+                final hex = '0x${color.value.toRadixString(16).toUpperCase().padLeft(8, '0')}';
+                final isSelected = element.color == hex;
+                return GestureDetector(
+                  onTap: () {
+                    final updatedElement = element.copyWith(color: hex);
+                    onDesignUpdate(design.updateElement(element.id, updatedElement));
+                  },
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    margin: const EdgeInsets.only(right: 6),
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? AppColors.marigold : Colors.grey.shade400,
+                        width: isSelected ? 2.5 : 1,
+                      ),
+                    ),
+                  ),
+                );
+              }),
+            ],
+          ),
         ),
 
         // Text effects
@@ -187,7 +206,7 @@ class TextControlsWidget extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: isActive ? AppColors.accentBlue : Colors.grey.shade200,
+          color: isActive ? AppColors.marigold : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Icon(

@@ -1,6 +1,21 @@
+enum DesignElementType {
+  text,
+  sticker,
+  shape;
+
+  /// Serialised value written to/read from JSON.
+  String get value => name;
+
+  static DesignElementType fromString(String v) => switch (v) {
+    'sticker' => DesignElementType.sticker,
+    'shape'   => DesignElementType.shape,
+    _         => DesignElementType.text,
+  };
+}
+
 class DesignElement {
   final String id;
-  final String type; // 'text', 'sticker', 'shape'
+  final DesignElementType type;
   final String content;
   final double x;
   final double y;
@@ -10,7 +25,7 @@ class DesignElement {
 
   DesignElement({
     required this.id,
-    required this.type,
+    this.type = DesignElementType.text,
     this.content = '',
     this.x = 0,
     this.y = 0,
@@ -21,7 +36,7 @@ class DesignElement {
 
   DesignElement copyWith({
     String? id,
-    String? type,
+    DesignElementType? type,
     String? content,
     double? x,
     double? y,
@@ -44,7 +59,7 @@ class DesignElement {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'type': type,
+      'type': type.value,
       'content': content,
       'x': x,
       'y': y,
@@ -57,7 +72,7 @@ class DesignElement {
   factory DesignElement.fromJson(Map<String, dynamic> json) {
     return DesignElement(
       id: json['id'] ?? '',
-      type: json['type'] ?? 'text',
+      type: DesignElementType.fromString(json['type'] ?? 'text'),
       content: json['content'] ?? '',
       x: (json['x'] as num?)?.toDouble() ?? 0,
       y: (json['y'] as num?)?.toDouble() ?? 0,
@@ -83,9 +98,14 @@ class CustomDesign {
   final String templateId;
   final String name; // User-given name for the design
   final String productType; // 'T-Shirt', 'Hoodie', 'Cap', etc.
+  final String printLocation; // 'centre_chest', 'left_chest', etc.
   final String? thumbnailPath; // Local path to saved thumbnail
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String collarStyle; // 'crew' | 'vneck' | 'polo'
+  final String pocketStyle; // 'none' | 'left' | 'right' | 'both'
+  // Runtime-only: AI-generated design graphic (base64, not persisted to JSON)
+  final String? designImageBase64;
 
   CustomDesign({
     this.baseColor = "0xFFFFFFFF",
@@ -102,9 +122,13 @@ class CustomDesign {
     this.templateId = '',
     this.name = '',
     this.productType = 'T-Shirt',
+    this.printLocation = 'centre_chest',
     this.thumbnailPath,
     this.createdAt,
     this.updatedAt,
+    this.collarStyle = 'crew',
+    this.pocketStyle = 'none',
+    this.designImageBase64,
   });
 
   CustomDesign copyWith({
@@ -122,9 +146,13 @@ class CustomDesign {
     String? templateId,
     String? name,
     String? productType,
+    String? printLocation,
     String? thumbnailPath,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? collarStyle,
+    String? pocketStyle,
+    Object? designImageBase64 = _keepExisting,
   }) {
     return CustomDesign(
       baseColor: baseColor ?? this.baseColor,
@@ -141,11 +169,19 @@ class CustomDesign {
       templateId: templateId ?? this.templateId,
       name: name ?? this.name,
       productType: productType ?? this.productType,
+      printLocation: printLocation ?? this.printLocation,
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      collarStyle: collarStyle ?? this.collarStyle,
+      pocketStyle: pocketStyle ?? this.pocketStyle,
+      designImageBase64: identical(designImageBase64, _keepExisting)
+          ? this.designImageBase64
+          : designImageBase64 as String?,
     );
   }
+
+  static const Object _keepExisting = Object();
 
   Map<String, dynamic> toJson() {
     return {
@@ -163,9 +199,12 @@ class CustomDesign {
       'templateId': templateId,
       'name': name,
       'productType': productType,
+      'printLocation': printLocation,
       'thumbnailPath': thumbnailPath,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'collarStyle': collarStyle,
+      'pocketStyle': pocketStyle,
     };
   }
 
@@ -188,6 +227,7 @@ class CustomDesign {
       templateId: json['templateId'] ?? '',
       name: json['name'] ?? '',
       productType: json['productType'] ?? 'T-Shirt',
+      printLocation: json['printLocation'] ?? 'centre_chest',
       thumbnailPath: json['thumbnailPath'],
       createdAt: json['createdAt'] != null
           ? DateTime.tryParse(json['createdAt'])
@@ -195,6 +235,8 @@ class CustomDesign {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'])
           : null,
+      collarStyle: json['collarStyle'] ?? 'crew',
+      pocketStyle: json['pocketStyle'] ?? 'none',
     );
   }
 
@@ -218,5 +260,12 @@ class CustomDesign {
           .map((e) => e.id == elementId ? newElement : e)
           .toList(),
     );
+  }
+
+  CustomDesign reorderElements(int oldIndex, int newIndex) {
+    final list = List<DesignElement>.from(elements);
+    final item = list.removeAt(oldIndex);
+    list.insert(newIndex, item);
+    return copyWith(elements: list);
   }
 }

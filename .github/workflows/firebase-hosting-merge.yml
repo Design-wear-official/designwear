@@ -22,13 +22,20 @@ jobs:
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          cache: true
+          # Built-in caching pulls in actions/cache@v5 (a tag, not a SHA), which
+          # the org's SHA-pinning policy rejects.
+          cache: false
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build web (release)
-        run: flutter build web --release --no-wasm-dry-run
+        run: |
+          flutter build web --release --no-wasm-dry-run -t lib/main.dart \
+            --dart-define=SANITY_PROJECT_ID=jh7llku7 \
+            --dart-define=SANITY_DATASET=production \
+            --dart-define=USE_WEB_API=true \
+            --dart-define=WEB_API_BASE_URL=https://designwear-backend.vishwamai.com/api
 
       - name: Deploy to Firebase Hosting (live)
         uses: FirebaseExtended/action-hosting-deploy@e2eda2e106cfa35cdbcf4ac9ddaf6c4756df2c8c # v0

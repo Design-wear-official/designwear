@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/services/services.dart';
 import 'package:designwear/presentation/styles/styles.dart';
-import 'design_studio_constants.dart';
 
 class TemplatesPanel extends StatelessWidget {
   final DesignTemplateService templateService;
@@ -22,7 +21,7 @@ class TemplatesPanel extends StatelessWidget {
       left: 0,
       top: 0,
       bottom: 0,
-      width: DesignStudioConstants.templatesPanelWidth,
+      width: (MediaQuery.sizeOf(context).width * 0.75).clamp(200.0, 300.0),
       child: Container(
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
@@ -80,7 +79,7 @@ class TemplatesPanel extends StatelessWidget {
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: AppColors.accentBlue,
+                            backgroundColor: AppColors.marigold,
                             child: Text(
                               template.name[0].toUpperCase(),
                               style: const TextStyle(
@@ -126,4 +125,3 @@ class TemplatesPanel extends StatelessWidget {
     );
   }
 }
-

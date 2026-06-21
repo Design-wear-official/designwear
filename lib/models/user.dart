@@ -1,6 +1,18 @@
 import 'address.dart';
 import 'payment_method.dart';
 
+enum AuthProvider {
+  email,
+  google,
+  phone;
+
+  static AuthProvider fromString(String v) => switch (v) {
+    'google' => AuthProvider.google,
+    'phone'  => AuthProvider.phone,
+    _        => AuthProvider.email,
+  };
+}
+
 class AppUser {
   final String id;
   final String? name;
@@ -9,7 +21,7 @@ class AppUser {
   final String? photoUrl;
   final bool isEmailVerified;
   final bool isPhoneVerified;
-  final String authProvider; // 'email', 'google', 'phone'
+  final AuthProvider authProvider;
   final List<Address> addresses;
   final List<PaymentMethod> paymentMethods;
   final int loyaltyPoints;
@@ -25,7 +37,7 @@ class AppUser {
     this.photoUrl,
     this.isEmailVerified = false,
     this.isPhoneVerified = false,
-    this.authProvider = 'email',
+    this.authProvider = AuthProvider.email,
     this.addresses = const [],
     this.paymentMethods = const [],
     this.loyaltyPoints = 0,
@@ -68,7 +80,7 @@ class AppUser {
     String? photoUrl,
     bool? isEmailVerified,
     bool? isPhoneVerified,
-    String? authProvider,
+    AuthProvider? authProvider,
     List<Address>? addresses,
     List<PaymentMethod>? paymentMethods,
     int? loyaltyPoints,
@@ -103,7 +115,7 @@ class AppUser {
       photoUrl: json['photoUrl'] ?? json['photoURL'],
       isEmailVerified: json['isEmailVerified'] == true,
       isPhoneVerified: json['isPhoneVerified'] == true,
-      authProvider: json['authProvider'] ?? 'email',
+      authProvider: AuthProvider.fromString(json['authProvider'] ?? 'email'),
       addresses: (json['addresses'] as List<dynamic>?)
               ?.map((e) => Address.fromJson(e))
               .toList() ??
@@ -132,7 +144,7 @@ class AppUser {
       'photoUrl': photoUrl,
       'isEmailVerified': isEmailVerified,
       'isPhoneVerified': isPhoneVerified,
-      'authProvider': authProvider,
+      'authProvider': authProvider.name,
       'addresses': addresses.map((a) => a.toJson()).toList(),
       'paymentMethods': paymentMethods.map((p) => p.toJson()).toList(),
       'loyaltyPoints': loyaltyPoints,

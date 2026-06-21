@@ -6,7 +6,7 @@ import 'package:designwear/screens/design_studio/design_studio_utils.dart';
 
 class EnhancedTextEditor extends StatefulWidget {
   final DesignTemplateService templateService;
-  final Function(String) onAddTextElement;
+  final Function(String text, String fontFamily) onAddTextElement;
 
   const EnhancedTextEditor({
     super.key,
@@ -101,7 +101,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppColors.accentBlue
+                          ? AppColors.marigold
                           : Colors.grey.shade200,
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -142,13 +142,15 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                 child: ElevatedButton(
                   onPressed: () {
                     if (_textController.text.isNotEmpty) {
-                      widget.onAddTextElement(_textController.text);
+                      widget.onAddTextElement(_textController.text, _selectedFont);
                     }
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
+                    backgroundColor: AppColors.marigold,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
                   ),
                   child: const Text('ADD TEXT'),
                 ),

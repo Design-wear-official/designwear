@@ -1,0 +1,194 @@
+name: CI
+
+# Build-verification pipeline for all three targets: web, Android and iOS.
+# Web deployment (Firebase Hosting) is handled by the firebase-hosting-*.yml
+# workflows; this pipeline only verifies that each platform compiles and that
+# the code analyzes and tests cleanly.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# Cancel superseded runs on the same branch/PR to save CI minutes (iOS runs on
+# the expensive macOS runners).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_CHANNEL: stable
+  JAVA_VERSION: "17"
+  # Public, non-secret build-time config. Real secrets are loaded at runtime
+  # from .env on mobile and are not required to verify the app compiles.
+  SANITY_PROJECT_ID: jh7llku7
+  SANITY_DATASET: production
+
+jobs:
+  analyze:
+    name: Analyze & test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          # Built-in caching is disabled: it pulls in actions/cache@v5 (a tag,
+          # not a SHA), which the org's SHA-pinning policy rejects.
+          cache: false
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: |
+          if find test -name '*_test.dart' -type f 2>/dev/null | grep -q .; then
+            flutter test
+          else
+            echo "No test files found under test/ — skipping flutter test."
+          fi
+
+  build-web:
+    name: Build web
+    needs: analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          # Built-in caching is disabled: it pulls in actions/cache@v5 (a tag,
+          # not a SHA), which the org's SHA-pinning policy rejects.
+          cache: false
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build web (release)
+        run: |
+          flutter build web --release --no-wasm-dry-run -t lib/main.dart \
+            --dart-define=SANITY_PROJECT_ID=${{ env.SANITY_PROJECT_ID }} \
+            --dart-define=SANITY_DATASET=${{ env.SANITY_DATASET }} \
+            --dart-define=USE_WEB_API=true \
+            --dart-define=WEB_API_BASE_URL=https://designwear-backend.vishwamai.com/api
+
+      - name: Upload web build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: web-release
+          path: build/web
+          retention-days: 7
+
+  build-android:
+    name: Build Android (APK)
+    needs: analyze
+    runs-on: ubuntu-latest
+    env:
+      # base64-encoded contents of android/app/google-services.json
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Java
+        uses: actions/setup-java@c1e323688fd81a25caa38c78aa6df2d33d3e20d9 # v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          # Built-in caching is disabled: it pulls in actions/cache@v5 (a tag,
+          # not a SHA), which the org's SHA-pinning policy rejects.
+          cache: false
+
+      - name: Restore google-services.json
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::Missing GOOGLE_SERVICES_JSON secret. Add it under" \
+                 "Settings → Secrets and variables → Actions as the base64 of" \
+                 "android/app/google-services.json (e.g. base64 -w0 android/app/google-services.json)."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON" | base64 --decode > android/app/google-services.json
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build APK (external flavor, release)
+        run: |
+          flutter build apk --release --flavor external -t lib/main_external.dart \
+            --dart-define=SANITY_PROJECT_ID=${{ env.SANITY_PROJECT_ID }} \
+            --dart-define=SANITY_DATASET=${{ env.SANITY_DATASET }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: android-external-apk
+          path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 7
+
+  build-ios:
+    name: Build iOS (no codesign)
+    needs: analyze
+    runs-on: macos-latest
+    env:
+      # base64-encoded contents of ios/Runner/GoogleService-Info.plist
+      GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          # Built-in caching is disabled: it pulls in actions/cache@v5 (a tag,
+          # not a SHA), which the org's SHA-pinning policy rejects.
+          cache: false
+
+      - name: Restore GoogleService-Info.plist
+        run: |
+          if [ -z "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            echo "::error::Missing GOOGLE_SERVICE_INFO_PLIST secret. Add it under" \
+                 "Settings → Secrets and variables → Actions as the base64 of" \
+                 "ios/Runner/GoogleService-Info.plist (e.g. base64 -i ios/Runner/GoogleService-Info.plist)."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICE_INFO_PLIST" | base64 --decode > ios/Runner/GoogleService-Info.plist
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS (release, no codesign)
+        run: |
+          flutter build ios --release --no-codesign -t lib/main.dart \
+            --dart-define=SANITY_PROJECT_ID=${{ env.SANITY_PROJECT_ID }} \
+            --dart-define=SANITY_DATASET=${{ env.SANITY_DATASET }}

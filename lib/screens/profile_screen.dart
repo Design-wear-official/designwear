@@ -537,18 +537,24 @@ class _MenuSection extends StatelessWidget {
                 ? null
                 : [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
           ),
-          child: Column(
-            children: items.asMap().entries.map((entry) {
-              final i = entry.key;
-              final item = entry.value;
-              return Column(
-                children: [
-                  _MenuItemTile(item: item),
-                  if (i < items.length - 1)
-                    Divider(height: 1, indent: 56, color: colorScheme.outline.withOpacity(0.12)),
-                ],
-              );
-            }).toList(),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Column(
+                children: items.asMap().entries.map((entry) {
+                  final i = entry.key;
+                  final item = entry.value;
+                  return Column(
+                    children: [
+                      _MenuItemTile(item: item),
+                      if (i < items.length - 1)
+                        Divider(height: 1, indent: 56, color: colorScheme.outline.withOpacity(0.12)),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
           ),
         ),
       ],

@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DesignWear — Remix Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    /* Base Light Theme */
+    --ink: #15182B;          /* near-black indigo */
+    --ink-2: #272B45;
+    --paper: #F1F0EC;        /* cool gallery canvas */
+    --card: #FFFFFF;
+    --hair: #E4E2DA;         /* hairline */
+    --stone: #7A7B82;        /* secondary text */
+    --marigold: #E2A33C;     /* accent */
+    --marigold-ink: #6F4710;
+    --like: #E5654B;         
+    --garment: #27314F;
+    --bg-blur: rgba(241,240,236,.92);
+    --shadow-base: rgba(20,24,45,.16);
+    --shadow-hover: rgba(20,24,45,.45);
+    --prov-bg: #f4e6cd;
+    --prov-border: #ecd6a8;
+    --stage-bg: radial-gradient(1200px 600px at 85% -10%,#20243f 0%,transparent 60%),#0e1124;
+    
+    --r-sm: 10px; --r-md: 16px; --r-lg: 24px;
+    --ff-display: "Archivo",system-ui,sans-serif;
+    --ff-body: "Inter",system-ui,sans-serif;
+    --ff-mono: "Space Mono",ui-monospace,monospace;
+  }
+
+  [data-theme="dark"] {
+    /* Dark Theme Overrides */
+    --ink: #F1F0EC;          
+    --ink-2: #D1D0CC;
+    --paper: #0D0F16;        
+    --card: #151824;
+    --hair: #262B3D;         
+    --stone: #8E92A3;        
+    --marigold: #E2A33C;     
+    --marigold-ink: #FFE9C2; 
+    --bg-blur: rgba(13,15,22,.92);
+    --shadow-base: rgba(0,0,0,.4);
+    --shadow-hover: rgba(0,0,0,.7);
+    --prov-bg: rgba(226,163,60,.15);
+    --prov-border: rgba(226,163,60,.3);
+    --stage-bg: radial-gradient(1200px 600px at 85% -10%,#090a12 0%,transparent 60%),#020306;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0; transition: background 0.3s ease;}
+  body{font-family:var(--ff-body); color:var(--ink);
+    background:var(--stage-bg);
+    -webkit-font-smoothing:antialiased; min-height:100vh}
+
+  /* ============ CONTROL BAR ============ */
+  .dw-controls{position:sticky; top:0; z-index:50; display:flex; gap:18px; align-items:center; flex-wrap:wrap;
+    padding:14px 18px; background:rgba(8,10,24,.8); backdrop-filter:blur(10px); border-bottom:1px solid rgba(255,255,255,.08)}
+  .dw-controls .brand{font-family:var(--ff-display); font-weight:900; letter-spacing:.16em; color:#fff; font-size:14px; text-transform:uppercase; white-space:nowrap}
+  .dw-controls .brand span{color:var(--marigold)}
+  .seg{display:inline-flex; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); border-radius:999px; padding:3px}
+  .seg button{appearance:none; border:0; background:transparent; cursor:pointer; color:#c6cbe0; font:600 12.5px/1 var(--ff-body); letter-spacing:.02em; padding:8px 14px; border-radius:999px; white-space:nowrap; display:inline-flex; align-items:center; gap:7px; transition:all 0.2s}
+  .seg button[aria-pressed="true"]{background:#fff; color:#15182B}
+  .seg.dev button[aria-pressed="true"]{background:var(--marigold); color:#6F4710}
+  .seg button:focus-visible{outline:2px solid var(--marigold); outline-offset:2px}
+  .ctl-label{color:#7e84a0; font:600 10.5px/1 var(--ff-mono); letter-spacing:.18em; text-transform:uppercase}
+
+  /* Segments adapted for app-internal use (light/dark adapt) */
+  .app-seg{display:inline-flex; background:var(--paper); border:1px solid var(--hair); border-radius:999px; padding:3px}
+  .app-seg button{appearance:none; border:0; background:transparent; cursor:pointer; color:var(--stone); font:600 12.5px/1 var(--ff-body); padding:8px 14px; border-radius:999px; transition:all 0.2s}
+  .app-seg button[aria-pressed="true"]{background:var(--card); color:var(--ink); box-shadow:0 2px 6px rgba(0,0,0,.08)}
+
+  /* ============ STAGE + DEVICE ============ */
+  .stage{display:flex; justify-content:center; padding:28px 16px 64px}
+  .device-wrap{position:relative}
+  .device{position:absolute; top:0; left:0; transform-origin:top left; background:var(--paper); overflow:hidden; box-shadow:0 40px 90px -30px rgba(0,0,0,.8); transition: background 0.3s}
+  .device.mobile{width:390px; height:812px; border-radius:42px; border:11px solid #0a0c1c}
+  .device.tablet{width:820px; height:1100px; border-radius:30px; border:14px solid #0a0c1c}
+  .device.desktop{width:1280px; height:840px; border-radius:14px; border:1px solid #0a0c1c}
+  .chrome{height:0}
+  .device.desktop .chrome{height:46px; background:#e9e7e0; display:flex; align-items:center; gap:8px; padding:0 16px; border-bottom:1px solid var(--hair)}
+  [data-theme="dark"] .device.desktop .chrome { background:#1a1c23; border-bottom:1px solid #000; }
+  .device.mobile .chrome,.device.tablet .chrome{display:none}
+  .dot{width:11px;height:11px;border-radius:50%}.dot.r{background:#f0685f}.dot.y{background:#f3bd4e}.dot.g{background:#62c554}
+  .url{flex:1; margin-left:10px; background:var(--card); border:1px solid var(--hair); border-radius:999px; height:28px; display:flex; align-items:center; padding:0 14px; font:400 12px/1 var(--ff-mono); color:var(--stone); gap:8px; max-width:560px}
+  .url b{color:var(--ink); font-weight:700}
+  .notch{display:none}
+  .device.mobile .notch{display:block; position:absolute; top:6px; left:50%; transform:translateX(-50%); width:128px; height:26px; background:#0a0c1c; border-radius:0 0 16px 16px; z-index:30}
+
+  .dw-screen{height:100%; overflow-y:auto; overflow-x:hidden; container-type:inline-size; container-name:app; background:var(--paper); color:var(--ink); scrollbar-width:thin; scrollbar-color:var(--hair) transparent; position:relative;}
+  .device.desktop .dw-screen{height:calc(100% - 46px)}
+  .dw-screen::-webkit-scrollbar{width:8px}.dw-screen::-webkit-scrollbar-thumb{background:var(--hair); border-radius:8px}
+  .dw-screen:not(.is-active){display:none}
+
+  /* ============ SHARED ============ */
+  .mono{font-family:var(--ff-mono)}
+  .eyebrow{font:700 10.5px/1 var(--ff-mono); letter-spacing:.22em; text-transform:uppercase; color:var(--marigold-ink); background:var(--prov-bg); border:1px solid var(--prov-border); display:inline-flex; padding:6px 10px; border-radius:999px}
+  .btn{appearance:none; cursor:pointer; border:0; border-radius:999px; font:700 14px/1 var(--ff-body); padding:13px 20px; display:inline-flex; align-items:center; justify-content:center; gap:8px; transition:transform .12s ease, background .15s ease, box-shadow .12s ease}
+  .btn:active{transform:translateY(1px)} .btn:focus-visible{outline:2px solid var(--ink); outline-offset:2px}
+  .btn-remix{background:var(--marigold); color:#6F4710; box-shadow:0 10px 24px -10px rgba(226,163,60,.9)}
+  .btn-remix:hover{background:#eeb352}
+  .btn-ink{background:var(--ink); color:var(--card)} .btn-ink:hover{background:var(--ink-2)}
+  .btn-ghost{background:transparent; color:var(--ink); border:1.5px solid var(--ink)} .btn-ghost:hover{background:var(--hair)}
+  .btn-sm{padding:9px 14px; font-size:13px}
+  .btn-block{width:100%}
+
+  .swatches{display:flex; flex-wrap:wrap; gap:9px}
+  .swatch{width:32px; height:32px; border-radius:50%; cursor:pointer; position:relative; border:2px solid var(--hair); box-shadow:inset 0 0 0 2px var(--card); transition:transform .12s ease}
+  .swatch:hover{transform:scale(1.08)}
+  .swatch[aria-pressed="true"]{border-color:var(--ink); box-shadow:inset 0 0 0 2px var(--card), 0 0 0 2px var(--ink)}
+  
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chip{appearance:none; cursor:pointer; background:var(--card); border:1.4px solid var(--hair); border-radius:10px; padding:9px 13px; font:600 13px/1 var(--ff-body); color:var(--ink)}
+  .chip[aria-pressed="true"]{border-color:var(--ink); background:var(--ink); color:var(--card)}
+
+  .avatar{width:26px; height:26px; border-radius:50%; flex:none; display:grid; place-items:center; color:#fff; font:800 11px/1 var(--ff-display)}
+  .handle{font:700 12.5px/1 var(--ff-mono); color:var(--ink)}
+  .stat{display:inline-flex; align-items:center; gap:5px; font:700 12px/1 var(--ff-mono); color:var(--stone)}
+  .stat svg{width:15px; height:15px}
+  .stat.like svg{color:var(--like)} .stat.remix svg{color:var(--marigold)}
+
+  .gtile{position:relative; display:grid; place-items:center; background:radial-gradient(120% 95% at 50% 8%,var(--card),var(--paper)); overflow:hidden}
+  .gtile::before{content:""; position:absolute; inset:0; opacity:.4; background-image:linear-gradient(var(--hair) 1px,transparent 1px),linear-gradient(90deg,var(--hair) 1px,transparent 1px); background-size:24px 24px; mask-image:radial-gradient(80% 80% at 50% 45%,#000 55%,transparent 100%)}
+  .garment{position:relative; z-index:1; height:auto; filter:drop-shadow(0 12px 18px var(--shadow-base))}
+  .garment .body{fill:var(--garment); transition:fill .25s ease}
+  .garment .seam{stroke:rgba(0,0,0,.2); stroke-width:1.4; fill:none}
+  [data-theme="dark"] .garment .seam { stroke:rgba(255,255,255,.1); }
+  .garment .collar{fill:rgba(0,0,0,.15)}
+  .garment .print{stroke:rgba(255,255,255,.7); stroke-dasharray:5 6; stroke-width:1.6; fill:transparent; opacity:0; transition:opacity .2s}
+  .garment.show-print .print{opacity:.9}
+  .garment .art{opacity:0; transition:opacity .2s}
+  .garment.show-art .art{opacity:1}
+
+  /* =========================================================
+     1) THE FEED
+     ========================================================= */
+  .top{position:sticky; top:0; z-index:20; background:var(--bg-blur); backdrop-filter:blur(8px); border-bottom:1px solid var(--hair)}
+  .top-row{display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:14px 18px}
+  .wm{font-family:var(--ff-display); font-weight:900; letter-spacing:.13em; color:var(--ink); font-size:17px; white-space:nowrap}
+  .wm i{color:var(--marigold); font-style:normal}
+  .search{display:flex; flex:1 1 100%; order:3; align-items:center; gap:9px; background:var(--card); border:1.4px solid var(--hair); border-radius:999px; padding:8px 15px; margin-top:2px; transition:border-color 0.2s}
+  .search:focus-within{border-color:var(--ink)}
+  .search svg{color:var(--stone); flex-shrink:0}
+  .search input{border:none; background:transparent; color:var(--ink); font:500 13px/1.2 var(--ff-body); width:100%; outline:none}
+  .search input::placeholder{color:var(--stone)}
+  .top-actions{display:flex; align-items:center; gap:10px; margin-left:auto}
+  .icon-btn{appearance:none; border:1.4px solid var(--hair); background:var(--card); width:38px; height:38px; border-radius:11px; display:grid; place-items:center; cursor:pointer; color:var(--ink); transition:all 0.2s}
+  .icon-btn:hover{background:var(--paper)}
+  .me{width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#5a6cff,#9b6cff); display:grid; place-items:center; color:#fff; font:800 12px/1 var(--ff-display); cursor:pointer}
+  
+  .tabs{display:flex; gap:4px; padding:0 18px 12px; overflow-x:auto; scrollbar-width:none;}
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button{appearance:none; border:0; background:transparent; cursor:pointer; white-space:nowrap; font:700 13px/1 var(--ff-body); color:var(--stone); padding:8px 12px; border-radius:999px; transition:all 0.2s}
+  .tabs button[aria-pressed="true"]{background:var(--ink); color:var(--card)}
+
+  .challenge{margin:16px 18px 0; background:var(--ink); border-radius:var(--r-lg); padding:18px; color:var(--card); position:relative; overflow:hidden}
+  [data-theme="dark"] .challenge { background: #202436; color: #fff; }
+  .challenge .lab{font:700 10px/1 var(--ff-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--marigold)}
+  .challenge h3{font-family:var(--ff-display); font-weight:800; font-size:20px; margin:9px 0 0; line-height:1.1}
+  .challenge p{color:var(--stone); font-size:12.5px; margin:7px 0 14px; line-height:1.4; max-width:42ch}
+  [data-theme="dark"] .challenge p { color: #aab0cf; }
+  .challenge .meta{font:700 11px/1 var(--ff-mono); color:var(--stone); margin-top:2px}
+
+  .feed-wrap{padding:18px}
+  .feed-head{display:flex; align-items:baseline; justify-content:space-between; margin:6px 2px 14px}
+  .feed-head h2{font-family:var(--ff-display); font-weight:800; font-size:20px; margin:0; letter-spacing:-.01em}
+  .feed-head .mono{color:var(--stone); font-size:11px}
+  
+  /* Gallery Modes */
+  .feed{transition: all 0.3s ease;}
+  /* Mode 1: Masonry Grid (Default) */
+  .feed.layout-grid { columns:1; column-gap:14px; }
+  .feed.layout-grid .fcard{break-inside:avoid; -webkit-column-break-inside:avoid; margin:0 0 14px; }
+  
+  /* Mode 2: Detail List */
+  .feed.layout-detail { display: flex; flex-direction: column; gap: 24px; }
+  .feed.layout-detail .fcard { margin: 0; width: 100%; display: flex; flex-direction: column; }
+  .feed.layout-detail .fcard .ph .garment { width: 85%; max-width: 400px; }
+  .feed.layout-detail .fcard .body2 { padding: 18px; }
+  .feed.layout-detail .fcard .ttl { font-size: 18px; }
+
+  /* Card Styles */
+  .fcard{background:var(--card); border:1px solid var(--hair); border-radius:var(--r-md); overflow:hidden; cursor:pointer; transition:transform .14s ease, box-shadow .14s ease}
+  .fcard:hover{transform:translateY(-3px); box-shadow:0 18px 34px -20px var(--shadow-hover)}
+  .fcard .ph{position:relative; width: 100%; display:flex; justify-content:center; align-items:center; background: var(--paper);}
+  .fcard .ph .gtile{width:100%; height:100%;}
+  .fcard.layout-grid .ph .garment{width:64%}
+  .fcard .ph .overlay{position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; padding:14px; opacity:0; background:linear-gradient(transparent 50%, rgba(0,0,0,.4)); transition:opacity .15s}
+  .fcard:hover .ph .overlay{opacity:1}
+  .fcard .frm{position:absolute; top:10px; left:10px; display:inline-flex; align-items:center; gap:6px; background:var(--bg-blur); border:1px solid var(--hair); border-radius:999px; padding:4px 9px 4px 4px; font:700 10px/1 var(--ff-mono); color:var(--stone)}
+  .fcard .frm .avatar{width:18px; height:18px; font-size:8px}
+  .fcard .ver{position:absolute; top:10px; right:10px; background:var(--ink); color:var(--card); font:700 9.5px/1 var(--ff-mono); padding:5px 8px; border-radius:7px; letter-spacing:.04em}
+  .fcard .body2{padding:12px 13px 13px}
+  .fcard .ttl{font:700 14px/1.25 var(--ff-body); color:var(--ink)}
+  .fcard .by{display:flex; align-items:center; gap:7px; margin-top:9px}
+  .fcard .by .avatar{width:20px; height:20px; font-size:9px}
+  .fcard .by .handle{font-size:11.5px}
+  .fcard .stats{display:flex; gap:14px; margin-top:11px; padding-top:11px; border-top:1px solid var(--hair)}
+
+  /* =========================================================
+     2) DESIGN DETAIL + LINEAGE
+     ========================================================= */
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:13px 18px; border-bottom:1px solid var(--hair); background:var(--bg-blur); backdrop-filter:blur(8px); position:sticky; top:0; z-index:20}
+  .back{appearance:none; border:1.4px solid var(--hair); background:var(--card); border-radius:10px; padding:8px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:7px; font:600 13px/1 var(--ff-body); color:var(--ink)}
+
+  .dd{padding-bottom:18px}
+  .dd-hero{padding:16px 18px 0}
+  .dd-hero .gtile{width:100%; aspect-ratio:1/1; border-radius:var(--r-lg); border:1px solid var(--hair)}
+  .dd-hero .garment{width:70%}
+  .dd-info{padding:18px}
+  .dd-info h1{font-family:var(--ff-display); font-weight:800; font-size:26px; line-height:1.08; letter-spacing:-.01em; margin:0}
+  .creator{display:flex; align-items:center; gap:10px; margin-top:14px}
+  .creator .avatar{width:38px; height:38px; font-size:14px; background:linear-gradient(135deg,#e0825a,#e2a33c)}
+  .creator .nm{font:700 14px/1.1 var(--ff-body); color:var(--ink)}
+  .creator .sub{font:600 11px/1 var(--ff-mono); color:var(--stone); margin-top:3px}
+  .creator .follow{margin-left:auto}
+  .prov{display:inline-flex; align-items:center; gap:8px; margin-top:16px; background:var(--prov-bg); border:1px solid var(--prov-border); border-radius:999px; padding:7px 13px; font:700 11px/1 var(--ff-mono); color:var(--marigold-ink)}
+  .dd-stats{display:flex; gap:20px; margin-top:16px}
+  .dd-tags{display:flex; flex-wrap:wrap; gap:7px; margin-top:16px}
+  .tag{font:600 11.5px/1 var(--ff-mono); color:var(--ink); background:var(--card); border:1.4px solid var(--hair); border-radius:999px; padding:7px 11px}
+  .dd-cta{display:flex; flex-direction:column; gap:10px; margin-top:20px}
+  .wear-note{font:500 11.5px/1.4 var(--ff-body); color:var(--stone); text-align:center}
+
+  .lineage-sec{padding:8px 18px 0}
+  .lineage-sec .h{font-family:var(--ff-display); font-weight:800; font-size:17px; margin:0 0 4px}
+  .lineage-sec .sub{font:500 12px/1.4 var(--ff-body); color:var(--stone); margin:0 0 16px}
+  .lineage{display:flex; align-items:flex-start; gap:0; overflow-x:auto; padding:6px 2px 12px}
+  .node{flex:0 0 auto; width:96px; text-align:center; position:relative}
+  .node .thumb{width:72px; height:84px; margin:0 auto; border-radius:12px; border:1.6px solid var(--hair); background:radial-gradient(120% 95% at 50% 12%,var(--card),var(--paper)); display:grid; place-items:center}
+  .node .thumb .garment{width:60%}
+  .node.current .thumb{border-color:var(--marigold); box-shadow:0 0 0 3px rgba(226,163,60,.32)}
+  .node .nh{font:700 10.5px/1.1 var(--ff-mono); color:var(--ink); margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .node .nv{font:400 9.5px/1 var(--ff-mono); color:var(--stone); margin-top:3px}
+  .node.current .nv{color:var(--marigold-ink); font-weight:700}
+  .stitch{flex:0 0 30px; align-self:flex-start; margin-top:42px; border-top:2px dashed var(--hair); height:0}
+
+  .remixes-sec{padding:18px}
+  .remixes-sec .h{font-family:var(--ff-display); font-weight:800; font-size:17px; margin:0 0 14px; display:flex; align-items:baseline; gap:8px}
+  .remixes-sec .h .mono{font-size:11px; color:var(--stone)}
+  .rgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px}
+  .rcard{background:var(--card); border:1px solid var(--hair); border-radius:var(--r-md); overflow:hidden; cursor:pointer; transition:transform .14s ease}
+  .rcard:hover{transform:translateY(-2px)}
+  .rcard .gtile{aspect-ratio:4/5} .rcard .garment{width:60%}
+  .rcard .rb{padding:9px 11px; display:flex; align-items:center; gap:7px}
+  .rcard .rb .avatar{width:18px; height:18px; font-size:8px} .rcard .rb .handle{font-size:11px}
+
+  .dd-bar{position:sticky; bottom:0; z-index:25; display:flex; align-items:center; gap:10px; padding:11px 16px; background:var(--bg-blur); backdrop-filter:blur(8px); border-top:1px solid var(--hair)}
+  .dd-bar .btn-remix{flex:1}
+  .dd-bar .wear{appearance:none; cursor:pointer; background:var(--card); border:1.5px solid var(--hair); border-radius:999px; padding:13px 15px; font:700 12.5px/1 var(--ff-body); color:var(--ink); white-space:nowrap}
+
+  /* =========================================================
+     3) REMIX STUDIO
+     ========================================================= */
+  .studio{display:flex; flex-direction:column; height:100%}
+  .studio-top{display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--hair); background:var(--paper)}
+  .studio-top .wm{font-size:15px}
+  .studio-top .prov-mini{display:none; align-items:center; gap:7px; font:600 12px/1 var(--ff-body); color:var(--stone); margin:0 auto}
+  .studio-top .prov-mini b{color:var(--ink)}
+  .studio-top .pub{margin-left:auto}
+
+  .studio-body{flex:1; display:flex; flex-direction:column; min-height:0}
+  .studio-mid{flex:1; display:flex; flex-direction:column; min-width:0; min-height:0; position:relative; order:1}
+  .canvas{position:relative; flex:1; min-height:280px; display:grid; place-items:center; padding:16px; background:radial-gradient(130% 100% at 50% 0%,var(--card) 0%,var(--paper) 70%,var(--hair) 100%); transition: background 0.3s}
+  [data-theme="dark"] .canvas { background:radial-gradient(130% 100% at 50% 0%,#1a1d2b 0%,#0d0f16 70%,#000 100%); }
+  .canvas .garment{width:min(66%,290px)}
+  .fb-toggle{position:absolute; top:14px; left:50%; transform:translateX(-50%); display:inline-flex; background:var(--card); border:1px solid var(--hair); border-radius:999px; padding:3px}
+  .fb-toggle button{appearance:none; border:0; background:transparent; cursor:pointer; font:700 11px/1 var(--ff-mono); letter-spacing:.08em; text-transform:uppercase; color:var(--stone); padding:7px 13px; border-radius:999px}
+  .fb-toggle button[aria-pressed="true"]{background:var(--ink); color:var(--card)}
+  .prov-chip{position:absolute; top:14px; left:14px; display:inline-flex; align-items:center; gap:6px; background:var(--prov-bg); border:1px solid var(--prov-border); border-radius:999px; padding:6px 11px; font:700 10px/1 var(--ff-mono); color:var(--marigold-ink)}
+  .canvas-readout{position:absolute; bottom:12px; right:14px; font:700 10px/1.4 var(--ff-mono); color:var(--ink); background:var(--bg-blur); border:1px solid var(--hair); border-radius:8px; padding:6px 9px}
+
+  .tools{display:flex; background:var(--card); border-top:1px solid var(--hair); order:2}
+  .tool{flex:1; appearance:none; border:0; background:transparent; cursor:pointer; padding:10px 4px 8px; display:flex; flex-direction:column; align-items:center; gap:5px; color:var(--stone); font:600 10px/1 var(--ff-body)}
+  .tool svg{width:20px; height:20px}
+  .tool[aria-pressed="true"]{color:var(--ink)} .tool[aria-pressed="true"] svg{color:var(--marigold)}
+
+  .panel{background:var(--card); border-top:1px solid var(--hair); order:3}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; padding:14px 16px 6px}
+  .panel-head h3{margin:0; font-family:var(--ff-display); font-weight:700; color:var(--ink); font-size:16px}
+  .panel-head .x{appearance:none; border:0; background:transparent; cursor:pointer; color:var(--stone); font-size:20px; line-height:1; padding:4px}
+  .panel-body{padding:6px 16px 14px}
+  .pane{display:none} .pane.on{display:block}
+  .field-label{font:700 10.5px/1 var(--ff-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--stone); margin:14px 0 9px}
+  .field-label:first-child{margin-top:2px}
+  .input{width:100%; background:var(--paper); border:1.4px solid var(--hair); border-radius:10px; padding:11px 13px; font:500 14px/1.2 var(--ff-body); color:var(--ink)}
+  .input:focus{outline:2px solid var(--ink); outline-offset:1px; border-color:var(--ink)}
+
+  .layers{display:flex; flex-direction:column; gap:8px}
+  .layer{display:flex; align-items:center; gap:11px; background:var(--paper); border:1.4px solid var(--hair); border-radius:11px; padding:10px 12px}
+  .layer .ic{width:30px; height:30px; border-radius:8px; flex:none; display:grid; place-items:center; background:var(--card); border:1px solid var(--hair); color:var(--ink)}
+  .layer .nm{font:700 12.5px/1.1 var(--ff-body); color:var(--ink)}
+  .layer .og{font:600 9.5px/1 var(--ff-mono); color:var(--marigold-ink); margin-top:4px}
+  .layer .yours{color:var(--stone)}
+  .layer .eye{margin-left:auto; appearance:none; border:0; background:transparent; cursor:pointer; color:var(--stone)}
+  .upload{border:1.6px dashed var(--hair); border-radius:12px; padding:18px; text-align:center; color:var(--stone); font:500 13px/1.4 var(--ff-body); background:var(--paper)}
+  .upload b{display:block; color:var(--ink); font-weight:700; margin-top:6px}
+  .placement-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .place{appearance:none; cursor:pointer; background:var(--paper); border:1.4px solid var(--hair); border-radius:10px; padding:12px; font:600 12.5px/1.2 var(--ff-body); color:var(--ink); text-align:left}
+  .place[aria-pressed="true"]{border-color:var(--ink); background:var(--card); box-shadow:0 0 0 2px var(--ink) inset}
+  .place small{display:block; color:var(--stone); font-weight:400; margin-top:4px}
+
+  .studio-bar{display:flex; align-items:center; gap:10px; padding:11px 16px; border-top:1px solid var(--hair); background:var(--paper)}
+  .studio-bar .meta{min-width:0}
+  .studio-bar .meta .lbl{font:700 9px/1 var(--ff-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--stone)}
+  .studio-bar .meta .amt{font:700 13px/1.2 var(--ff-body); color:var(--ink); margin-top:4px}
+  .studio-bar .order{appearance:none; cursor:pointer; background:transparent; border:1.5px solid var(--hair); border-radius:999px; padding:12px 14px; font:700 12px/1 var(--ff-body); color:var(--ink); white-space:nowrap}
+  .studio-bar .btn-remix{margin-left:auto}
+
+  /* =========================================================
+     SETTINGS MODAL (Global inside device)
+     ========================================================= */
+  .settings-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.5); z-index:100; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.2s ease; backdrop-filter:blur(4px); }
+  .settings-overlay.open { opacity:1; pointer-events:all; }
+  .settings-panel { background:var(--paper); width:100%; max-height:80%; border-radius:24px 24px 0 0; padding:24px; transform:translateY(100%); transition:transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); box-shadow:0 -10px 40px rgba(0,0,0,0.3); display:flex; flex-direction:column; gap:20px; }
+  @container app (min-width:600px) {
+    .settings-overlay { align-items:center; }
+    .settings-panel { width:400px; border-radius:20px; transform:translateY(20px) scale(0.95); max-height:90%; }
+    .settings-overlay.open .settings-panel { transform:translateY(0) scale(1); }
+  }
+  .settings-overlay.open .settings-panel { transform:translateY(0); }
+  .settings-panel h3 { margin:0; font-family:var(--ff-display); font-size:20px; color:var(--ink); display:flex; justify-content:space-between; align-items:center; }
+  .settings-panel .x-btn { appearance:none; background:none; border:none; color:var(--stone); cursor:pointer; font-size:24px; line-height:1; }
+  .setting-row { display:flex; flex-direction:column; gap:10px; padding-bottom:16px; border-bottom:1px solid var(--hair); }
+  .setting-row:last-of-type { border-bottom:none; }
+  .setting-label { font:600 13px/1 var(--ff-body); color:var(--ink); }
+  .setting-desc { font:400 12px/1.4 var(--ff-body); color:var(--stone); margin-top:-4px; }
+
+  /* =========================================================
+     AUTH PAGES
+     ========================================================= */
+  .auth-wrapper { min-height: calc(100% - 60px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .auth-card { width: 100%; max-width: 380px; background: var(--card); border: 1px solid var(--hair); border-radius: var(--r-lg); padding: 32px 24px; text-align: center; box-shadow: 0 12px 32px var(--shadow-base); }
+  .auth-brand { font-family: var(--ff-display); font-weight: 900; letter-spacing: .16em; color: var(--ink); font-size: 20px; margin-bottom: 24px; }
+  .auth-brand span { color: var(--marigold); }
+  .auth-card h2 { font-family: var(--ff-display); font-weight: 800; font-size: 24px; color: var(--ink); margin: 0 0 8px; }
+  .auth-card p { font-size: 13px; color: var(--stone); margin: 0 0 24px; }
+  .auth-form { display: flex; flex-direction: column; gap: 12px; }
+  .auth-divider { display: flex; align-items: center; text-align: center; margin: 12px 0; color: var(--stone); font: 600 11px/1 var(--ff-mono); text-transform: uppercase; letter-spacing: 0.1em; }
+  .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid var(--hair); }
+  .auth-divider::before { margin-right: 12px; }
+  .auth-divider::after { margin-left: 12px; }
+  .auth-footer { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--stone); }
+  .text-link { appearance: none; border: none; background: transparent; cursor: pointer; color: var(--ink); font: 600 13px/1 var(--ff-body); padding: 0; text-decoration: underline; text-decoration-color: var(--hair); text-underline-offset: 4px; transition: color 0.2s; }
+  .text-link:hover { color: var(--marigold-ink); text-decoration-color: var(--marigold); }
+  .social-btn { font-size: 13.5px; font-weight: 600; color: var(--ink); display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .social-btn svg { width: 18px; height: 18px; fill: currentColor; }
+  .social-btn.mobile-btn svg { fill: none; }
+
+  /* =========================================================
+     CONTAINER QUERIES — responsive
+     base = MOBILE
+     ========================================================= */
+  @container app (min-width:600px){           /* TABLET */
+    .search{flex:1 1 auto; order:0; margin-top:0; max-width:380px}
+    .top-row{flex-wrap:nowrap; padding:15px 28px}
+    .tabs{padding:0 28px 12px}
+    .challenge{margin:20px 28px 0; display:flex; align-items:center; justify-content:space-between; gap:22px}
+    .challenge .ctxt{max-width:60ch}
+    .challenge p{margin-bottom:0}
+    .feed-wrap{padding:22px 28px}
+    .feed.layout-grid{columns:2}
+    .feed.layout-detail .fcard { flex-direction: row; align-items:center; }
+    .feed.layout-detail .fcard .ph { width: 45%; height: 100%; border-right:1px solid var(--hair); }
+    .feed.layout-detail .fcard .body2 { width: 55%; padding: 24px; }
+    
+    .nav{padding:14px 28px}
+    .dd{display:grid; grid-template-columns:1.05fr .95fr; gap:30px; padding:26px 28px; align-items:start}
+    .dd-hero{padding:0; position:sticky; top:18px}
+    .dd-info{padding:0}
+    .lineage-sec{grid-column:1 / -1; padding:8px 0 0}
+    .remixes-sec{grid-column:1 / -1; padding:8px 0 0}
+    .rgrid{grid-template-columns:repeat(4,1fr)}
+    .dd-bar{display:none}
+    
+    .studio-body{flex-direction:row}
+    .tools{flex-direction:column; border-top:0; border-right:1px solid var(--hair); width:88px; order:1}
+    .tool{padding:14px 4px}
+    .studio-mid{order:2}
+    .panel{width:312px; border-top:0; border-left:1px solid var(--hair); display:flex; flex-direction:column; order:3}
+    .panel .x{display:none}
+    .panel-body{overflow-y:auto}
+    .pane{display:none !important} .pane.on{display:block !important}
+    .studio-top .prov-mini{display:flex}
+  }
+  @container app (min-width:1024px){          /* DESKTOP */
+    .top-row{padding:16px 40px}
+    .tabs{padding:0 40px 14px}
+    .challenge{margin:24px 40px 0; padding:24px 30px}
+    .feed-wrap{padding:26px 40px}
+    .feed.layout-grid{columns:3}
+    .nav{padding:16px 40px}
+    .dd{gap:48px; padding:34px 40px}
+    .dd-info h1{font-size:32px}
+    .dd-hero .garment{width:64%}
+    .tools{width:104px} .tool{font-size:11px; padding:16px 6px}
+    .panel{width:352px} .panel-body{padding:8px 22px 18px}
+    .canvas .garment{width:min(58%,310px)}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none !important}}
+</style>
+</head>
+<body>
+
+<div class="dw-controls">
+  <span class="brand">DESIGN<span>WEAR</span></span>
+  <span class="ctl-label">Screen</span>
+  <div class="seg screen" role="group" aria-label="Screen">
+    <button data-screen="feed" aria-pressed="true">Feed</button>
+    <button data-screen="design" aria-pressed="false">Design&nbsp;+&nbsp;Lineage</button>
+    <button data-screen="studio" aria-pressed="false">Remix&nbsp;Studio</button>
+    <button data-screen="login" aria-pressed="false">Auth</button>
+  </div>
+  <span class="ctl-label">View</span>
+  <div class="seg dev" role="group" aria-label="Device">
+    <button data-dev="mobile" aria-pressed="false">📱 Mobile</button>
+    <button data-dev="tablet" aria-pressed="false">▭ Tablet</button>
+    <button data-dev="desktop" aria-pressed="true">🖥 Desktop</button>
+  </div>
+</div>
+
+<div class="stage">
+  <div class="device-wrap" id="wrap">
+    <div class="device desktop" id="device">
+      <div class="notch"></div>
+      <div class="chrome">
+        <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+        <span class="url" id="url">🔒 designwear.remix.app<b>/</b></span>
+      </div>
+
+      <!-- ============ FEED ============ -->
+      <div class="dw-screen is-active" data-screen="feed">
+        <div class="top">
+          <div class="top-row">
+            <span class="wm">DESIGN<i>WEAR</i></span>
+            <div class="search">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+              <input type="text" placeholder="Search designs, creators…" aria-label="Search">
+            </div>
+            <div class="top-actions">
+              <button class="btn btn-ink btn-sm" data-goto="studio"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Create</button>
+              <div class="me" data-goto="login" title="Sign In">KS</div>
+              <!-- Settings Toggle -->
+              <button class="icon-btn" id="btnOpenSettings" aria-label="Settings">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </button>
+            </div>
+          </div>
+          <div class="tabs" role="group" aria-label="Feed filter">
+            <button aria-pressed="true">Trending</button>
+            <button aria-pressed="false">New</button>
+            <button aria-pressed="false">Following</button>
+            <button aria-pressed="false">Challenges</button>
+            <button aria-pressed="false">Tees</button>
+            <button aria-pressed="false">Typographic</button>
+            <button aria-pressed="false">Minimal</button>
+          </div>
+        </div>
+
+        <div class="challenge">
+          <div class="ctxt">
+            <div class="lab">This week's challenge</div>
+            <h3>Monsoon — remix a rain-ready tee</h3>
+            <p>Fork any design, give it a monsoon twist, and publish before Sunday. Top remixes get featured.</p>
+            <div class="meta">⑂ 248 remixes · ends in 3 days</div>
+          </div>
+          <button class="btn btn-remix" data-goto="design" style="white-space:nowrap">Join & remix</button>
+        </div>
+
+        <div class="feed-wrap">
+          <div class="feed-head"><h2>Discover</h2><span class="mono">updated hourly</span></div>
+          <div class="feed layout-grid" id="feed"><!-- cards injected via JS --></div>
+        </div>
+      </div>
+
+      <!-- ============ SETTINGS OVERLAY ============ -->
+      <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-panel">
+          <h3>App Settings <button class="x-btn" id="btnCloseSettings">×</button></h3>
+          
+          <div class="setting-row">
+            <span class="setting-label">Appearance</span>
+            <span class="setting-desc">Choose your viewing environment.</span>
+            <div class="app-seg" role="group" id="themeToggleGroup">
+              <button data-theme-val="light" aria-pressed="true">☀️ Bright Mode</button>
+              <button data-theme-val="dark" aria-pressed="false">🌙 Dark Mode</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <span class="setting-label">Gallery Layout</span>
+            <span class="setting-desc">Switch between a dense grid or large details.</span>
+            <div class="app-seg" role="group" id="layoutToggleGroup">
+              <button data-layout-val="grid" aria-pressed="true">⊞ Masonry Grid</button>
+              <button data-layout-val="detail" aria-pressed="false">☰ Detail View</button>
+            </div>
+          </div>
+
+          <button class="btn btn-ink btn-block mt-2" id="btnSettingsDone" style="margin-top:10px;">Done</button>
+        </div>
+      </div>
+
+      <!-- ============ DESIGN + LINEAGE ============ -->
+      <div class="dw-screen" data-screen="design">
+        <div class="nav">
+          <button class="back" data-goto="feed"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>Feed</button>
+          <span class="wm" style="font-size:15px">DESIGN<i>WEAR</i></span>
+          <button class="icon-btn" aria-label="Save"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 4h12v16l-6-3.5L6 20z"/></svg></button>
+        </div>
+
+        <div class="dd">
+          <div class="dd-hero">
+            <div class="gtile">
+              <svg class="garment show-art" id="ddGarment" viewBox="0 0 400 380" style="--garment:#2C5F5A"><use href="#tee"/></svg>
+            </div>
+          </div>
+
+          <div class="dd-info">
+            <h1>Petrichor Tee</h1>
+            <div class="creator">
+              <div class="avatar">Aa</div>
+              <div><div class="nm">Aanya R.</div><div class="sub">@aanya · 4.2k followers</div></div>
+              <button class="btn btn-ghost btn-sm follow">Follow</button>
+            </div>
+            <div class="prov"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>Remixed from @kabir · v3</div>
+            <div class="dd-stats">
+              <span class="stat like"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4.5c2 0 3.3 1.2 4.5 3 1.2-1.8 2.5-3 4.5-3C18.5 4.5 20 8 21.5 12 19 16.5 12 21 12 21z"/></svg>3,184</span>
+              <span class="stat remix"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>412</span>
+            </div>
+            <div class="dd-tags"><span class="tag">#monsoon</span><span class="tag">#typographic</span><span class="tag">#teal</span></div>
+
+            <div class="dd-cta">
+              <button class="btn btn-remix btn-block" data-goto="studio"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>Remix this design</button>
+              <button class="btn btn-ghost btn-block">Wear it as-is — ₹699</button>
+            </div>
+          </div>
+
+          <div class="lineage-sec">
+            <p class="h">Lineage</p>
+            <p class="sub">Every remix keeps its thread. This design is three forks deep.</p>
+            <div class="lineage">
+              <div class="node"><div class="thumb"><svg class="garment show-art" viewBox="0 0 400 380" style="--garment:#1C2541"><use href="#tee"/></svg></div><div class="nh">@maya</div><div class="nv">origin · v0</div></div>
+              <div class="stitch"></div>
+              <div class="node"><div class="thumb"><svg class="garment show-art" viewBox="0 0 400 380" style="--garment:#3A4668"><use href="#tee"/></svg></div><div class="nh">@kabir</div><div class="nv">v3</div></div>
+              <div class="stitch"></div>
+              <div class="node current"><div class="thumb"><svg class="garment show-art" viewBox="0 0 400 380" style="--garment:#2C5F5A"><use href="#tee"/></svg></div><div class="nh">@aanya</div><div class="nv">this design</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dd-bar">
+          <button class="btn btn-remix" data-goto="studio">Remix this</button>
+          <button class="wear">Wear it</button>
+        </div>
+      </div>
+
+      <!-- ============ REMIX STUDIO ============ -->
+      <div class="dw-screen" data-screen="studio">
+        <div class="studio">
+          <div class="studio-top">
+            <span class="wm">DESIGN<i>WEAR</i></span>
+            <span class="prov-mini"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>Remixing <b>@aanya's Tee</b></span>
+            <button class="btn btn-ink btn-sm pub">Publish</button>
+          </div>
+
+          <div class="studio-body">
+            <div class="tools" role="tablist" aria-label="Tools">
+              <button class="tool" data-tool="layers" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>Layers</button>
+              <button class="tool" data-tool="color" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="9" cy="9" r="1.3" fill="currentColor"/><circle cx="15" cy="9" r="1.3" fill="currentColor"/><circle cx="16" cy="14" r="1.3" fill="currentColor"/></svg>Colour</button>
+              <button class="tool" data-tool="text" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6h14M12 6v13M9 19h6"/></svg>Text</button>
+              <button class="tool" data-tool="place" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="9" y="8" width="6" height="8" rx="1"/></svg>Placement</button>
+            </div>
+
+            <div class="studio-mid">
+              <div class="canvas">
+                <div class="prov-chip"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>from @aanya</div>
+                <div class="fb-toggle" role="group" aria-label="Side">
+                  <button data-side="front" aria-pressed="true">Front</button>
+                  <button data-side="back" aria-pressed="false">Back</button>
+                </div>
+                <svg class="garment show-print show-art" id="studioGarment" viewBox="0 0 400 380" style="--garment:#2C5F5A"><use href="#tee"/></svg>
+                <div class="canvas-readout">PRINT 30 × 40 cm</div>
+              </div>
+            </div>
+
+            <div class="panel" id="panel">
+              <div class="panel-head"><h3 id="panelTitle">Layers</h3><button class="x" id="panelClose" aria-label="Close">×</button></div>
+              <div class="panel-body">
+                <div class="pane on" data-pane="layers">
+                  <div class="field-label">Inherited from @aanya</div>
+                  <div class="layers">
+                    <div class="layer"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/></svg></span><div><div class="nm">Tee colour — Teal</div><div class="og">from original</div></div></div>
+                    <div class="layer"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6h14M12 6v13"/></svg></span><div><div class="nm">"PETRICHOR" mark</div><div class="og">from original</div></div></div>
+                    <div class="layer" style="border-style:dashed; background:transparent"><span class="ic" style="color:var(--marigold)"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></span><div><div class="nm yours">Add your layer</div><div class="og yours">your remix</div></div></div>
+                  </div>
+                </div>
+                <div class="pane" data-pane="color">
+                  <div class="field-label">Fabric colour — <span id="colorName">Teal</span></div>
+                  <div class="swatches" id="studioSwatches"></div>
+                </div>
+                <div class="pane" data-pane="text">
+                  <div class="field-label">Wordmark</div>
+                  <input class="input" value="PETRICHOR" aria-label="Text">
+                </div>
+                <div class="pane" data-pane="place">
+                  <div class="field-label">Print location</div>
+                  <div class="placement-grid">
+                    <button class="place" aria-pressed="true">Centre chest<small>Inherited</small></button>
+                    <button class="place" aria-pressed="false">Left chest<small>Pocket</small></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AUTH: LOGIN ============ -->
+      <div class="dw-screen" data-screen="login">
+        <div class="nav"><button class="back" data-goto="feed"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>Feed</button></div>
+        <div class="auth-wrapper">
+          <div class="auth-card">
+            <div class="auth-brand">DESIGN<span>WEAR</span></div>
+            <h2>Welcome back</h2>
+            <p>Log in to discover and remix designs.</p>
+            <div class="auth-form">
+              <button class="btn btn-ghost btn-block social-btn">
+                <svg viewBox="0 0 24 24"><path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2 6.42 2 12c0 5.59 4.39 10 9.88 10 5.6 0 9.38-3.9 9.38-9.9 0-.91-.18-1.57-.18-1.57z"/></svg> Continue with Google
+              </button>
+              <button class="btn btn-ghost btn-block social-btn">
+                <svg viewBox="0 0 24 24"><path d="M17.05 13.57c-.03-2.6 2.06-3.8 2.15-3.86-1.18-1.74-3-1.98-3.66-2-1.55-.16-3.03.9-3.83.9-.81 0-2.02-.88-3.32-.86-1.68.02-3.23.98-4.1 2.5-1.78 3.08-.46 7.62 1.27 10.13.85 1.23 1.84 2.61 3.17 2.56 1.27-.05 1.76-.83 3.3-.83 1.52 0 1.98.83 3.32.8.13-.02 2.18-1.35 3.02-2.58 1-.15 1.4-2.82 1.4-2.82-.04-.02-2.67-1.02-2.7-3.96zM14.28 4.29c.7-.85 1.16-2.04 1.03-3.24-1.03.04-2.26.69-2.98 1.55-.57.68-1.12 1.88-.97 3.05 1.15.09 2.22-.5 2.92-1.36z"/></svg> Continue with Apple
+              </button>
+              <button class="btn btn-ghost btn-block social-btn mobile-btn">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Continue with Mobile
+              </button>
+
+              <div class="auth-divider"><span>or email</span></div>
+
+              <input type="email" class="input" placeholder="Email address" aria-label="Email">
+              <input type="password" class="input" placeholder="Password" aria-label="Password">
+              <button class="btn btn-ink btn-block">Sign In</button>
+            </div>
+            <div class="auth-footer">
+              <button class="text-link" data-goto="forgot">Forgot your password?</button>
+              <span>Don't have an account? <button class="text-link font-bold" style="font-weight:700" data-goto="signup">Sign up</button></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AUTH: SIGNUP ============ -->
+      <div class="dw-screen" data-screen="signup">
+        <div class="nav"><button class="back" data-goto="feed"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>Feed</button></div>
+        <div class="auth-wrapper">
+          <div class="auth-card">
+            <div class="auth-brand">DESIGN<span>WEAR</span></div>
+            <h2>Join the community</h2>
+            <p>Create an account to start remixing.</p>
+            <div class="auth-form">
+              <button class="btn btn-ghost btn-block social-btn">
+                <svg viewBox="0 0 24 24"><path d="M21.35 11.1h-9.17v2.73h6.51c-.33 3.81-3.5 5.44-6.5 5.44C8.36 19.27 5 16.25 5 12c0-4.1 3.2-7.27 7.2-7.27 3.09 0 4.9 1.97 4.9 1.97L19 4.72S16.56 2 12.1 2C6.42 2 2 6.42 2 12c0 5.59 4.39 10 9.88 10 5.6 0 9.38-3.9 9.38-9.9 0-.91-.18-1.57-.18-1.57z"/></svg> Continue with Google
+              </button>
+              <button class="btn btn-ghost btn-block social-btn">
+                <svg viewBox="0 0 24 24"><path d="M17.05 13.57c-.03-2.6 2.06-3.8 2.15-3.86-1.18-1.74-3-1.98-3.66-2-1.55-.16-3.03.9-3.83.9-.81 0-2.02-.88-3.32-.86-1.68.02-3.23.98-4.1 2.5-1.78 3.08-.46 7.62 1.27 10.13.85 1.23 1.84 2.61 3.17 2.56 1.27-.05 1.76-.83 3.3-.83 1.52 0 1.98.83 3.32.8.13-.02 2.18-1.35 3.02-2.58 1-.15 1.4-2.82 1.4-2.82-.04-.02-2.67-1.02-2.7-3.96zM14.28 4.29c.7-.85 1.16-2.04 1.03-3.24-1.03.04-2.26.69-2.98 1.55-.57.68-1.12 1.88-.97 3.05 1.15.09 2.22-.5 2.92-1.36z"/></svg> Continue with Apple
+              </button>
+              <button class="btn btn-ghost btn-block social-btn mobile-btn">
+                <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Continue with Mobile
+              </button>
+              <div class="auth-divider"><span>or email</span></div>
+              <input type="text" class="input" placeholder="Full Name" aria-label="Full Name">
+              <input type="email" class="input" placeholder="Email address" aria-label="Email">
+              <input type="password" class="input" placeholder="Password" aria-label="Password">
+              <button class="btn btn-ink btn-block">Create Account</button>
+            </div>
+            <div class="auth-footer">
+              <span>Already have an account? <button class="text-link font-bold" style="font-weight:700" data-goto="login">Log in</button></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ AUTH: FORGOT PASSWORD ============ -->
+      <div class="dw-screen" data-screen="forgot">
+        <div class="nav"><button class="back" data-goto="login"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 6l-6 6 6 6"/></svg>Back to Login</button></div>
+        <div class="auth-wrapper">
+          <div class="auth-card">
+            <div class="auth-brand">DESIGN<span>WEAR</span></div>
+            <h2>Reset Password</h2>
+            <p>Enter your email or mobile number to receive a reset link.</p>
+            <div class="auth-form">
+              <input type="text" class="input" placeholder="Email or Mobile Number" aria-label="Contact">
+              <button class="btn btn-ink btn-block">Send Reset Link</button>
+            </div>
+            <div class="auth-footer">
+              <button class="text-link" data-goto="login">Return to Log in</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /device -->
+  </div><!-- /wrap -->
+</div><!-- /stage -->
+
+<!-- shared garment symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="tee" viewBox="0 0 400 380">
+    <path class="body" d="M150 28 L120 40 L74 92 L40 150 L78 188 L120 156 L120 360 L280 360 L280 156 L322 188 L360 150 L326 92 L280 40 L250 28 C242 56 222 70 200 70 C178 70 158 56 150 28 Z"/>
+    <path class="seam" d="M150 28 C158 56 178 70 200 70 C222 70 242 56 250 28"/>
+    <path class="seam" d="M120 156 L120 360 M280 156 L280 360"/>
+    <ellipse class="collar" cx="200" cy="40" rx="34" ry="12"/>
+    <rect class="print" x="150" y="118" width="100" height="140" rx="6"/>
+    <g class="art">
+      <path d="M168 150c8-7 16-7 24 0M168 168c8-7 16-7 24 0M208 150c8-7 16-7 24 0M208 168c8-7 16-7 24 0" stroke="rgba(255,255,255,.85)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <text x="200" y="214" text-anchor="middle" font-family="Archivo, sans-serif" font-weight="900" font-size="22" fill="#ffffff" letter-spacing="2">PETRICHOR</text>
+      <text x="200" y="236" text-anchor="middle" font-family="Space Mono, monospace" font-weight="700" font-size="9" fill="#E2A33C" letter-spacing="3">MONSOON ’26</text>
+    </g>
+  </symbol>
+</svg>
+
+<script>
+(function(){
+  var devices={mobile:{w:390,h:812}, tablet:{w:820,h:1100}, desktop:{w:1280,h:840}};
+  var routes={feed:'<b>/</b>', design:'/#/<b>design/petrichor</b>', studio:'/#/<b>remix/petrichor</b>', login:'/#/<b>login</b>', signup:'/#/<b>signup</b>', forgot:'/#/<b>forgot-password</b>'};
+  var fabrics=[['Teal','#2C5F5A'],['Indigo','#27314F'],['Charcoal','#2B2E33'],['Clay','#B65D3C'],['Sage','#7E8B6B'],['Bone','#C1BCB1'],['Gold','#C9A227']];
+
+  var device=document.getElementById('device'), wrap=document.getElementById('wrap');
+  var stage=document.querySelector('.stage'), url=document.getElementById('url');
+  var cur={dev:'desktop', screen:'feed'};
+
+  /* ---- build feed cards ---- */
+  var FEED=[
+    {t:'Petrichor Tee', h:'@aanya', a:'Aa', g:'#2C5F5A', from:'@kabir', v:'v3', likes:'3.1k', rem:'412', ar:'1/1', grad:'135deg,#e0825a,#e2a33c'},
+    {t:'After the Rain', h:'@kabir', a:'Kb', g:'#3A4668', v:'v2', likes:'1.8k', rem:'204', ar:'4/5', grad:'135deg,#5a6cff,#9b6cff'},
+    {t:'Static Type', h:'@dev', a:'Dv', g:'#2B2E33', from:'@aanya', v:'v1', likes:'982', rem:'77', ar:'4/3', grad:'135deg,#3aa17e,#7ec59f'},
+    {t:'Clay Court', h:'@rhea', a:'Rh', g:'#B65D3C', v:'v4', likes:'2.4k', rem:'318', ar:'1/1', grad:'135deg,#e0825a,#c9a227'},
+    {t:'Field Notes', h:'@imran', a:'Im', g:'#7E8B6B', from:'@maya', v:'v2', likes:'1.1k', rem:'140', ar:'4/5', grad:'135deg,#6b8f6b,#aac0a0'},
+    {t:'Midnight Mono', h:'@maya', a:'My', g:'#1C2541', v:'v1', likes:'4.6k', rem:'690', ar:'1/1', grad:'135deg,#3a4668,#7a86b8'}
+  ];
+  function avatarHTML(a,grad){return '<span class="avatar" style="background:linear-gradient('+grad+')">'+a+'</span>';}
+  var feedEl=document.getElementById('feed');
+  FEED.forEach(function(c){
+    var fromHTML = c.from ? '<span class="frm">'+avatarHTML(c.a,c.grad)+' '+c.from+'</span>' : '';
+    var el=document.createElement('div'); el.className='fcard'; el.setAttribute('data-goto','design');
+    el.innerHTML=
+      '<div class="ph">'
+      + '<div class="gtile" style="aspect-ratio:'+c.ar+'"><svg class="garment show-art" viewBox="0 0 400 380" style="--garment:'+c.g+'"><use href="#tee"/></svg></div>'
+      + fromHTML
+      + '<span class="ver">⑂ '+c.v+'</span>'
+      + '<div class="overlay"><button class="btn btn-remix btn-sm" data-goto="studio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>Remix</button></div>'
+      + '</div>'
+      + '<div class="body2"><div class="ttl">'+c.t+'</div>'
+      + '<div class="by">'+avatarHTML(c.a,c.grad)+'<span class="handle">'+c.h+'</span></div>'
+      + '<div class="stats"><span class="stat like"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7-4.5-9.5-9C.5 8 2 4.5 5.5 4.5c2 0 3.3 1.2 4.5 3 1.2-1.8 2.5-3 4.5-3C18.5 4.5 20 8 21.5 12 19 16.5 12 21 12 21z"/></svg>'+c.likes+'</span>'
+      + '<span class="stat remix"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M6 8v6a4 4 0 0 0 4 4h6"/></svg>'+c.rem+'</span></div></div>';
+    feedEl.appendChild(el);
+  });
+
+  /* ---- studio swatches ---- */
+  var studioGarment=document.getElementById('studioGarment');
+  var sw=document.getElementById('studioSwatches');
+  fabrics.forEach(function(f,i){
+    var b=document.createElement('button'); b.className='swatch'; b.style.background=f[1];
+    b.setAttribute('aria-pressed', f[0]==='Teal'?'true':'false');
+    b.addEventListener('click', function(){
+      sw.querySelectorAll('.swatch').forEach(function(s){s.setAttribute('aria-pressed','false')});
+      b.setAttribute('aria-pressed','true');
+      studioGarment.style.setProperty('--garment', f[1]);
+      document.getElementById('colorName').textContent=f[0];
+    });
+    sw.appendChild(b);
+  });
+
+  /* ---- scaling & navigation ---- */
+  function fit(){var d=devices[cur.dev], avail=stage.clientWidth-8, s=Math.min(1,avail/d.w);
+    device.style.transform='scale('+s+')'; wrap.style.width=(d.w*s)+'px'; wrap.style.height=(d.h*s)+'px';}
+  window.addEventListener('resize', fit);
+
+  function setScreen(name){cur.screen=name;
+    document.querySelectorAll('.dw-screen').forEach(function(s){s.classList.toggle('is-active', s.dataset.screen===name)});
+    document.querySelectorAll('.seg.screen button').forEach(function(b){b.setAttribute('aria-pressed', b.dataset.screen===name?'true':'false')});
+    url.innerHTML='🔒 designwear.remix.app'+routes[name];
+    document.querySelectorAll('.dw-screen').forEach(function(s){s.scrollTop=0});
+  }
+  document.querySelectorAll('.seg.screen button').forEach(function(b){b.addEventListener('click', function(){setScreen(b.dataset.screen)})});
+  document.addEventListener('click', function(e){
+    var t=e.target.closest('[data-goto]'); 
+    if(t && !e.target.closest('.settings-panel')){e.preventDefault(); e.stopPropagation(); setScreen(t.dataset.goto);}
+  });
+
+  /* ---- studio tools & device switch ---- */
+  var panel=document.getElementById('panel');
+  function openTool(tool){
+    document.querySelectorAll('.tool').forEach(function(t){t.setAttribute('aria-pressed', t.dataset.tool===tool?'true':'false')});
+    document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on', p.dataset.pane===tool)});
+  }
+  document.querySelectorAll('.tool').forEach(function(t){t.addEventListener('click', function(){openTool(t.dataset.tool)})});
+  
+  function setDevice(name){cur.dev=name; device.className='device '+name;
+    document.querySelectorAll('.seg.dev button').forEach(function(b){b.setAttribute('aria-pressed', b.dataset.dev===name?'true':'false')});
+    fit();}
+  document.querySelectorAll('.seg.dev button').forEach(function(b){b.addEventListener('click', function(){setDevice(b.dataset.dev)})});
+
+  /* ---- Settings logic ---- */
+  var btnOpenSettings = document.getElementById('btnOpenSettings');
+  var btnCloseSettings = document.getElementById('btnCloseSettings');
+  var btnSettingsDone = document.getElementById('btnSettingsDone');
+  var settingsOverlay = document.getElementById('settingsOverlay');
+
+  function toggleSettings(show) {
+    if(show) { settingsOverlay.classList.add('open'); } 
+    else { settingsOverlay.classList.remove('open'); }
+  }
+
+  btnOpenSettings.addEventListener('click', function(){ toggleSettings(true); });
+  btnCloseSettings.addEventListener('click', function(){ toggleSettings(false); });
+  btnSettingsDone.addEventListener('click', function(){ toggleSettings(false); });
+  settingsOverlay.addEventListener('click', function(e){ if(e.target === settingsOverlay) toggleSettings(false); });
+
+  /* Theme Toggle */
+  var htmlRoot = document.documentElement;
+  var themeBtns = document.querySelectorAll('#themeToggleGroup button');
+  themeBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      themeBtns.forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
+      btn.setAttribute('aria-pressed', 'true');
+      htmlRoot.setAttribute('data-theme', btn.dataset.themeVal);
+    });
+  });
+
+  /* Layout Toggle */
+  var feedContainer = document.getElementById('feed');
+  var layoutBtns = document.querySelectorAll('#layoutToggleGroup button');
+  layoutBtns.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      layoutBtns.forEach(function(b){ b.setAttribute('aria-pressed', 'false'); });
+      btn.setAttribute('aria-pressed', 'true');
+      
+      var mode = btn.dataset.layoutVal;
+      if(mode === 'detail') {
+        feedContainer.classList.remove('layout-grid');
+        feedContainer.classList.add('layout-detail');
+      } else {
+        feedContainer.classList.remove('layout-detail');
+        feedContainer.classList.add('layout-grid');
+      }
+    });
+  });
+
+  /* generic single-selects */
+  function singleSelect(sel){document.querySelectorAll(sel).forEach(function(g){g.addEventListener('click', function(e){
+    var b=e.target.closest('[aria-pressed]'); if(!b||!g.contains(b)) return;
+    g.querySelectorAll('[aria-pressed]').forEach(function(x){x.setAttribute('aria-pressed','false')}); b.setAttribute('aria-pressed','true');})});}
+  singleSelect('.tabs'); singleSelect('.placement-grid');
+
+  fit();
+})();
+</script>
+</body>
+</html>

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -15,8 +17,9 @@ import 'package:designwear/presentation/styles/styles.dart';
 
 class VirtualTryOnScreen extends StatefulWidget {
   final Product product;
+  final Uint8List? customClothingBytes;
 
-  const VirtualTryOnScreen({super.key, required this.product});
+  const VirtualTryOnScreen({super.key, required this.product, this.customClothingBytes});
 
   @override
   State<VirtualTryOnScreen> createState() => _VirtualTryOnScreenState();
@@ -85,9 +88,9 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -118,7 +121,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                     child: _buildSourceOption(
                       icon: Icons.camera_alt_rounded,
                       label: 'Camera',
-                      color: AppColors.purple,
+                      color: AppColors.marigold,
                       onTap: () {
                         Navigator.pop(context);
                         _pickImage(ImageSource.camera);
@@ -130,7 +133,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                   child: _buildSourceOption(
                     icon: Icons.photo_library_rounded,
                     label: 'Gallery',
-                    color: AppColors.purple,
+                    color: AppColors.marigold,
                     onTap: () {
                       Navigator.pop(context);
                       _pickImage(ImageSource.gallery);
@@ -202,9 +205,11 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
     });
 
     try {
-      // Get clothing image bytes from URL
+      // Get clothing image bytes
       Uint8List clothingBytes;
-      if (widget.product.imageUrl != null) {
+      if (widget.customClothingBytes != null) {
+        clothingBytes = widget.customClothingBytes!;
+      } else if (widget.product.imageUrl != null) {
         final response = await http.get(Uri.parse(widget.product.imageUrl!));
         if (response.statusCode == 200) {
           clothingBytes = response.bodyBytes;
@@ -212,7 +217,12 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
           throw Exception('Failed to fetch product image');
         }
       } else {
-        throw Exception('Product image not available');
+        try {
+          final byteData = await rootBundle.load('assets/images/tshirt_white.png');
+          clothingBytes = byteData.buffer.asUint8List();
+        } catch (e) {
+          throw Exception('Product image and default asset not available');
+        }
       }
 
       // Generate try-on
@@ -268,19 +278,23 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final surfaceColor = theme.colorScheme.surface;
+    final onSurface = theme.colorScheme.onSurface;
+
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.white,
+        backgroundColor: surfaceColor,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.black),
+          icon: Icon(Icons.arrow_back, color: onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Virtual Try-On',
           style: GoogleFonts.outfit(
-            color: AppColors.black,
+            color: onSurface,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -307,7 +321,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
               // Generated Result
               if (_generatedImage != null) _buildResultSection(),
 
-              const SizedBox(height: 100), // Space for bottom button
+              SizedBox(height: 100.h), // Space for bottom button
             ],
           ),
         ),
@@ -317,14 +331,15 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   }
 
   Widget _buildProductCard() {
+    final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: AppColors.blackOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 20,
             offset: const Offset(0, 4),
           ),
@@ -337,13 +352,13 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             child: widget.product.imageUrl != null
                 ? SafeNetworkImage(
                     imageUrl: widget.product.imageUrl!,
-                    width: 80,
-                    height: 80,
+                    width: 80.r,
+                    height: 80.r,
                     fit: BoxFit.cover,
                   )
                 : Container(
-                    width: 80,
-                    height: 80,
+                    width: 80.r,
+                    height: 80.r,
                     color: AppColors.gray200,
                     child: const Icon(Icons.image_not_supported),
                   ),
@@ -368,7 +383,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                   style: GoogleFonts.outfit(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.purple,
+                    color: AppColors.marigold,
                   ),
                 ),
               ],
@@ -380,6 +395,9 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   }
 
   Widget _buildUserPhotoSection() {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final borderColor = isDark ? AppColors.hairDark : AppColors.hairLight;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -390,7 +408,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
         const SizedBox(height: 4),
         Text(
           'Upload a full-body photo for best results',
-          style: GoogleFonts.outfit(fontSize: 14, color: AppColors.gray600),
+          style: GoogleFonts.outfit(fontSize: 14, color: theme.colorScheme.onSurface.withValues(alpha: 0.6)),
         ),
         const SizedBox(height: 16),
         GestureDetector(
@@ -399,18 +417,18 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             width: double.infinity,
             height: ResponsiveSizes.carouselHeight(context) * 0.75,
             decoration: BoxDecoration(
-              color: AppColors.white,
+              color: theme.colorScheme.surface,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: _userPhotoBytes != null
-                    ? AppColors.purple.withOpacity(0.5)
-                    : AppColors.gray300,
+                    ? AppColors.marigold.withValues(alpha: 0.5)
+                    : borderColor,
                 width: 2,
                 strokeAlign: BorderSide.strokeAlignCenter,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.blackOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 20,
                   offset: const Offset(0, 4),
                 ),
@@ -433,11 +451,11 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         top: 12,
                         right: 12,
                         child: CircleAvatar(
-                          backgroundColor: AppColors.white,
+                          backgroundColor: Theme.of(context).colorScheme.surface,
                           child: IconButton(
                             icon: const Icon(
                               Icons.edit,
-                              color: AppColors.purple,
+                              color: AppColors.marigold,
                             ),
                             onPressed: _showImageSourceDialog,
                           ),
@@ -451,13 +469,13 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: AppColors.purple.withOpacity(0.1),
+                          color: AppColors.marigold.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
                           Icons.add_a_photo_rounded,
                           size: 48,
-                          color: AppColors.purple,
+                          color: AppColors.marigold,
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -466,7 +484,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
                         style: GoogleFonts.outfit(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.purple,
+                          color: AppColors.marigold,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -532,7 +550,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             IconButton(
               onPressed: _shareResult,
               icon: const Icon(Icons.share_rounded),
-              color: AppColors.purple,
+              color: AppColors.marigold,
             ),
           ],
         ),
@@ -543,7 +561,7 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: AppColors.purple.withOpacity(0.2),
+                color: AppColors.marigold.withValues(alpha: 0.2),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
               ),
@@ -559,13 +577,14 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
   }
 
   Widget _buildBottomBar() {
+    final theme = Theme.of(context);
     return Container(
       padding: ResponsiveSizes.contentPadding(context),
       decoration: BoxDecoration(
-        color: AppColors.white,
+        color: theme.colorScheme.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.blackOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             offset: const Offset(0, -5),
             blurRadius: 15,
           ),
@@ -578,8 +597,8 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen>
           child: ElevatedButton(
             onPressed: _isLoading ? null : _generateTryOn,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.purple,
-              foregroundColor: AppColors.white,
+              backgroundColor: AppColors.marigold,
+              foregroundColor: AppColors.marigoldInk,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),

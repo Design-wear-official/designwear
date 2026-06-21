@@ -5,7 +5,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:designwear/config/config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:designwear/services/logging_service.dart';
 
 class User {
   final String? id;
@@ -46,48 +48,33 @@ class AuthService extends ChangeNotifier {
   }
 
   void init() {
-    if (!kIsWeb) {
+    if (!kIsWeb && !Platform.isWindows && !Platform.isLinux) {
       _initFcm();
     }
   }
 
   Future<void> _initFcm() async {
     final messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-
+    await messaging.requestPermission(alert: true, badge: true, sound: true);
     messaging.getToken().then((token) {
       if (token != null) _syncFcmToken(token);
     });
-
-    messaging.onTokenRefresh.listen((token) {
-      _syncFcmToken(token);
-    });
+    messaging.onTokenRefresh.listen(_syncFcmToken);
   }
 
   Future<void> _syncFcmToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     final storedToken = prefs.getString('mem_fcm_token');
-    
-    // Always store token locally
     await prefs.setString('mem_fcm_token', token);
-
-    // If logged in, and token is new or hasn't been synced this session
     if (_currentUser?.id != null && storedToken != token) {
       try {
         await http.post(
           Uri.parse('$_baseUrl/auth/update'),
           headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'uid': _currentUser!.id,
-            'fcmToken': token,
-          }),
+          body: jsonEncode({'uid': _currentUser!.id, 'fcmToken': token}),
         );
       } catch (e) {
-        debugPrint('Failed to sync fcm token: $e');
+        LoggingService.instance.logError('Failed to sync fcm token', error: e);
       }
     }
   }
@@ -100,18 +87,19 @@ class AuthService extends ChangeNotifier {
     if (token != null && uid != null) {
       List<Map<String, dynamic>> loadedAddresses = [];
       List<Map<String, dynamic>> loadedPayments = [];
-
       try {
         final addrStr = prefs.getString('auth_addresses');
         if (addrStr != null) {
-          loadedAddresses = List<Map<String, dynamic>>.from(jsonDecode(addrStr));
+          loadedAddresses =
+              List<Map<String, dynamic>>.from(jsonDecode(addrStr));
         }
         final payStr = prefs.getString('auth_payment_methods');
         if (payStr != null) {
-          loadedPayments = List<Map<String, dynamic>>.from(jsonDecode(payStr));
+          loadedPayments =
+              List<Map<String, dynamic>>.from(jsonDecode(payStr));
         }
       } catch (e) {
-        debugPrint('Error parsing stored lists: $e');
+        LoggingService.instance.logError('Error parsing stored lists', error: e);
       }
 
       _currentUser = User(
@@ -131,18 +119,12 @@ class AuthService extends ChangeNotifier {
 
   Future<void> _saveSession(Map<String, dynamic> data) async {
     final prefs = await SharedPreferences.getInstance();
-
     if (data['token'] != null) {
       await prefs.setString('auth_token', data['token']);
     }
     await prefs.setString('auth_uid', data['uid'] ?? '');
-
-    if (data['email'] != null) {
-      await prefs.setString('auth_email', data['email']);
-    }
-    if (data['name'] != null) {
-      await prefs.setString('auth_name', data['name']);
-    }
+    if (data['email'] != null) await prefs.setString('auth_email', data['email']);
+    if (data['name'] != null) await prefs.setString('auth_name', data['name']);
     if (data['photoUrl'] != null) {
       await prefs.setString('auth_photo_url', data['photoUrl']);
     }
@@ -150,49 +132,45 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('auth_addresses', jsonEncode(data['addresses']));
     }
     if (data['paymentMethods'] != null) {
-      await prefs.setString('auth_payment_methods', jsonEncode(data['paymentMethods']));
+      await prefs.setString(
+          'auth_payment_methods', jsonEncode(data['paymentMethods']));
     }
     if (data['isGuest'] != null) {
       await prefs.setBool('auth_isGuest', data['isGuest']);
     }
-
     await _loadUserFromStorage();
-
-    // After login, guarantee latest loaded FCM token is synced to this user.
-    final token = prefs.getString('mem_fcm_token');
-    if (token != null) {
-      _syncFcmToken(token); // safe duplicate call handles it
-    }
+    final fcmToken = prefs.getString('mem_fcm_token');
+    if (fcmToken != null) _syncFcmToken(fcmToken);
   }
+
+  Future<void> _saveFirebaseUser(fb.User user, {bool isGuest = false}) async {
+    final idToken = await user.getIdToken();
+    await _saveSession({
+      'uid': user.uid,
+      'email': user.email,
+      'name': user.displayName ?? user.email ?? 'Guest',
+      'photoUrl': user.photoURL,
+      'token': idToken,
+      'isGuest': isGuest || user.isAnonymous,
+    });
+  }
+
+  // ── Email / Password ──────────────────────────────────────────────────────
 
   Future<void> signInWithEmail(String email, String password) async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/auth/login'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'email': email, 'password': password}),
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['success']) {
-        // For seamless integration with backend lists if they aren't explicitly returned down the line,
-        // it may be helpful to ensure that `_saveSession` acts as a full merge if missing.
-        // Usually, the backend returns the full user document from login.
-        await _saveSession(data['data']);
-      } else {
-        final msg = data['error'] ?? 'Login failed';
-        throw Exception(_friendlyError(msg));
-      }
+      final cred = await fb.FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      await _saveFirebaseUser(cred.user!);
+    } on fb.FirebaseAuthException catch (e) {
+      throw Exception(_friendlyFirebaseError(e.code));
     } on SocketException {
       throw Exception(
-        'No internet connection. Please check your WiFi or mobile data.',
-      );
-    } on http.ClientException {
-      throw Exception('Could not reach the server. Please try again.');
+          'No internet connection. Please check your WiFi or mobile data.');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -200,169 +178,109 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> signUpWithEmail(
-    String email,
-    String password,
-    String name,
-  ) async {
+      String email, String password, String name) async {
     _isLoading = true;
     notifyListeners();
     try {
-      // 1. Register User
-      final regResponse = await http.post(
-        Uri.parse('$_baseUrl/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password, 'name': name}),
-      );
-
-      final regData = jsonDecode(regResponse.body);
-      if (regResponse.statusCode != 200 || !regData['success']) {
-        throw Exception(regData['error'] ?? 'Registration failed');
-      }
-
-      // 2. Immediately Login to get Token
-      await signInWithEmail(email, password);
+      final cred = await fb.FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+      await cred.user!.updateDisplayName(name);
+      await cred.user!.reload();
+      await _saveFirebaseUser(fb.FirebaseAuth.instance.currentUser!);
+    } on fb.FirebaseAuthException catch (e) {
+      throw Exception(_friendlyFirebaseError(e.code));
+    } on SocketException {
+      throw Exception(
+          'No internet connection. Please check your WiFi or mobile data.');
     } finally {
-      if (_isLoading) {
-        _isLoading = false;
-        notifyListeners();
-      }
+      _isLoading = false;
+      notifyListeners();
     }
   }
+
+  // ── Guest (anonymous) ─────────────────────────────────────────────────────
 
   Future<void> loginAsGuest() async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/auth/guest'),
-            headers: {'Content-Type': 'application/json'},
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['success']) {
-        await _saveSession(data['data']);
-      } else {
-        throw Exception(data['error'] ?? 'Guest login failed');
-      }
+      final cred = await fb.FirebaseAuth.instance.signInAnonymously();
+      await _saveFirebaseUser(cred.user!, isGuest: true);
+    } on fb.FirebaseAuthException catch (e) {
+      throw Exception(_friendlyFirebaseError(e.code));
     } on SocketException {
       throw Exception(
-        'No internet connection. Please check your WiFi or mobile data.',
-      );
-    } on http.ClientException {
-      throw Exception('Could not reach the server. Please try again.');
+          'No internet connection. Please check your WiFi or mobile data.');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // ── Google ────────────────────────────────────────────────────────────────
+
+  static bool get isGoogleSignInSupported =>
+      kIsWeb || !(Platform.isWindows || Platform.isLinux);
+
   Future<void> signInWithGoogle() async {
+    if (!isGoogleSignInSupported) {
+      throw Exception(
+        'Google Sign-In is not supported on Windows. Please use email & password.',
+      );
+    }
     _isLoading = true;
     notifyListeners();
     try {
-      // serverClientId = the Web OAuth Client ID from google-services.json (type 3)
-      const serverClientId =
-          '350351347585-0pnnds7cvia2salbb6nqj2a3p6mq372q.apps.googleusercontent.com';
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        serverClientId: serverClientId,
+      // google-services.json injects default_web_client_id on Android at build time.
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) throw Exception('Google did not return an ID token');
+
+      final credential = fb.GoogleAuthProvider.credential(
+        idToken: idToken,
+        accessToken: googleAuth.accessToken,
       );
-      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
-      if (googleUser == null) return; // User cancelled
-
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
-      final String? idToken = googleAuth.idToken;
-      if (idToken == null) throw Exception('Failed to get Google ID token');
-
-      // Try backend first; fall back to local session if unreachable.
-      try {
-        final response = await http
-            .post(
-              Uri.parse('$_baseUrl/auth/google'),
-              headers: {'Content-Type': 'application/json'},
-              body: jsonEncode({'idToken': idToken}),
-            )
-            .timeout(const Duration(seconds: 12));
-
-        final data = jsonDecode(response.body);
-        if (response.statusCode == 200 && data['success']) {
-          await _saveSession(data['data']);
-          return;
-        }
-        debugPrint('Google auth backend error: ${data['error']}');
-      } catch (networkErr) {
-        // Backend unreachable — fall through to local session
-        debugPrint('Backend unreachable for Google auth: $networkErr');
-      }
-
-      // Local session fallback: sign in from Google account directly
-      await _saveSession({
-        'uid': googleUser.id,
-        'email': googleUser.email,
-        'name': googleUser.displayName ?? googleUser.email,
-        'token': idToken,
-        'isGuest': false,
-      });
+      final cred =
+          await fb.FirebaseAuth.instance.signInWithCredential(credential);
+      if (cred.user == null) throw Exception('Firebase sign-in returned no user');
+      await _saveFirebaseUser(cred.user!);
     } on SocketException {
       throw Exception(
-        'No internet connection. Please check your WiFi or mobile data.',
-      );
+          'No internet connection. Please check your WiFi or mobile data.');
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('ApiException: 10') || msg.contains('DEVELOPER_ERROR')) {
+        throw Exception(
+          'Google Sign-In is not configured for this build. '
+          'Add this app\'s SHA-1 fingerprint to Firebase Console → '
+          'Project Settings → Your Apps → com.vishwamai.designwear.',
+        );
+      }
+      rethrow;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Converts raw Firebase/server error codes to human-readable messages.
-  String _friendlyError(String raw) {
-    if (raw.contains('INVALID_LOGIN_CREDENTIALS') ||
-        raw.contains('INVALID_PASSWORD')) {
-      return 'Incorrect email or password. Please try again.';
-    }
-    if (raw.contains('EMAIL_NOT_FOUND') || raw.contains('USER_NOT_FOUND')) {
-      return 'No account found with this email.';
-    }
-    if (raw.contains('TOO_MANY_ATTEMPTS') ||
-        raw.contains('TOO_MANY_REQUESTS')) {
-      return 'Too many failed attempts. Please wait a few minutes and try again.';
-    }
-    if (raw.contains('USER_DISABLED')) {
-      return 'This account has been disabled. Please contact support.';
-    }
-    return raw;
-  }
+  // ── Profile ───────────────────────────────────────────────────────────────
 
   Future<void> updateProfile({String? name, String? email}) async {
     if (_currentUser?.id == null) return;
     _isLoading = true;
     notifyListeners();
-
     try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/auth/update'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'uid': _currentUser!.id,
-              // ignore: use_null_aware_elements
-              if (name != null) 'name': name,
-              // ignore: use_null_aware_elements
-              if (email != null) 'email': email,
-            }),
-          )
-          .timeout(const Duration(seconds: 15));
-
-      final data = jsonDecode(response.body);
-      if (response.statusCode == 200 && data['success']) {
-        final prefs = await SharedPreferences.getInstance();
-        if (name != null) await prefs.setString('auth_name', name);
-        if (email != null) await prefs.setString('auth_email', email);
-        await _loadUserFromStorage();
-      } else {
-        throw Exception(data['error'] ?? 'Profile update failed');
-      }
+      final user = fb.FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Not signed in');
+      if (name != null) await user.updateDisplayName(name);
+      if (email != null) await user.verifyBeforeUpdateEmail(email);
+      await user.reload();
+      await _saveFirebaseUser(fb.FirebaseAuth.instance.currentUser!);
+    } on fb.FirebaseAuthException catch (e) {
+      throw Exception(_friendlyFirebaseError(e.code));
     } on SocketException {
       throw Exception('No internet connection.');
     } finally {
@@ -373,98 +291,68 @@ class AuthService extends ChangeNotifier {
 
   Future<void> updateProfileImage(String path) async {
     if (_currentUser?.id == null) return;
-    
-    // Optimistically update local storage so UI reflects immediately
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_photo_url', path);
     await _loadUserFromStorage();
-
     try {
-      // Background sync to backend
-      final response = await http.post(
-        Uri.parse('$_baseUrl/auth/update'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'uid': _currentUser!.id,
-          'photoUrl': path,
-        }),
-      );
-      
-      if (response.statusCode != 200) {
-         debugPrint('Failed to sync profile image to backend: ${response.body}');
-      }
+      await fb.FirebaseAuth.instance.currentUser?.updatePhotoURL(path);
     } catch (e) {
-      debugPrint('Error syncing profile image to backend: $e');
+      LoggingService.instance.logError('Error syncing profile image to Firebase', error: e);
     }
   }
 
+  // ── Addresses & Payment Methods ───────────────────────────────────────────
+
   Future<void> addAddress(Map<String, dynamic> address) async {
     if (_currentUser?.id == null) return;
-    
-    final currentList = List<Map<String, dynamic>>.from(_currentUser!.addresses);
-    
-    // If setting as default, make all others non-default
+    final currentList =
+        List<Map<String, dynamic>>.from(_currentUser!.addresses);
     if (address['isDefault'] == true) {
-      for (var a in currentList) {
-        a['isDefault'] = false;
-      }
+      for (var a in currentList) { a['isDefault'] = false; }
     } else if (currentList.isEmpty) {
-      address['isDefault'] = true; // First one is default
+      address['isDefault'] = true;
     }
-
     currentList.add(address);
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_addresses', jsonEncode(currentList));
     await _loadUserFromStorage();
-
     try {
-      final response = await http.post(
+      await http.post(
         Uri.parse('$_baseUrl/auth/update'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'uid': _currentUser!.id,
-          'addresses': currentList,
-        }),
+        body: jsonEncode({'uid': _currentUser!.id, 'addresses': currentList}),
       );
-      if (response.statusCode != 200) debugPrint('Failed to sync addresses: ${response.body}');
     } catch (e) {
-      debugPrint('Error syncing addresses: $e');
+      LoggingService.instance.logError('Error syncing addresses', error: e);
     }
   }
 
   Future<void> addPaymentMethod(Map<String, dynamic> method) async {
     if (_currentUser?.id == null) return;
-    
-    final currentList = List<Map<String, dynamic>>.from(_currentUser!.paymentMethods);
+    final currentList =
+        List<Map<String, dynamic>>.from(_currentUser!.paymentMethods);
     if (method['isDefault'] == true) {
-      for (var p in currentList) {
-        p['isDefault'] = false;
-      }
+      for (var p in currentList) { p['isDefault'] = false; }
     } else if (currentList.isEmpty) {
       method['isDefault'] = true;
     }
-
     currentList.add(method);
-
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('auth_payment_methods', jsonEncode(currentList));
     await _loadUserFromStorage();
-
     try {
-      final response = await http.post(
+      await http.post(
         Uri.parse('$_baseUrl/auth/update'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'uid': _currentUser!.id,
-          'paymentMethods': currentList,
-        }),
+        body: jsonEncode(
+            {'uid': _currentUser!.id, 'paymentMethods': currentList}),
       );
-      if (response.statusCode != 200) debugPrint('Failed to sync payment methods: ${response.body}');
     } catch (e) {
-      debugPrint('Error syncing payment methods: $e');
+      LoggingService.instance.logError('Error syncing payment methods', error: e);
     }
   }
+
+  // ── Logout ────────────────────────────────────────────────────────────────
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
@@ -477,14 +365,40 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_payment_methods');
     await prefs.remove('auth_isGuest');
 
-    try {
-      await GoogleSignIn().signOut();
-    } catch (e) {
-      // Ignore error if not signed in with Google
+    if (isGoogleSignInSupported) {
+      try {
+        await GoogleSignIn().signOut();
+      } catch (_) {}
     }
+    try {
+      await fb.FirebaseAuth.instance.signOut();
+    } catch (_) {}
 
     _currentUser = null;
     notifyListeners();
   }
 
+  // ── Error helpers ─────────────────────────────────────────────────────────
+
+  String _friendlyFirebaseError(String code) {
+    switch (code) {
+      case 'wrong-password':
+      case 'invalid-credential':
+        return 'Incorrect email or password. Please try again.';
+      case 'user-not-found':
+        return 'No account found with this email.';
+      case 'email-already-in-use':
+        return 'An account already exists with this email.';
+      case 'weak-password':
+        return 'Password is too weak. Use at least 6 characters.';
+      case 'too-many-requests':
+        return 'Too many failed attempts. Please wait a few minutes and try again.';
+      case 'user-disabled':
+        return 'This account has been disabled. Please contact support.';
+      case 'network-request-failed':
+        return 'No internet connection. Please check your network.';
+      default:
+        return code;
+    }
+  }
 }

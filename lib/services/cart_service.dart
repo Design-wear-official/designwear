@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:designwear/models/models.dart';
 import 'package:designwear/domain/usecases/product_use_cases.dart';
 import 'package:designwear/config/config.dart';
+import 'package:designwear/services/logging_service.dart';
 
 class CartService extends ChangeNotifier {
   final Cart _cart = Cart();
@@ -37,7 +38,7 @@ class CartService extends ChangeNotifier {
       _cart.setTaxRate(_currentTaxRate);
       notifyListeners();
     } catch (e) {
-      if (kDebugMode) debugPrint('Error fetching tax rate: $e');
+      LoggingService.instance.logError('Error fetching tax rate', error: e);
     }
 
     if (WebApiConfig.useWebApi) {
@@ -46,7 +47,7 @@ class CartService extends ChangeNotifier {
           if (user != null) loadCartFromBackend();
         });
       } catch (e) {
-        debugPrint('CartService: Firebase auth listener setup failed: $e');
+        LoggingService.instance.logError('CartService: Firebase auth listener setup failed', error: e);
       }
     }
   }
@@ -62,7 +63,7 @@ class CartService extends ChangeNotifier {
         'Authorization': 'Bearer $idToken',
       };
     } catch (e) {
-      debugPrint('CartService: Failed to get auth token: $e');
+      LoggingService.instance.logError('CartService: Failed to get auth token', error: e);
       return null;
     }
   }
@@ -90,10 +91,10 @@ class CartService extends ChangeNotifier {
         }),
       );
       if (response.statusCode != 200) {
-        debugPrint('Cart sync failed: ${response.statusCode} ${response.body}');
+        LoggingService.instance.logWarn('Cart sync failed: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
-      debugPrint('Cart sync error: $e');
+      LoggingService.instance.logError('Cart sync error', error: e);
     }
   }
 
@@ -117,7 +118,7 @@ class CartService extends ChangeNotifier {
               try {
                 return CartItem.fromJson(raw as Map<String, dynamic>);
               } catch (e) {
-                debugPrint('CartService: skipping unrestorable item: $e');
+                LoggingService.instance.logWarn('CartService: skipping unrestorable item: $e');
                 return null;
               }
             }).whereType<CartItem>().toList();
@@ -132,7 +133,7 @@ class CartService extends ChangeNotifier {
         }
       }
     } catch (e) {
-      debugPrint('CartService: load from backend error: $e');
+      LoggingService.instance.logError('CartService: load from backend error', error: e);
     }
   }
 

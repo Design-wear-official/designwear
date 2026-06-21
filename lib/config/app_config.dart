@@ -45,7 +45,8 @@ class ConfigLoader {
 
 /// Sanity CMS Configuration
 class SanityConfig {
-  static String get projectId => ConfigLoader.get('SANITY_PROJECT_ID') ?? '';
+  // Project ID is public — visible in every CDN request URL.
+  static String get projectId => ConfigLoader.get('SANITY_PROJECT_ID') ?? 'jh7llku7';
   static String get dataset => ConfigLoader.get('SANITY_DATASET') ?? 'production';
 }
 
@@ -73,7 +74,7 @@ class AppConfig {
 class GeminiConfig {
   static String get apiKey => ConfigLoader.get('GEMINI_API_KEY') ?? '';
   static bool get isConfigured => apiKey.isNotEmpty;
-  static const String model = 'gemini-2.0-flash-exp';
+  static const String model = 'gemini-3.5-flash';
   static const int maxOutputTokens = 8192;
   static const double temperature = 0.7;
 }
