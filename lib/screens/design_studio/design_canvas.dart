@@ -110,6 +110,19 @@ class _DesignCanvasState extends State<DesignCanvas> {
           else
             _buildComingSoonPlaceholder(context),
 
+          // Pocket & collar overlays (front view only)
+          if (_hasAsset && !_showBack)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: _GarmentOverlayPainter(
+                  tshirtColor: DesignStudioUtils.parseColorFromHex(
+                      widget.design.baseColor),
+                  collarStyle: widget.design.collarStyle,
+                  pocketStyle: widget.design.pocketStyle,
+                ),
+              ),
+            ),
+
           // Only render front design elements if Front view is active
           if (_hasAsset && !_showBack) ...[
             // AI-generated design graphic in the chest print area
@@ -355,4 +368,138 @@ class _CanvasGridPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_CanvasGridPainter old) => old.color != color;
+}
+
+// Draws collar style and pocket overlays on top of the garment image.
+// Coordinates are calibrated for tshirt_white.png at 300px width in a
+// 332×407 canvas (16px padding each side, image centred).
+class _GarmentOverlayPainter extends CustomPainter {
+  final Color tshirtColor;
+  final String collarStyle; // 'crew' | 'vneck' | 'polo'
+  final String pocketStyle; // 'none' | 'left' | 'right' | 'both'
+
+  const _GarmentOverlayPainter({
+    required this.tshirtColor,
+    required this.collarStyle,
+    required this.pocketStyle,
+  });
+
+  // Approximate t-shirt geometry (canvas-relative pixels)
+  static const double _cx = 166.0; // canvas horizontal centre
+  static const double _collarTopY = 80.0; // top of neckline
+  static const double _collarMidY = 126.0; // deepest point of V / polo base
+  static const double _collarHalfW = 46.0; // half-width at collar opening
+  static const double _pocketW = 44.0;
+  static const double _pocketH = 40.0;
+  static const double _pocketTopY = 168.0; // pocket top edge
+  static const double _leftPocketCX = 108.0;
+  static const double _rightPocketCX = 224.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    _paintCollar(canvas);
+    _paintPockets(canvas);
+  }
+
+  void _paintCollar(Canvas canvas) {
+    if (collarStyle == 'crew') return;
+
+    final shade = _adjust(tshirtColor, 0.14);
+    final fillPaint = Paint()
+      ..color = shade
+      ..style = PaintingStyle.fill;
+    final borderPaint = Paint()
+      ..color = _adjust(tshirtColor, 0.32)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    if (collarStyle == 'vneck') {
+      final path = Path()
+        ..moveTo(_cx - _collarHalfW, _collarTopY)
+        ..lineTo(_cx, _collarMidY)
+        ..lineTo(_cx + _collarHalfW, _collarTopY)
+        ..close();
+      canvas.drawPath(path, fillPaint);
+      canvas.drawPath(path, borderPaint);
+    } else if (collarStyle == 'polo') {
+      final rrect = RRect.fromRectAndRadius(
+        Rect.fromLTWH(
+          _cx - _collarHalfW - 6,
+          _collarTopY,
+          (_collarHalfW + 6) * 2,
+          42,
+        ),
+        const Radius.circular(5),
+      );
+      canvas.drawRRect(rrect, fillPaint);
+      canvas.drawRRect(rrect, borderPaint);
+      // Button placket line
+      final linePaint = Paint()
+        ..color = _adjust(tshirtColor, 0.38)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
+      canvas.drawLine(
+        Offset(_cx, _collarTopY + 6),
+        Offset(_cx, _collarTopY + 40),
+        linePaint,
+      );
+      // Two buttons
+      final btnPaint = Paint()
+        ..color = _adjust(tshirtColor, 0.42)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(Offset(_cx, _collarTopY + 16), 3.5, btnPaint);
+      canvas.drawCircle(Offset(_cx, _collarTopY + 30), 3.5, btnPaint);
+    }
+  }
+
+  void _paintPockets(Canvas canvas) {
+    if (pocketStyle == 'none') return;
+
+    final shade = _adjust(tshirtColor, 0.13);
+    final fillPaint = Paint()
+      ..color = shade
+      ..style = PaintingStyle.fill;
+    final stitchPaint = Paint()
+      ..color = _adjust(tshirtColor, 0.30)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0
+      ..strokeJoin = StrokeJoin.round;
+
+    void drawPocket(double cx) {
+      final rect = Rect.fromLTWH(cx - _pocketW / 2, _pocketTopY, _pocketW, _pocketH);
+      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(4));
+      canvas.drawRRect(rrect, fillPaint);
+      // Inner stitch border
+      final innerRect = rect.deflate(5);
+      final innerRRect = RRect.fromRectAndRadius(innerRect, const Radius.circular(2));
+      canvas.drawRRect(innerRRect, stitchPaint);
+    }
+
+    if (pocketStyle == 'left' || pocketStyle == 'both') drawPocket(_leftPocketCX);
+    if (pocketStyle == 'right' || pocketStyle == 'both') drawPocket(_rightPocketCX);
+  }
+
+  // Lighten for dark colours, darken for light ones, so overlays are always visible.
+  Color _adjust(Color color, double amount) {
+    if (color.computeLuminance() < 0.25) {
+      return Color.fromARGB(
+        color.alpha,
+        (color.red + (255 - color.red) * amount).round().clamp(0, 255),
+        (color.green + (255 - color.green) * amount).round().clamp(0, 255),
+        (color.blue + (255 - color.blue) * amount).round().clamp(0, 255),
+      );
+    }
+    return Color.fromARGB(
+      color.alpha,
+      (color.red * (1 - amount)).round().clamp(0, 255),
+      (color.green * (1 - amount)).round().clamp(0, 255),
+      (color.blue * (1 - amount)).round().clamp(0, 255),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_GarmentOverlayPainter old) =>
+      old.tshirtColor != tshirtColor ||
+      old.collarStyle != collarStyle ||
+      old.pocketStyle != pocketStyle;
 }

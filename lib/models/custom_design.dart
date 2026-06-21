@@ -102,6 +102,8 @@ class CustomDesign {
   final String? thumbnailPath; // Local path to saved thumbnail
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String collarStyle; // 'crew' | 'vneck' | 'polo'
+  final String pocketStyle; // 'none' | 'left' | 'right' | 'both'
   // Runtime-only: AI-generated design graphic (base64, not persisted to JSON)
   final String? designImageBase64;
 
@@ -124,6 +126,8 @@ class CustomDesign {
     this.thumbnailPath,
     this.createdAt,
     this.updatedAt,
+    this.collarStyle = 'crew',
+    this.pocketStyle = 'none',
     this.designImageBase64,
   });
 
@@ -146,6 +150,8 @@ class CustomDesign {
     String? thumbnailPath,
     DateTime? createdAt,
     DateTime? updatedAt,
+    String? collarStyle,
+    String? pocketStyle,
     Object? designImageBase64 = _keepExisting,
   }) {
     return CustomDesign(
@@ -167,6 +173,8 @@ class CustomDesign {
       thumbnailPath: thumbnailPath ?? this.thumbnailPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      collarStyle: collarStyle ?? this.collarStyle,
+      pocketStyle: pocketStyle ?? this.pocketStyle,
       designImageBase64: identical(designImageBase64, _keepExisting)
           ? this.designImageBase64
           : designImageBase64 as String?,
@@ -195,6 +203,8 @@ class CustomDesign {
       'thumbnailPath': thumbnailPath,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'collarStyle': collarStyle,
+      'pocketStyle': pocketStyle,
     };
   }
 
@@ -225,6 +235,8 @@ class CustomDesign {
       updatedAt: json['updatedAt'] != null
           ? DateTime.tryParse(json['updatedAt'])
           : null,
+      collarStyle: json['collarStyle'] ?? 'crew',
+      pocketStyle: json['pocketStyle'] ?? 'none',
     );
   }
 

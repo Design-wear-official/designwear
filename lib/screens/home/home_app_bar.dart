@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/services/services.dart';
 import 'package:designwear/screens/cart_screen.dart';
@@ -232,37 +233,78 @@ class _AvatarButton extends StatelessWidget {
 
   const _AvatarButton({required this.auth, required this.isDark, required this.onTap});
 
+  String _initials() {
+    final name = auth.currentUser?.name;
+    if (name != null && name.trim().isNotEmpty) {
+      final parts = name.trim().split(' ');
+      if (parts.length >= 2) return '${parts.first[0]}${parts.last[0]}'.toUpperCase();
+      return parts.first[0].toUpperCase();
+    }
+    final email = auth.currentUser?.email;
+    if (email != null && email.isNotEmpty) return email[0].toUpperCase();
+    return '?';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final initials = auth.isLoggedIn && auth.currentUser?.email != null
-        ? auth.currentUser!.email!.substring(0, 2).toUpperCase()
-        : 'KS';
+    final photoUrl = auth.currentUser?.photoUrl;
+    final hasPhoto = auth.isLoggedIn &&
+        photoUrl != null &&
+        photoUrl.startsWith('http');
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 34,
         height: 34,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Color(0xFF5a6cff), Color(0xFF9b6cff)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
           shape: BoxShape.circle,
+          gradient: (!hasPhoto && auth.isLoggedIn)
+              ? const LinearGradient(
+                  colors: [Color(0xFF5a6cff), Color(0xFF9b6cff)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: !auth.isLoggedIn
+              ? (isDark ? AppColors.cardDark : AppColors.cardLight)
+              : null,
+          border: !auth.isLoggedIn
+              ? Border.all(
+                  color: isDark ? AppColors.hairDark : AppColors.hairLight,
+                  width: 1.4,
+                )
+              : null,
         ),
         alignment: Alignment.center,
-        child: Text(
-          initials,
-          style: GoogleFonts.archivo(
-            fontWeight: FontWeight.w800,
-            fontSize: 12,
-            color: Colors.white,
-          ),
-        ),
+        child: hasPhoto
+            ? CachedNetworkImage(
+                imageUrl: photoUrl,
+                width: 34,
+                height: 34,
+                fit: BoxFit.cover,
+                errorWidget: (_, __, ___) => _initialsText(),
+              )
+            : auth.isLoggedIn
+                ? _initialsText()
+                : Icon(
+                    Icons.person_outline,
+                    size: 18,
+                    color: isDark ? AppColors.inkDark : AppColors.inkLight,
+                  ),
       ),
     );
   }
+
+  Widget _initialsText() => Text(
+        _initials(),
+        style: GoogleFonts.archivo(
+          fontWeight: FontWeight.w800,
+          fontSize: 12,
+          color: Colors.white,
+        ),
+      );
 }
 
 // ── Icon action button ────────────────────────────────────────────────────────
