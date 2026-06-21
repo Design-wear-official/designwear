@@ -7,6 +7,7 @@ import 'package:designwear/config/config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:designwear/services/logging_service.dart';
 
 class User {
   final String? id;
@@ -73,7 +74,7 @@ class AuthService extends ChangeNotifier {
           body: jsonEncode({'uid': _currentUser!.id, 'fcmToken': token}),
         );
       } catch (e) {
-        debugPrint('Failed to sync fcm token: $e');
+        LoggingService.instance.logError('Failed to sync fcm token', error: e);
       }
     }
   }
@@ -98,7 +99,7 @@ class AuthService extends ChangeNotifier {
               List<Map<String, dynamic>>.from(jsonDecode(payStr));
         }
       } catch (e) {
-        debugPrint('Error parsing stored lists: $e');
+        LoggingService.instance.logError('Error parsing stored lists', error: e);
       }
 
       _currentUser = User(
@@ -296,7 +297,7 @@ class AuthService extends ChangeNotifier {
     try {
       await fb.FirebaseAuth.instance.currentUser?.updatePhotoURL(path);
     } catch (e) {
-      debugPrint('Error syncing profile image to Firebase: $e');
+      LoggingService.instance.logError('Error syncing profile image to Firebase', error: e);
     }
   }
 
@@ -322,7 +323,7 @@ class AuthService extends ChangeNotifier {
         body: jsonEncode({'uid': _currentUser!.id, 'addresses': currentList}),
       );
     } catch (e) {
-      debugPrint('Error syncing addresses: $e');
+      LoggingService.instance.logError('Error syncing addresses', error: e);
     }
   }
 
@@ -347,7 +348,7 @@ class AuthService extends ChangeNotifier {
             {'uid': _currentUser!.id, 'paymentMethods': currentList}),
       );
     } catch (e) {
-      debugPrint('Error syncing payment methods: $e');
+      LoggingService.instance.logError('Error syncing payment methods', error: e);
     }
   }
 

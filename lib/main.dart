@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'dart:io' show Platform;
+import 'dart:async' show unawaited;
 import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
@@ -76,6 +77,13 @@ Future<void> mainCommon(Flavor flavor) async {
   }
 
   FlavorConfig.init(flavor);
+
+  // Fire-and-forget: logging init is non-critical, don't block runApp.
+  unawaited(LoggingService.instance.init(
+    flavor: flavor == Flavor.internal ? 'internal' : 'external',
+    appVersion: '1.0.0+1',
+  ));
+
   runApp(DesignWearApp(flavor: flavor));
 }
 
@@ -141,6 +149,7 @@ class DesignWearApp extends StatelessWidget {
               theme: AppTheme.lightTheme,
               darkTheme: AppTheme.darkTheme,
               themeMode: themeProvider.themeMode,
+              navigatorObservers: [LoggingService.instance.routeObserver],
               builder: (context, child) {
                 final bg = Theme.of(context).scaffoldBackgroundColor;
                 final screenW = MediaQuery.sizeOf(context).width;

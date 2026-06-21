@@ -389,7 +389,13 @@ class _SettingsCard extends StatelessWidget {
                 ),
               ],
       ),
-      child: Column(children: children),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Material(
+          type: MaterialType.transparency,
+          child: Column(children: children),
+        ),
+      ),
     );
   }
 }
