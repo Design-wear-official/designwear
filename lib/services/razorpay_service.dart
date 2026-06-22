@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:designwear/config/config.dart';
@@ -6,6 +7,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'razorpay_web_checkout_stub.dart'
+    if (dart.library.html) 'razorpay_web_checkout_web.dart';
 
 class RazorpayService {
   static final RazorpayService _instance = RazorpayService._internal();
@@ -40,7 +43,7 @@ class RazorpayService {
     return headers;
   }
 
-  /// Opens the Razorpay native checkout and returns true if payment succeeded.
+  /// Opens the Razorpay checkout and returns true if payment succeeded.
   Future<bool> makePayment({
     required String orderId,
     required double amount,
@@ -51,37 +54,8 @@ class RazorpayService {
       return false;
     }
 
-    final completer = Completer<bool>();
-    final razorpay = Razorpay();
-
-    void onPaymentSuccess(PaymentSuccessResponse response) {
-      debugPrint('Razorpay payment success: ${response.paymentId}');
-      _verifyPayment(
-        razorpayOrderId: response.orderId ?? '',
-        razorpayPaymentId: response.paymentId ?? '',
-        razorpaySignature: response.signature ?? '',
-      ).then((verified) {
-        if (!completer.isCompleted) completer.complete(verified);
-      });
-    }
-
-    void onPaymentError(PaymentFailureResponse response) {
-      debugPrint('Razorpay payment failed: ${response.message}');
-      if (!completer.isCompleted) completer.complete(false);
-    }
-
-    void onExternalWallet(ExternalWalletResponse response) {
-      debugPrint('External wallet: ${response.walletName}');
-      // External wallet payments cannot be verified immediately
-      if (!completer.isCompleted) completer.complete(false);
-    }
-
-    razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, onPaymentSuccess);
-    razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, onPaymentError);
-    razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, onExternalWallet);
-
     try {
-      // 1. Create Razorpay order on backend
+      // Create Razorpay order on backend first (both web and native)
       final headers = await _getHeaders();
       final response = await http.post(
         Uri.parse('$_baseUrl/payments/razorpay/order'),
@@ -91,36 +65,82 @@ class RazorpayService {
 
       if (response.statusCode != 200) {
         debugPrint('Failed to create Razorpay order: ${response.body}');
-        razorpay.clear();
         return false;
       }
 
       final data = jsonDecode(response.body);
+      final razorpayOrderId = data['razorpay_order_id'] as String? ?? '';
+      final keyId = data['key_id'] as String? ?? '';
+      final amountInPaise = data['amount'] as int? ?? (amount * 100).toInt();
+      final currency = data['currency'] as String? ?? 'INR';
 
-      // 2. Open Razorpay checkout
-      final options = {
-        'key': data['key_id'],
-        'amount': data['amount'], // already in paise
-        'currency': data['currency'] ?? 'INR',
-        'order_id': data['razorpay_order_id'],
+      if (kIsWeb) {
+        // On web, razorpay_flutter uses MethodChannel (Android/iOS only).
+        // Use checkout.js directly via JS interop.
+        final result = await openRazorpayCheckoutWeb(
+          key: keyId,
+          amountInPaise: amountInPaise,
+          currency: currency,
+          razorpayOrderId: razorpayOrderId,
+          name: 'Design Wear',
+          description: 'Order #$orderId',
+          customerName: customerName,
+        );
+        if (result == null) return false; // cancelled
+        return _verifyPayment(
+          razorpayOrderId: result['orderId'] ?? '',
+          razorpayPaymentId: result['paymentId'] ?? '',
+          razorpaySignature: result['signature'] ?? '',
+        );
+      }
+
+      // Native (Android / iOS)
+      final completer = Completer<bool>();
+      final razorpay = Razorpay();
+
+      void onPaymentSuccess(PaymentSuccessResponse r) {
+        _verifyPayment(
+          razorpayOrderId: r.orderId ?? '',
+          razorpayPaymentId: r.paymentId ?? '',
+          razorpaySignature: r.signature ?? '',
+        ).then((verified) {
+          if (!completer.isCompleted) completer.complete(verified);
+        }).catchError((Object e) {
+          debugPrint('Error verifying payment: $e');
+          if (!completer.isCompleted) completer.complete(false);
+        });
+      }
+
+      void onPaymentError(PaymentFailureResponse r) {
+        debugPrint('Razorpay payment failed: ${r.message}');
+        if (!completer.isCompleted) completer.complete(false);
+      }
+
+      void onExternalWallet(ExternalWalletResponse r) {
+        debugPrint('External wallet: ${r.walletName}');
+        if (!completer.isCompleted) completer.complete(false);
+      }
+
+      razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, onPaymentSuccess);
+      razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, onPaymentError);
+      razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, onExternalWallet);
+
+      razorpay.open({
+        'key': keyId,
+        'amount': amountInPaise,
+        'currency': currency,
+        'order_id': razorpayOrderId,
         'name': 'Design Wear',
         'description': 'Order #$orderId',
-        'prefill': {
-          'name': customerName,
-        },
-        'theme': {
-          'color': '#000000',
-        },
-      };
-
-      razorpay.open(options);
+        'prefill': {'name': customerName},
+        'theme': {'color': '#000000'},
+      });
 
       final result = await completer.future;
       razorpay.clear();
       return result;
     } catch (e) {
       debugPrint('Error in Razorpay makePayment: $e');
-      razorpay.clear();
       return false;
     }
   }
