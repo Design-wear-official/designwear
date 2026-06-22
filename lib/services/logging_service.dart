@@ -78,7 +78,7 @@ class LogRow {
 /// [LoggingService.instance.routeObserver].
 class _LoggingNavigatorObserver extends NavigatorObserver {
   void _update(Route<dynamic>? route) {
-    final name = route?.settings.name ?? route.runtimeType.toString();
+    final name = route?.settings.name ?? route?.runtimeType.toString() ?? "/";
     LoggingService.instance._currentPage = name;
   }
 

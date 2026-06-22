@@ -10,6 +10,8 @@ import 'dart:async' show unawaited;
 import 'package:flutter/foundation.dart' show PlatformDispatcher, kIsWeb;
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
+import 'screens/error_404_screen.dart';
+import 'screens/error_405_screen.dart';
 import 'package:designwear/services/services.dart';
 import 'package:designwear/config/config.dart';
 import 'package:designwear/presentation/styles/styles.dart';
@@ -31,13 +33,18 @@ Future<void> mainCommon(Flavor flavor) async {
   // Initialize config loader (loads env.json for web)
   await ConfigLoader.init();
 
-  // Load environment variables from .env (mobile/desktop only).
-  // Web uses --dart-define build args or built-in defaults — .env is not
-  // bundled in web builds and must not be served publicly (contains secrets).
+  // Load environment variables from .env on mobile/desktop only.
+  // Firebase Hosting excludes dotfiles, so .env is never served on web — dotenv
+  // would silently skip the load and stay uninitialized, breaking everything that
+  // reads from it. Web Firebase config is hardcoded in firebase_options.dart
+  // (those keys are intentionally non-secret in web apps).
   if (!kIsWeb) {
     await dotenv.load(fileName: ".env", isOptional: true);
-    // .env.local overrides .env (production settings take precedence over dev defaults)
-    await dotenv.load(fileName: ".env.local", isOptional: true, mergeWith: dotenv.env);
+    await dotenv.load(
+      fileName: ".env.local",
+      isOptional: true,
+      mergeWith: Map<String, String>.from(dotenv.env),
+    );
   }
 
   final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isLinux);
@@ -165,6 +172,13 @@ class DesignWearApp extends StatelessWidget {
                 );
               },
               home: const HomeScreen(),
+              routes: {
+                Error404Screen.routeName: (_) => const Error404Screen(),
+                Error405Screen.routeName: (_) => const Error405Screen(),
+              },
+              onUnknownRoute: (_) => MaterialPageRoute(
+                builder: (_) => const Error404Screen(),
+              ),
             );
           },
         ),

@@ -9,6 +9,12 @@
 
 ---
 
+> 📚 **Full documentation:** see the [**Documentation Hub →** `docs/README.md`](docs/README.md)
+> for architecture, configuration, data models, services, the Design Studio, AI,
+> the backend API reference, Sanity CMS, deployment, and troubleshooting.
+
+---
+
 ## ✨ Key Features
 
 | Feature | Description |

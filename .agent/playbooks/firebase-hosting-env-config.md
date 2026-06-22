@@ -1,276 +1,277 @@
 # Firebase Hosting Environment Configuration Playbook
 
-## Problem Overview
+## The Core Problem
 
-When deploying Flutter web applications to Firebase Hosting, environment variables stored in `.env` files are not accessible in the deployed application, causing runtime failures when the app tries to read configuration values.
+Firebase Hosting has `"**/.*"` in its default `ignore` array inside `firebase.json`. This strips every
+dotfile — including `.env`, `.env.local` — before uploading. Even if those files are listed as Flutter
+assets in `pubspec.yaml`, `rootBundle.loadString('.env')` returns a 404 at runtime, `flutter_dotenv`
+silently skips the load (because `isOptional: true`), and `dotenv.isInitialized` stays `false`.
 
-### Symptoms
+Any code that then reads `dotenv.env[key]` throws:
 
-- **Local build works fine**: App runs correctly with `flutter run -d chrome` or local builds
-- **Deployed app fails**: Shows "No data found" or similar errors
-- **Console errors**: API calls fail with malformed URLs (e.g., `https://.api.sanity.io/...` instead of `https://PROJECT_ID.api.sanity.io/...`)
-- **Root cause**: Environment variables return empty strings or null values
+```
+NotInitializedError: DotEnv has not been initialized.
+Call load() or loadFromString() before accessing env variables.
+```
 
-### Why This Happens
+This cascades into Firebase failing to init → `FirebaseAuth` being null → a null-check crash on the
+login screen.
 
-Firebase Hosting has a default ignore pattern `"**/.*"` in `firebase.json` that blocks all dotfiles (files starting with `.`) from being deployed. This includes:
-- `.env`
-- `.env.production`
-- `.gitignore`
-- Any other dotfile
+**Do NOT remove `"**/.*"` from `firebase.json`** to "fix" this. `.env` contains `RAZORPAY_KEY_SECRET`,
+`GEMINI_API_KEY`, and other server-side secrets that must never be served publicly.
 
-Even if you modify `firebase.json` to exclude `.env` from the ignore pattern using `"!**/assets/.env"`, Firebase Hosting may still not serve dotfiles reliably due to security policies.
+Serving an `assets/env.json` file (the old approach documented here) has the same problem — the file
+is publicly downloadable at `/assets/assets/env.json` by anyone.
 
-## Solution: Use Non-Dotfile Configuration
+---
 
-Instead of relying on `.env` files for web deployments, use a JSON configuration file that won't be blocked by Firebase Hosting.
+## The Correct Solution: `--dart-define-from-file`
 
-### Implementation Steps
+Flutter's `--dart-define-from-file` flag reads a **gitignored** JSON file and bakes every value
+directly into `main.dart.js` at compile time via `String.fromEnvironment()`. No separate file is
+ever served; values are compiled in. Firebase Hosting never sees the config file.
 
-#### Step 1: Create `env.json` Configuration File
+```
+Local machine            Build step            Deployed bundle
+config/env.web.json  →   flutter build web  →  main.dart.js (values compiled in)
+(gitignored)             --dart-define-         No separate config file exists
+                         from-file=...
+```
 
-Create `assets/env.json` with your environment variables:
+---
+
+## File Structure
+
+```
+designwear/
+├── config/
+│   └── env.web.json          ← gitignored; never committed; used only at build time
+├── lib/
+│   ├── config/app_config.dart  ← ConfigLoader reads String.fromEnvironment()
+│   └── firebase_options.dart   ← uses ConfigLoader.get() for all platforms
+├── .env                        ← mobile/desktop only (filesystem, never bundled)
+├── .env.local                  ← mobile/desktop overrides
+├── pubspec.yaml                ← .env/.env.local NOT in assets
+└── firebase.json               ← "**.*" ignore stays (correct)
+```
+
+---
+
+## Implementation
+
+### 1. `config/env.web.json` (gitignored)
+
+Contains all web-facing config. **Never include server-side secrets** (e.g. `RAZORPAY_KEY_SECRET`,
+backend signing keys). Firebase keys are safe — they are public client identifiers; security is
+enforced by Firebase Security Rules, not by hiding the keys.
 
 ```json
 {
-  "SANITY_PROJECT_ID": "your_project_id",
+  "SANITY_PROJECT_ID": "jh7llku7",
   "SANITY_DATASET": "production",
-  "API_KEY": "your_api_key",
-  "APP_NAME": "Your App Name"
+  "APP_NAME": "Design Wear",
+  "DEBUG_MODE": "false",
+  "DATA_SOURCE": "sanity",
+  "ENABLE_FALLBACK": "true",
+  "USE_WEB_API": "true",
+  "WEB_API_BASE_URL": "https://designwear-backend.vishwamai.com/api",
+  "API_TIMEOUT_SECONDS": "30",
+  "GEMINI_API_KEY": "<from secret store>",
+  "RAZORPAY_KEY_ID": "<public key — safe>",
+  "FIREBASE_PROJECT_ID": "designwear-731c9",
+  "FIREBASE_API_KEY": "<web api key>",
+  "FIREBASE_APP_ID": "1:653328426569:web:005abd63cc23b9a7628198",
+  "FIREBASE_WEB_API_KEY": "<web api key>",
+  "FIREBASE_WEB_APP_ID": "1:653328426569:web:005abd63cc23b9a7628198",
+  "FIREBASE_MESSAGING_SENDER_ID": "653328426569",
+  "FIREBASE_STORAGE_BUCKET": "designwear-731c9.firebasestorage.app",
+  "FIREBASE_ANDROID_API_KEY": "<android api key>",
+  "FIREBASE_ANDROID_APP_ID": "1:350351347585:android:17a893404ea99d6fafe280",
+  "FIREBASE_IOS_API_KEY": "<ios api key>",
+  "FIREBASE_IOS_APP_ID": "1:653328426569:ios:c4a0bf64daf45268628198",
+  "FIREBASE_IOS_BUNDLE_ID": "",
+  "FIREBASE_WINDOWS_APP_ID": ""
 }
 ```
 
-**Security Note**: This file will be publicly accessible. Only include non-sensitive configuration values or values that are safe to expose (like project IDs for public APIs).
+### 2. `.gitignore`
 
-#### Step 2: Add to Flutter Assets
+```
+# Web build-time env (contains API keys — never commit)
+config/env.web.json
+config/env.*.json
+```
 
-Update `pubspec.yaml` to include the JSON file:
+### 3. `lib/config/app_config.dart` — ConfigLoader
+
+Every key used anywhere in the app must have a `String.fromEnvironment()` entry in `_dartDefines`.
+At build time, `--dart-define-from-file` populates these. On mobile, dotenv is the fallback.
+
+```dart
+static const Map<String, String> _dartDefines = {
+  'SANITY_PROJECT_ID':            String.fromEnvironment('SANITY_PROJECT_ID'),
+  'FIREBASE_WEB_API_KEY':         String.fromEnvironment('FIREBASE_WEB_API_KEY'),
+  'FIREBASE_WEB_APP_ID':          String.fromEnvironment('FIREBASE_WEB_APP_ID'),
+  'FIREBASE_MESSAGING_SENDER_ID': String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
+  // ... all other keys
+};
+
+static String? get(String key) {
+  final injected = _dartDefines[key];
+  if (injected != null && injected.isNotEmpty) return injected;
+  if (dotenv.isInitialized) return dotenv.env[key];
+  return null;
+}
+```
+
+### 4. `lib/firebase_options.dart`
+
+Check `kIsWeb` **before** the `defaultTargetPlatform` switch. On Chrome/Windows,
+`defaultTargetPlatform` returns `TargetPlatform.windows` even for web builds — without the
+`kIsWeb` guard, the wrong getter runs.
+
+```dart
+static FirebaseOptions get currentPlatform {
+  if (kIsWeb) return web;           // ← must be first
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.android: return android;
+    case TargetPlatform.iOS:     return ios;
+    // ...
+  }
+}
+
+static FirebaseOptions get web => FirebaseOptions(
+  apiKey:            _get('FIREBASE_WEB_API_KEY'),
+  appId:             _get('FIREBASE_WEB_APP_ID'),
+  messagingSenderId: _get('FIREBASE_MESSAGING_SENDER_ID'),
+  projectId:         _get('FIREBASE_PROJECT_ID'),
+  storageBucket:     _get('FIREBASE_STORAGE_BUCKET'),
+  authDomain:        '${_get('FIREBASE_PROJECT_ID')}.firebaseapp.com',
+);
+```
+
+### 5. `lib/main.dart` — dotenv loading
+
+```dart
+// Web: dotenv is never loaded — Firebase Hosting strips dotfiles.
+// Values come from --dart-define-from-file baked into main.dart.js at build time.
+// Mobile/Desktop: load from filesystem .env files.
+if (!kIsWeb) {
+  await dotenv.load(fileName: ".env", isOptional: true);
+  await dotenv.load(
+    fileName: ".env.local",
+    isOptional: true,
+    mergeWith: Map<String, String>.from(dotenv.env), // copy, not live reference
+  );
+}
+```
+
+> **`mergeWith: dotenv.env` bug**: `dotenv.load()` calls `clean()` at the start which clears
+> `_envMap`. Passing `dotenv.env` (a live reference to `_envMap`) as `mergeWith` means the map
+> is cleared before it can be merged. Always pass `Map.from(dotenv.env)` to merge a snapshot.
+
+### 6. `pubspec.yaml` — remove `.env` from assets
 
 ```yaml
 flutter:
   assets:
-    - assets/.env          # Keep for mobile platforms
-    - assets/env.json      # Add for web platform
     - assets/images/
+    - assets/system_prompt.txt
+    # .env and .env.local must NOT be listed here.
+    # On web they are never served (Firebase Hosting strips dotfiles).
+    # On mobile they are loaded from the filesystem, not the asset bundle.
 ```
-
-#### Step 3: Create Configuration Loader
-
-Create or update your config file (e.g., `lib/config/app_config.dart`) with a dual-loader that supports both `.env` and `env.json`:
-
-```dart
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/services.dart' show rootBundle;
-import 'dart:convert';
-
-/// Configuration loader that supports both .env and env.json
-class ConfigLoader {
-  static Map<String, dynamic>? _jsonConfig;
-  static bool _initialized = false;
-
-  static Future<void> init() async {
-    if (_initialized) return;
-    
-    // For web, load env.json (dotfiles don't deploy well)
-    if (kIsWeb) {
-      try {
-        final jsonString = await rootBundle.loadString('assets/env.json');
-        _jsonConfig = json.decode(jsonString);
-        print('Loaded configuration from env.json');
-      } catch (e) {
-        print('Failed to load env.json: $e');
-      }
-    }
-    
-    _initialized = true;
-  }
-
-  static String? get(String key) {
-    // Try JSON config first (for web)
-    if (_jsonConfig != null && _jsonConfig!.containsKey(key)) {
-      return _jsonConfig![key]?.toString();
-    }
-    // Fall back to dotenv (for mobile)
-    return dotenv.env[key];
-  }
-}
-
-/// Example config class using the loader
-class SanityConfig {
-  static String get projectId => ConfigLoader.get('SANITY_PROJECT_ID') ?? '';
-  static String get dataset => ConfigLoader.get('SANITY_DATASET') ?? 'production';
-}
-```
-
-#### Step 4: Initialize in Main
-
-Update `lib/main.dart` to initialize the config loader:
-
-```dart
-import 'config/app_config.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize config loader (loads env.json for web)
-  await ConfigLoader.init();
-
-  // Load .env for mobile platforms
-  await dotenv.load(fileName: "assets/.env");
-
-  // Rest of initialization...
-  runApp(const MyApp());
-}
-```
-
-#### Step 5: Build and Deploy
-
-```bash
-# Build for web
-flutter build web --release
-
-# Deploy to Firebase
-firebase deploy --only hosting
-```
-
-#### Step 6: Verify Deployment
-
-1. Check that `env.json` is accessible:
-   ```bash
-   curl https://your-app.web.app/assets/assets/env.json
-   ```
-
-2. Open browser console and verify:
-   - Look for "Loaded configuration from env.json" message
-   - Check that API calls use correct configuration values
-
-## How It Works
-
-### Platform Detection
-
-The `ConfigLoader` uses `kIsWeb` to detect the platform:
-- **Web**: Loads `env.json` using `rootBundle.loadString()`
-- **Mobile/Desktop**: Falls back to `flutter_dotenv` which reads `.env`
-
-### Fallback Chain
-
-```
-ConfigLoader.get(key)
-  ├─> Check JSON config (if web and loaded)
-  └─> Fall back to dotenv.env[key]
-```
-
-This ensures:
-- Web builds use `env.json`
-- Mobile builds use `.env`
-- Graceful degradation if either fails
-
-## Alternative Approaches (Not Recommended)
-
-### ❌ Modifying firebase.json Ignore Pattern
-
-```json
-{
-  "hosting": {
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "!**/assets/.env"  // This often doesn't work reliably
-    ]
-  }
-}
-```
-
-**Why this fails**: Firebase Hosting security policies may still block dotfiles even with explicit exceptions.
-
-### ❌ Using Firebase Environment Config
-
-Firebase offers environment configuration, but it's designed for Cloud Functions, not static hosting.
-
-### ❌ Build-Time Variable Injection
-
-While possible, this requires custom build scripts and doesn't work well with Flutter's asset bundling.
-
-## Security Considerations
-
-### Public Exposure
-
-Files in `assets/` are publicly accessible in web builds. **Never include**:
-- Private API keys
-- Database credentials
-- Authentication secrets
-- Encryption keys
-
-### Safe to Include
-
-- Public API project IDs (e.g., Sanity, Firebase)
-- Public configuration endpoints
-- Feature flags
-- Non-sensitive app settings
-
-### For Sensitive Values
-
-Use one of these approaches:
-1. **Backend proxy**: Route sensitive API calls through your own backend
-2. **Firebase App Check**: Protect API access with app attestation
-3. **Environment-specific builds**: Use different `env.json` files for dev/staging/prod
-4. **Server-side rendering**: Handle sensitive operations server-side
-
-## Troubleshooting
-
-### Config not loading on web
-
-**Check**: Browser console for "Loaded configuration from env.json"
-- If missing, verify `env.json` is in `assets/` and listed in `pubspec.yaml`
-- Run `flutter clean && flutter build web --release`
-
-### Getting empty values
-
-**Check**: Key names match exactly between `env.json` and your code
-- JSON is case-sensitive
-- No extra spaces in key names
-
-### 404 on env.json
-
-**Check**: File path in deployment
-- Should be at `https://your-app.web.app/assets/assets/env.json`
-- Note the double `assets/` - this is correct for Flutter web
-
-### Works locally but not deployed
-
-**Check**: You're testing the actual deployed URL, not local build
-- Clear browser cache
-- Use incognito/private browsing mode
-- Check Firebase Hosting deployment timestamp
-
-## Testing Checklist
-
-- [ ] Local web build works: `flutter run -d chrome`
-- [ ] Production build works: `flutter build web --release`
-- [ ] `env.json` is accessible at deployed URL
-- [ ] Console shows "Loaded configuration from env.json"
-- [ ] API calls use correct configuration values
-- [ ] Mobile builds still work with `.env`
-- [ ] No sensitive data in `env.json`
-
-## Related Files
-
-- `assets/env.json` - Web configuration file
-- `assets/.env` - Mobile configuration file (keep for backward compatibility)
-- `lib/config/app_config.dart` - Configuration loader
-- `lib/main.dart` - Initialization
-- `pubspec.yaml` - Asset declarations
-- `firebase.json` - Hosting configuration
-
-## References
-
-- [Flutter Web Deployment](https://docs.flutter.dev/deployment/web)
-- [Firebase Hosting Configuration](https://firebase.google.com/docs/hosting/full-config)
-- [flutter_dotenv Package](https://pub.dev/packages/flutter_dotenv)
 
 ---
 
-**Last Updated**: 2026-02-02  
-**Tested With**: Flutter 3.x, Firebase Hosting  
+## Build Commands
+
+```bash
+# Local dev (web)
+flutter run -d chrome --dart-define-from-file=config/env.web.json
+
+# Production build
+flutter build web --release --dart-define-from-file=config/env.web.json
+
+# Deploy
+firebase deploy --only hosting
+```
+
+---
+
+## CI/CD (GitHub Actions)
+
+Store the entire JSON blob as one repository secret `WEB_ENV_JSON`:
+
+```yaml
+- name: Build Flutter web
+  run: |
+    mkdir -p config
+    echo '${{ secrets.WEB_ENV_JSON }}' > config/env.web.json
+    flutter build web --release --dart-define-from-file=config/env.web.json
+
+- name: Deploy to Firebase
+  run: firebase deploy --only hosting --token ${{ secrets.FIREBASE_TOKEN }}
+```
+
+---
+
+## Security Classification
+
+| Value | In `config/env.web.json`? | Reason |
+|---|---|---|
+| Firebase API keys / App IDs | ✅ Yes | Public client identifiers; security via Security Rules |
+| Sanity project ID | ✅ Yes | Already visible in every CDN request URL |
+| Backend API URL | ✅ Yes | Not a secret |
+| Razorpay key_id | ✅ Yes | Public merchant identifier |
+| Gemini API key | ⚠️ Dev only | Risk: API quota abuse; use backend proxy in production |
+| Razorpay key_secret | ❌ Never | Server-side only — used to sign payment requests |
+| Backend signing tokens | ❌ Never | Server-side only |
+
+---
+
+## Troubleshooting
+
+### `NotInitializedError: DotEnv has not been initialized`
+
+**Cause**: Something reads `dotenv.env[key]` on web where dotenv is never loaded.  
+**Fix**: Ensure all web code paths go through `ConfigLoader.get()`, which guards with
+`dotenv.isInitialized` before touching `dotenv.env`.
+
+### Firebase init failed / null check crash on login
+
+**Cause**: `firebase_options.dart` hit the `windows` case on Chrome/Windows, which called
+`dotenv.env[...]` directly (not through ConfigLoader).  
+**Fix**: Add `if (kIsWeb) return web;` at the top of `currentPlatform`, before the switch.
+
+### Empty values in deployed app
+
+**Cause**: Build ran without `--dart-define-from-file`, so all `String.fromEnvironment()` calls
+returned `''`.  
+**Fix**: Always build with `--dart-define-from-file=config/env.web.json`.
+
+### Values present locally but empty after deploy
+
+**Cause**: CI pipeline didn't write `config/env.web.json` before the build step.  
+**Fix**: Add the secret injection step before `flutter build web`.
+
+---
+
+## Related Files
+
+| File | Purpose |
+|---|---|
+| `config/env.web.json` | Web build-time config (gitignored) |
+| `.env` / `.env.local` | Mobile/desktop config (gitignored, filesystem only) |
+| `lib/config/app_config.dart` | `ConfigLoader` — single source of truth for all config |
+| `lib/firebase_options.dart` | Firebase platform options using `ConfigLoader.get()` |
+| `lib/main.dart` | dotenv loading (mobile/desktop only) |
+| `pubspec.yaml` | Asset declarations (`.env` must NOT be listed) |
+| `firebase.json` | Hosting config — `"**/.*"` ignore must stay |
+
+---
+
+**Last Updated**: 2026-06-22
+**Flutter**: 3.x / Dart 3.x
+**firebase-tools**: 15.x
 **Status**: ✅ Production-ready

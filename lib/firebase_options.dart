@@ -3,11 +3,17 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, TargetPlatform;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:designwear/config/app_config.dart';
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
+    // kIsWeb must be checked before defaultTargetPlatform — on web, the host OS
+    // platform is still returned (e.g. windows on Chrome/Windows), which would
+    // hit the wrong case and read dotenv before it is loaded.
+    if (kIsWeb) {
+      return web;
+    }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
@@ -25,40 +31,54 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static String _get(String key) => ConfigLoader.get(key) ?? '';
+
+  // Web Firebase config comes from --dart-define-from-file=config/env.web.json
+  // at build time. Values are compiled into main.dart.js — no file is served.
+  // Firebase keys are non-secret by design (security is via Security Rules).
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: _get('FIREBASE_WEB_API_KEY'),
+    appId: _get('FIREBASE_WEB_APP_ID'),
+    messagingSenderId: _get('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: _get('FIREBASE_PROJECT_ID'),
+    storageBucket: _get('FIREBASE_STORAGE_BUCKET'),
+    authDomain: '${_get('FIREBASE_PROJECT_ID')}.firebaseapp.com',
+  );
+
   static FirebaseOptions get android => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+    apiKey: _get('FIREBASE_ANDROID_API_KEY'),
+    appId: _get('FIREBASE_ANDROID_APP_ID'),
+    messagingSenderId: _get('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: _get('FIREBASE_PROJECT_ID'),
+    storageBucket: _get('FIREBASE_STORAGE_BUCKET'),
   );
 
   static FirebaseOptions get ios => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
-    iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID'] ?? '',
+    apiKey: _get('FIREBASE_IOS_API_KEY'),
+    appId: _get('FIREBASE_IOS_APP_ID'),
+    messagingSenderId: _get('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: _get('FIREBASE_PROJECT_ID'),
+    storageBucket: _get('FIREBASE_STORAGE_BUCKET'),
+    iosBundleId: _get('FIREBASE_IOS_BUNDLE_ID'),
   );
 
   static FirebaseOptions get macos => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
-    iosBundleId: dotenv.env['FIREBASE_IOS_BUNDLE_ID'] ?? '',
+    apiKey: _get('FIREBASE_IOS_API_KEY'),
+    appId: _get('FIREBASE_IOS_APP_ID'),
+    messagingSenderId: _get('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: _get('FIREBASE_PROJECT_ID'),
+    storageBucket: _get('FIREBASE_STORAGE_BUCKET'),
+    iosBundleId: _get('FIREBASE_IOS_BUNDLE_ID'),
   );
 
   // Windows/Linux use web credentials — firebase_auth on desktop uses REST APIs.
   static FirebaseOptions get windows => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? dotenv.env['FIREBASE_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_WINDOWS_APP_ID']?.isNotEmpty == true
-        ? dotenv.env['FIREBASE_WINDOWS_APP_ID']!
-        : dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_MESSAGING_SENDER_ID'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    storageBucket: dotenv.env['FIREBASE_STORAGE_BUCKET'] ?? '',
+    apiKey: _get('FIREBASE_WEB_API_KEY'),
+    appId: _get('FIREBASE_WINDOWS_APP_ID').isNotEmpty
+        ? _get('FIREBASE_WINDOWS_APP_ID')
+        : _get('FIREBASE_WEB_APP_ID'),
+    messagingSenderId: _get('FIREBASE_MESSAGING_SENDER_ID'),
+    projectId: _get('FIREBASE_PROJECT_ID'),
+    storageBucket: _get('FIREBASE_STORAGE_BUCKET'),
   );
 }

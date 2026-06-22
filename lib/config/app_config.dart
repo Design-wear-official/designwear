@@ -14,11 +14,23 @@ class ConfigLoader {
     'USE_WEB_API': String.fromEnvironment('USE_WEB_API'),
     'GEMINI_API_KEY': String.fromEnvironment('GEMINI_API_KEY'),
     'RAZORPAY_KEY_ID': String.fromEnvironment('RAZORPAY_KEY_ID'),
+    // Firebase — all platforms
     'FIREBASE_PROJECT_ID': String.fromEnvironment('FIREBASE_PROJECT_ID'),
     'FIREBASE_API_KEY': String.fromEnvironment('FIREBASE_API_KEY'),
     'FIREBASE_APP_ID': String.fromEnvironment('FIREBASE_APP_ID'),
     'FIREBASE_MESSAGING_SENDER_ID': String.fromEnvironment('FIREBASE_MESSAGING_SENDER_ID'),
     'FIREBASE_STORAGE_BUCKET': String.fromEnvironment('FIREBASE_STORAGE_BUCKET'),
+    // Firebase — web / Windows
+    'FIREBASE_WEB_API_KEY': String.fromEnvironment('FIREBASE_WEB_API_KEY'),
+    'FIREBASE_WEB_APP_ID': String.fromEnvironment('FIREBASE_WEB_APP_ID'),
+    'FIREBASE_WINDOWS_APP_ID': String.fromEnvironment('FIREBASE_WINDOWS_APP_ID'),
+    // Firebase — Android
+    'FIREBASE_ANDROID_API_KEY': String.fromEnvironment('FIREBASE_ANDROID_API_KEY'),
+    'FIREBASE_ANDROID_APP_ID': String.fromEnvironment('FIREBASE_ANDROID_APP_ID'),
+    // Firebase — iOS / macOS
+    'FIREBASE_IOS_API_KEY': String.fromEnvironment('FIREBASE_IOS_API_KEY'),
+    'FIREBASE_IOS_APP_ID': String.fromEnvironment('FIREBASE_IOS_APP_ID'),
+    'FIREBASE_IOS_BUNDLE_ID': String.fromEnvironment('FIREBASE_IOS_BUNDLE_ID'),
   };
 
   static bool _initialized = false;
