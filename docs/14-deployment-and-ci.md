@@ -42,8 +42,19 @@ flutter build web --release \
 ### Hosting config — [`firebase.json`](../firebase.json)
 - `public: build/web`
 - SPA rewrite: `**` → `/index.html`
-- Long-cache (`max-age=31536000`) for `js|css|wasm`
-- Security headers: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`
+- **Cache-Control:** `no-cache` (revalidate) for everything **except** `/canvaskit/**`
+  which is `public, max-age=31536000, immutable`.
+  > ⚠️ Do **not** long-cache `main.dart.js`/`flutter_service_worker.js`/
+  > `flutter_bootstrap.js`/`index.html`. Flutter does **not** content-hash them,
+  > so a long `max-age` makes browsers serve a **stale app for up to a year**
+  > after each deploy. (This previously hid a fixed "+" button on the live site.)
+  > Only CanvasKit (versioned by SDK path) is safe to cache forever.
+- Security headers: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`,
+  `Cross-Origin-Opener-Policy: same-origin-allow-popups` (needed for Google Sign-In popups)
+
+> **After any deploy, returning users may need one hard refresh** (Ctrl/Cmd+Shift+R)
+> to break out of a previously long-cached bundle. With `no-cache` headers in
+> place going forward, subsequent deploys refresh automatically.
 
 ### Deploy
 ```bash

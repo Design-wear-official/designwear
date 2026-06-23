@@ -7,6 +7,7 @@ import 'package:designwear/services/services.dart';
 import 'package:designwear/screens/cart_screen.dart';
 import 'package:designwear/screens/login_screen.dart';
 import 'package:designwear/screens/profile_screen.dart';
+import 'package:designwear/screens/design_studio_screen.dart';
 
 /// Top sticky app bar matching demo `.top` element.
 /// Contains: brand wordmark, search field, Create button, avatar, settings gear.
@@ -176,7 +177,7 @@ class _CreateButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => const DesignStudioNavigator(),
+          builder: (_) => const DesignStudioScreen(),
           settings: const RouteSettings(name: '/design-studio'),
         ),
       ),
@@ -208,19 +209,6 @@ class _CreateButton extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-// Lazy import to avoid circular dependency
-class DesignStudioNavigator extends StatelessWidget {
-  const DesignStudioNavigator({super.key});
-  @override
-  Widget build(BuildContext context) {
-    // Import lazily via builder to avoid circular deps at top-level
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.of(context).pushReplacementNamed('/design-studio');
-    });
-    return const SizedBox.shrink();
   }
 }
 

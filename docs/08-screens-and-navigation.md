@@ -43,10 +43,13 @@ The canonical route-name strings are centralized in
 | `AppRoutes.paymentMethods` | `/payment-methods` |
 | `AppRoutes.searchResults` | `/search` |
 
-> **Heads-up:** Because there's no `routes`/`onGenerateRoute` table, prefer
-> `Navigator.push(MaterialPageRoute(...))`. A few call sites use
-> `pushReplacementNamed(...)`; if you rely on named routing, register a route
-> table or `onGenerateRoute` in `MaterialApp` first.
+> **Heads-up:** There is no `routes`/`onGenerateRoute` table, so **named-route
+> navigation does not resolve**. Always use `Navigator.push(MaterialPageRoute(...))`
+> and pass the `AppRoutes` constant only as the `RouteSettings(name:)` (for the
+> logging route observer). Do **not** use `pushNamed`/`pushReplacementNamed`
+> unless you first register a route table in `MaterialApp`. (A past bug: the
+> home "+" Create button used `pushReplacementNamed('/design-studio')` and never
+> opened the studio — now fixed to a direct `MaterialPageRoute` push.)
 
 ---
 

@@ -27,6 +27,7 @@ here, then dive into the area you need.
 | 13 | [Sanity CMS](13-sanity-cms.md) | Content schemas, datasets, studio |
 | 14 | [Deployment & CI/CD](14-deployment-and-ci.md) | Web/Android/iOS builds, Firebase Hosting, Vercel, GitHub Actions |
 | 15 | [Troubleshooting](15-troubleshooting.md) | Common issues and fixes |
+| 16 | [Design Studio — Build Roadmap](16-design-studio-roadmap.md) | Current-state assessment + phased plan to complete the Design Studio |
 
 ### Existing topical docs (kept as-is)
 

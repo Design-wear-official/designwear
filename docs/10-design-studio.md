@@ -5,6 +5,10 @@ feature. This page documents the module's architecture, state, data model,
 constants, and how AI plugs in. For the user-facing feature changelog see
 [DESIGN_STUDIO_FEATURES.md](DESIGN_STUDIO_FEATURES.md).
 
+> **See also:** [16 · Design Studio — Build Roadmap](16-design-studio-roadmap.md)
+> — current-state gap assessment and the phased plan to complete the studio
+> (canvas UX, lossless persistence/publish, garment coverage, AI layers).
+
 ---
 
 ## Entry point
