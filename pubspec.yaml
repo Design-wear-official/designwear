@@ -52,5 +52,3 @@ flutter:
   assets:
     - assets/images/
     - assets/system_prompt.txt
-    - .env
-    - .env.local

@@ -68,12 +68,19 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Consumer<CartService>(
-          builder: (_, cs, __) => Text(
-            cs.isEmpty ? 'Cart' : 'Cart (${cs.itemCount})',
-            style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 18),
+          builder: (_, cs, __) => ShaderMask(
+            shaderCallback: (bounds) => AppColors.goldGradient.createShader(bounds),
+            child: Text(
+              cs.isEmpty ? 'My Cart' : 'My Cart (${cs.itemCount})',
+              style: GoogleFonts.outfit(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
         centerTitle: true,
@@ -308,11 +315,23 @@ class _CartItemTile extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.cardDark
+              : AppColors.cardLight,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.12)),
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.hairDark
+                : AppColors.hairLight,
+          ),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2)),
+            BoxShadow(
+              color: Colors.black.withOpacity(
+                Theme.of(context).brightness == Brightness.dark ? 0.18 : 0.06,
+              ),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
         ),
         child: Row(
@@ -413,10 +432,12 @@ class _QuantityControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: colorScheme.outline.withOpacity(0.3)),
+        border: Border.all(
+          color: isDark ? AppColors.hairDark : AppColors.hairLight,
+        ),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -540,11 +561,15 @@ class _CouponSection extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: couponLoading ? null : onApply,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.gold,
+                  foregroundColor: AppColors.textOnGold,
+                  disabledBackgroundColor: AppColors.gold.withOpacity(0.4),
+                  elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                 ),
                 child: couponLoading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textOnGold))
                     : Text('APPLY', style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 13)),
               ),
             ),
@@ -643,6 +668,7 @@ class _PriceRow extends StatelessWidget {
 class _EmptyCart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Padding(
@@ -650,33 +676,77 @@ class _EmptyCart extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.shopping_cart_outlined,
-              size: 90,
-              color: colorScheme.onSurface.withOpacity(0.2),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDark
+                    ? AppColors.surface
+                    : AppColors.gray900,
+                border: Border.all(
+                  color: isDark ? AppColors.hairDark : AppColors.hairLight,
+                ),
+              ),
+              child: Icon(
+                Icons.shopping_cart_outlined,
+                size: 52,
+                color: isDark
+                    ? AppColors.textSecondary
+                    : AppColors.gray500,
+              ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Text(
               'Your cart is empty',
               style: GoogleFonts.outfit(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               'Add items to your cart to get started',
-              style: GoogleFonts.outfit(color: colorScheme.onSurface.withOpacity(0.45)),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.outfit(
+                fontSize: 14,
+                color: colorScheme.onSurface.withOpacity(0.5),
+              ),
             ),
-            const SizedBox(height: 28),
-            ElevatedButton.icon(
-              onPressed: () => Navigator.pop(context),
-              icon: const Icon(Icons.arrow_back, size: 18),
-              label: Text('Continue Shopping', style: GoogleFonts.outfit(fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: 220,
+              height: 50,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: AppColors.goldGradient,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.gold.withOpacity(0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                  label: Text(
+                    'Continue Shopping',
+                    style: GoogleFonts.outfit(fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: AppColors.textOnGold,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

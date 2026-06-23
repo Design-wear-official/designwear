@@ -165,6 +165,7 @@ class AuthService extends ChangeNotifier {
         email: email,
         password: password,
       );
+      if (cred.user == null) throw Exception('Sign-in returned no user');
       await _saveFirebaseUser(cred.user!);
     } on fb.FirebaseAuthException catch (e) {
       throw Exception(_friendlyFirebaseError(e.code));
@@ -184,9 +185,12 @@ class AuthService extends ChangeNotifier {
     try {
       final cred = await fb.FirebaseAuth.instance
           .createUserWithEmailAndPassword(email: email, password: password);
+      if (cred.user == null) throw Exception('Sign-up returned no user');
       await cred.user!.updateDisplayName(name);
       await cred.user!.reload();
-      await _saveFirebaseUser(fb.FirebaseAuth.instance.currentUser!);
+      final refreshed = fb.FirebaseAuth.instance.currentUser;
+      if (refreshed == null) throw Exception('User lost after reload');
+      await _saveFirebaseUser(refreshed);
     } on fb.FirebaseAuthException catch (e) {
       throw Exception(_friendlyFirebaseError(e.code));
     } on SocketException {
@@ -205,6 +209,7 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
     try {
       final cred = await fb.FirebaseAuth.instance.signInAnonymously();
+      if (cred.user == null) throw Exception('Anonymous sign-in returned no user');
       await _saveFirebaseUser(cred.user!, isGuest: true);
     } on fb.FirebaseAuthException catch (e) {
       throw Exception(_friendlyFirebaseError(e.code));
@@ -231,22 +236,37 @@ class AuthService extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
     try {
-      // google-services.json injects default_web_client_id on Android at build time.
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) return;
+      if (kIsWeb) {
+        // On web, google_sign_in requires a clientId which we don't configure.
+        // Use Firebase's built-in popup flow instead — no extra setup needed.
+        final provider = fb.GoogleAuthProvider();
+        final result =
+            await fb.FirebaseAuth.instance.signInWithPopup(provider);
+        if (result.user == null) {
+          throw Exception('Google sign-in returned no user');
+        }
+        await _saveFirebaseUser(result.user!);
+      } else {
+        // Mobile / macOS: use google_sign_in package.
+        // google-services.json injects default_web_client_id on Android at build time.
+        final googleUser = await GoogleSignIn().signIn();
+        if (googleUser == null) return;
 
-      final googleAuth = await googleUser.authentication;
-      final idToken = googleAuth.idToken;
-      if (idToken == null) throw Exception('Google did not return an ID token');
+        final googleAuth = await googleUser.authentication;
+        final idToken = googleAuth.idToken;
+        if (idToken == null) throw Exception('Google did not return an ID token');
 
-      final credential = fb.GoogleAuthProvider.credential(
-        idToken: idToken,
-        accessToken: googleAuth.accessToken,
-      );
-      final cred =
-          await fb.FirebaseAuth.instance.signInWithCredential(credential);
-      if (cred.user == null) throw Exception('Firebase sign-in returned no user');
-      await _saveFirebaseUser(cred.user!);
+        final credential = fb.GoogleAuthProvider.credential(
+          idToken: idToken,
+          accessToken: googleAuth.accessToken,
+        );
+        final cred =
+            await fb.FirebaseAuth.instance.signInWithCredential(credential);
+        if (cred.user == null) {
+          throw Exception('Firebase sign-in returned no user');
+        }
+        await _saveFirebaseUser(cred.user!);
+      }
     } on SocketException {
       throw Exception(
           'No internet connection. Please check your WiFi or mobile data.');
