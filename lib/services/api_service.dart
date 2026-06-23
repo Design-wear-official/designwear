@@ -293,6 +293,10 @@ class ApiService {
     String? remixedFromVersion,
     List<Map<String, String>> lineage = const [],
     List<String> tags = const [],
+    // Full serialised CustomDesign so the published product is lossless.
+    Map<String, dynamic>? designJson,
+    // base64-encoded PNG preview of the rendered canvas (becomes the thumbnail).
+    String? previewImageBase64,
   }) async {
     final uri = Uri.parse('${webApiBaseUrl ?? _fallbackBaseUrl}/publish-remix');
     final response = await http
@@ -311,9 +315,11 @@ class ApiService {
             'remixedFromVersion': remixedFromVersion,
             'lineage': lineage,
             'tags': tags,
+            'designJson': designJson,
+            'previewImageBase64': previewImageBase64,
           }),
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(const Duration(seconds: 45));
 
     final data = jsonDecode(response.body) as Map<String, dynamic>;
     if (response.statusCode == 200 && data['success'] == true) {

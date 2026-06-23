@@ -23,7 +23,7 @@ enum Flavor { internal, external }
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(); // Android/iOS: native plugin provides options
   debugPrint("Handling a background message: ${message.messageId}");
 }
 
@@ -48,17 +48,27 @@ Future<void> mainCommon(Flavor flavor) async {
   }
 
   final isDesktop = !kIsWeb && (Platform.isWindows || Platform.isLinux);
+  // Mobile (Android/iOS) uses google-services.json / GoogleService-Info.plist
+  // compiled in by the native Gradle/Xcode plugin — no env vars needed.
+  final isMobile = !kIsWeb && !isDesktop;
 
-  // Skip Firebase when no credentials are configured (e.g. running without .env)
-  final hasFirebaseCreds = kIsWeb ||
-      (dotenv.env['FIREBASE_ANDROID_API_KEY']?.isNotEmpty ?? false) ||
+  // Skip Firebase only on desktop/web when no credentials are configured.
+  final hasFirebaseCreds = isMobile ||
+      kIsWeb ||
       (isDesktop && (dotenv.env['FIREBASE_WEB_API_KEY']?.isNotEmpty ?? false));
 
   if (hasFirebaseCreds) {
     try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
+      // Android/iOS: omit options — the native Gradle/Xcode plugin reads
+      // google-services.json at build time and injects credentials as resources.
+      // Web/desktop: pass options explicitly from env / config.
+      if (isMobile) {
+        await Firebase.initializeApp();
+      } else {
+        await Firebase.initializeApp(
+          options: DefaultFirebaseOptions.currentPlatform,
+        );
+      }
 
       // Crashlytics is not supported on Windows/Linux.
       if (!kIsWeb && !isDesktop) {

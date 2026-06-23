@@ -7,3 +7,4 @@ export 'stickers_tab.dart';
 export 'templates_tab.dart';
 export 'text_controls_widget.dart';
 export 'text_tab.dart';
+export 'transformable_element_widget.dart';

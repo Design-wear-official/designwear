@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:designwear/config/config.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:designwear/services/logging_service.dart';
@@ -54,12 +55,22 @@ class AuthService extends ChangeNotifier {
   }
 
   Future<void> _initFcm() async {
-    final messaging = FirebaseMessaging.instance;
-    await messaging.requestPermission(alert: true, badge: true, sound: true);
-    messaging.getToken().then((token) {
-      if (token != null) _syncFcmToken(token);
-    });
-    messaging.onTokenRefresh.listen(_syncFcmToken);
+    // Guard: if Firebase was never initialized (demo / no-google-services mode)
+    // there is nothing to do — accessing FirebaseMessaging.instance would throw.
+    if (Firebase.apps.isEmpty) {
+      debugPrint('ℹ️ FCM init skipped: Firebase not initialized');
+      return;
+    }
+    try {
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+      messaging.getToken().then((token) {
+        if (token != null) _syncFcmToken(token);
+      });
+      messaging.onTokenRefresh.listen(_syncFcmToken);
+    } catch (e) {
+      debugPrint('ℹ️ FCM init skipped: $e');
+    }
   }
 
   Future<void> _syncFcmToken(String token) async {
@@ -227,6 +238,18 @@ class AuthService extends ChangeNotifier {
   static bool get isGoogleSignInSupported =>
       kIsWeb || !(Platform.isWindows || Platform.isLinux);
 
+  // google_sign_in 7.x requires explicit initialize() with the web client ID
+  // before authenticate() is called on Android.
+  static bool _googleSignInInitialized = false;
+  static const _webClientId =
+      '350351347585-0pnnds7cvia2salbb6nqj2a3p6mq372q.apps.googleusercontent.com';
+
+  static Future<void> _ensureGoogleSignInInitialized() async {
+    if (_googleSignInInitialized) return;
+    await GoogleSignIn.instance.initialize(serverClientId: _webClientId);
+    _googleSignInInitialized = true;
+  }
+
   Future<void> signInWithGoogle() async {
     if (!isGoogleSignInSupported) {
       throw Exception(
@@ -248,17 +271,14 @@ class AuthService extends ChangeNotifier {
         await _saveFirebaseUser(result.user!);
       } else {
         // Mobile / macOS: use google_sign_in package.
-        // google-services.json injects default_web_client_id on Android at build time.
-        final googleUser = await GoogleSignIn().signIn();
-        if (googleUser == null) return;
-
-        final googleAuth = await googleUser.authentication;
+        await _ensureGoogleSignInInitialized();
+        final googleUser = await GoogleSignIn.instance.authenticate();
+        final googleAuth = googleUser.authentication;
         final idToken = googleAuth.idToken;
         if (idToken == null) throw Exception('Google did not return an ID token');
 
         final credential = fb.GoogleAuthProvider.credential(
           idToken: idToken,
-          accessToken: googleAuth.accessToken,
         );
         final cred =
             await fb.FirebaseAuth.instance.signInWithCredential(credential);
@@ -385,9 +405,10 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_payment_methods');
     await prefs.remove('auth_isGuest');
 
-    if (isGoogleSignInSupported) {
+    if (isGoogleSignInSupported && !kIsWeb) {
       try {
-        await GoogleSignIn().signOut();
+        await _ensureGoogleSignInInitialized();
+        await GoogleSignIn.instance.signOut();
       } catch (_) {}
     }
     try {

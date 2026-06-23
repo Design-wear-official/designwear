@@ -24,6 +24,8 @@ plugins {
     id("com.google.gms.google-services") version("4.4.2") apply false
     id("com.google.firebase.crashlytics") version("3.0.1") apply false
     // END: FlutterFire Configuration
+    // Declare Kotlin version so Flutter's built-in Kotlin plugin and plugins
+    // like share_plus that ship Kotlin 2.2.x stdlib can compile without mismatch.
     id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
 

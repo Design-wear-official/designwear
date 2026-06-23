@@ -1,9 +1,10 @@
+import 'package:designwear/config/app_constants.dart';
 import 'package:designwear/models/models.dart';
 
 class DesignHistoryService {
   final List<CustomDesign> _history = [];
   int _currentIndex = -1;
-  static const int maxHistorySize = 50;
+  static const int maxHistorySize = AppConstants.maxUndoHistory;
 
   void clear() {
     _history.clear();

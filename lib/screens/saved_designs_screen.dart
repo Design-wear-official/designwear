@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
@@ -105,15 +106,7 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
                 ),
                 child: ListTile(
                   contentPadding: ResponsiveSizes.contentPadding(context),
-                  leading: CircleAvatar(
-                    backgroundColor: AppColors.accentBlue,
-                    radius: 30,
-                    child: Icon(
-                      Icons.design_services,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
+                  leading: _buildThumbnail(design),
                   title: Text(
                     design.name,
                     style: GoogleFonts.outfit(
@@ -200,6 +193,34 @@ class _SavedDesignsScreenState extends State<SavedDesignsScreen> {
         backgroundColor: AppColors.accentBlue,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+    );
+  }
+
+  Widget _buildThumbnail(SavedDesign saved) {
+    final thumb = saved.thumbnailPath;
+    if (thumb != null && thumb.isNotEmpty) {
+      try {
+        final bytes = base64Decode(thumb);
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.memory(
+            bytes,
+            width: 60,
+            height: 60,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => _defaultLeadingIcon(),
+          ),
+        );
+      } catch (_) {}
+    }
+    return _defaultLeadingIcon();
+  }
+
+  Widget _defaultLeadingIcon() {
+    return CircleAvatar(
+      backgroundColor: AppColors.accentBlue,
+      radius: 30,
+      child: const Icon(Icons.design_services, color: Colors.white, size: 24),
     );
   }
 

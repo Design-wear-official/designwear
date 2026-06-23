@@ -131,4 +131,24 @@ class DesignStudioConstants {
   // Panel dimensions
   static const double templatesPanelWidth = 300;
   static const double layersPanelWidth = 280;
+
+  // ── Print / design area ───────────────────────────────────────────────────
+  // Bounds in element coordinate space (offset from the canvas anchor at
+  // elementCanvasOffsetX/Y). Matches the AI prompt's x:-130..130, y:-100..200.
+  static const double printAreaMinX = -130;
+  static const double printAreaMaxX = 130;
+  static const double printAreaMinY = -100;
+  static const double printAreaMaxY = 200;
+
+  // ── Element transform limits ──────────────────────────────────────────────
+  static const double minElementSize = 12;
+  static const double maxElementSize = 220;
+  static const double defaultImageSize = 150;
+  static const double defaultShapeSize = 80;
+
+  // Center-snapping threshold (logical px) while dragging.
+  static const double snapThreshold = 7;
+
+  // Shapes available in the Shapes source.
+  static const List<String> availableShapes = ['rect', 'circle', 'triangle', 'line'];
 }

@@ -7,6 +7,7 @@ import 'design_studio_utils.dart';
 class LayersPanel extends StatelessWidget {
   final CustomDesign design;
   final String? selectedElementId;
+  final String? provenanceLabel;
   final Function(String?) onElementSelected;
   final Function(String) onDuplicateElement;
   final Function(String) onDeleteElement;
@@ -22,6 +23,7 @@ class LayersPanel extends StatelessWidget {
     required this.onDuplicateElement,
     required this.onDeleteElement,
     required this.onReorderElements,
+    this.provenanceLabel,
     this.onClose,
     this.onAddLayerTap,
   });
@@ -62,16 +64,18 @@ class LayersPanel extends StatelessWidget {
               ),
             ),
           
-          Text(
-            'Inherited from @aanya',
-            style: GoogleFonts.spaceMono(
-              fontWeight: FontWeight.bold,
-              fontSize: 11.5,
-              color: AppColors.stone,
-              letterSpacing: 0.5,
+          if (provenanceLabel != null) ...[
+            Text(
+              'Inherited $provenanceLabel',
+              style: GoogleFonts.spaceMono(
+                fontWeight: FontWeight.bold,
+                fontSize: 11.5,
+                color: AppColors.stone,
+                letterSpacing: 0.5,
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
+            const SizedBox(height: 10),
+          ],
 
           // Layers List
           Expanded(child: _buildLayersList(context)),

@@ -1,7 +1,8 @@
 enum DesignElementType {
   text,
   sticker,
-  shape;
+  shape,
+  image;
 
   /// Serialised value written to/read from JSON.
   String get value => name;
@@ -9,18 +10,41 @@ enum DesignElementType {
   static DesignElementType fromString(String v) => switch (v) {
     'sticker' => DesignElementType.sticker,
     'shape'   => DesignElementType.shape,
+    'image'   => DesignElementType.image,
     _         => DesignElementType.text,
   };
+}
+
+/// Which face of the garment an element lives on.
+enum DesignSide {
+  front,
+  back;
+
+  String get value => name;
+  static DesignSide fromString(String? v) =>
+      v == 'back' ? DesignSide.back : DesignSide.front;
 }
 
 class DesignElement {
   final String id;
   final DesignElementType type;
+  /// Text string, emoji, shape name ('rect'|'circle'|'triangle'|'line'), or
+  /// base64-encoded PNG bytes for [DesignElementType.image].
   final String content;
   final double x;
   final double y;
+  /// Font size (text) / emoji size (sticker). Shapes & images use [width]/[height].
   final double size;
   final String color;
+  /// Clockwise rotation in degrees.
+  final double rotation;
+  /// Box width/height for shape & image elements (logical px). Null for text/sticker.
+  final double? width;
+  final double? height;
+  /// 0.0 (transparent) .. 1.0 (opaque).
+  final double opacity;
+  /// Which garment face this element is printed on.
+  final DesignSide side;
   final Map<String, dynamic> properties;
 
   DesignElement({
@@ -31,6 +55,11 @@ class DesignElement {
     this.y = 0,
     this.size = 20,
     this.color = '0xFF000000',
+    this.rotation = 0,
+    this.width,
+    this.height,
+    this.opacity = 1.0,
+    this.side = DesignSide.front,
     this.properties = const {},
   });
 
@@ -42,6 +71,11 @@ class DesignElement {
     double? y,
     double? size,
     String? color,
+    double? rotation,
+    double? width,
+    double? height,
+    double? opacity,
+    DesignSide? side,
     Map<String, dynamic>? properties,
   }) {
     return DesignElement(
@@ -52,6 +86,11 @@ class DesignElement {
       y: y ?? this.y,
       size: size ?? this.size,
       color: color ?? this.color,
+      rotation: rotation ?? this.rotation,
+      width: width ?? this.width,
+      height: height ?? this.height,
+      opacity: opacity ?? this.opacity,
+      side: side ?? this.side,
       properties: properties ?? Map.from(this.properties),
     );
   }
@@ -65,6 +104,11 @@ class DesignElement {
       'y': y,
       'size': size,
       'color': color,
+      'rotation': rotation,
+      'width': width,
+      'height': height,
+      'opacity': opacity,
+      'side': side.value,
       'properties': properties,
     };
   }
@@ -78,6 +122,11 @@ class DesignElement {
       y: (json['y'] as num?)?.toDouble() ?? 0,
       size: (json['size'] as num?)?.toDouble() ?? 20,
       color: json['color'] ?? '0xFF000000',
+      rotation: (json['rotation'] as num?)?.toDouble() ?? 0,
+      width: (json['width'] as num?)?.toDouble(),
+      height: (json['height'] as num?)?.toDouble(),
+      opacity: (json['opacity'] as num?)?.toDouble() ?? 1.0,
+      side: DesignSide.fromString(json['side'] as String?),
       properties: Map<String, dynamic>.from(json['properties'] ?? {}),
     );
   }
@@ -205,6 +254,8 @@ class CustomDesign {
       'updatedAt': updatedAt?.toIso8601String(),
       'collarStyle': collarStyle,
       'pocketStyle': pocketStyle,
+      // Persisted so saved/published designs keep their AI graphic (was dropped before).
+      'designImageBase64': designImageBase64,
     };
   }
 
@@ -237,12 +288,21 @@ class CustomDesign {
           : null,
       collarStyle: json['collarStyle'] ?? 'crew',
       pocketStyle: json['pocketStyle'] ?? 'none',
+      designImageBase64: json['designImageBase64'] as String?,
     );
   }
 
   // Helper methods for design history and templates
   bool get isEmpty =>
       text.isEmpty && sticker.isEmpty && elements.isEmpty && templateId.isEmpty;
+
+  /// Elements printed on the given garment face, in z-order.
+  List<DesignElement> elementsForSide(DesignSide side) =>
+      elements.where((e) => e.side == side).toList();
+
+  /// True once any image layer exists (AI-generated or uploaded).
+  bool get hasImageElement =>
+      elements.any((e) => e.type == DesignElementType.image);
 
   CustomDesign addElement(DesignElement element) {
     return copyWith(elements: [...elements, element]);

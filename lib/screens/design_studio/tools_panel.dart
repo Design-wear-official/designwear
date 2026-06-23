@@ -40,6 +40,12 @@ class ToolsPanel extends StatelessWidget {
       'iconFilled': Icons.emoji_emotions,
     },
     {
+      'id': 'shapes',
+      'label': 'Shapes',
+      'iconOutline': Icons.category_outlined,
+      'iconFilled': Icons.category,
+    },
+    {
       'id': 'place',
       'label': 'Placement',
       'iconOutline': Icons.aspect_ratio_outlined,
