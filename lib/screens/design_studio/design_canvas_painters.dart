@@ -23,6 +23,53 @@ class CanvasGridPainter extends CustomPainter {
   bool shouldRepaint(CanvasGridPainter old) => old.color != color;
 }
 
+/// Draws marigold dashed centre lines while an element snaps to centre.
+class SnapGuidePainter extends CustomPainter {
+  final bool vertical;
+  final bool horizontal;
+  final Color color;
+
+  const SnapGuidePainter({
+    required this.vertical,
+    required this.horizontal,
+    required this.color,
+  });
+
+  void _dashedLine(Canvas canvas, Offset a, Offset b, Paint paint) {
+    const dash = 6.0, gap = 4.0;
+    final total = (b - a).distance;
+    final dir = (b - a) / total;
+    double drawn = 0;
+    while (drawn < total) {
+      final start = a + dir * drawn;
+      final end = a + dir * math.min(drawn + dash, total);
+      canvas.drawLine(start, end, paint);
+      drawn += dash + gap;
+    }
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.0;
+    if (vertical) {
+      _dashedLine(canvas, Offset(size.width / 2, 0),
+          Offset(size.width / 2, size.height), paint);
+    }
+    if (horizontal) {
+      _dashedLine(canvas, Offset(0, size.height / 2),
+          Offset(size.width, size.height / 2), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(SnapGuidePainter old) =>
+      old.vertical != vertical ||
+      old.horizontal != horizontal ||
+      old.color != color;
+}
+
 /// Draws collar, pocket, sleeve-cuff and fabric-finish overlays on the t-shirt.
 /// Coordinates calibrated for tshirt_white.png at 300px in a 332×407 canvas.
 class GarmentOverlayPainter extends CustomPainter {

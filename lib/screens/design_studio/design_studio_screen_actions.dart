@@ -156,6 +156,124 @@ extension _ActionMethods on _DesignStudioScreenState {
   void _reorderElements(int oldIndex, int newIndex) =>
       _updateDesign(_design.reorderElements(oldIndex, newIndex));
 
+  // ── Selected-element editing helpers ─────────────────────────────────────────
+
+  DesignElement? get _selectedElement => _design.elements
+      .cast<DesignElement?>()
+      .firstWhere((e) => e?.id == _selectedElementId, orElse: () => null);
+
+  void _nudgeSelected(double dx, double dy) {
+    final el = _selectedElement;
+    if (el == null) return;
+    final nx = (el.x + dx).clamp(
+        DesignStudioConstants.printAreaMinX, DesignStudioConstants.printAreaMaxX);
+    final ny = (el.y + dy).clamp(
+        DesignStudioConstants.printAreaMinY, DesignStudioConstants.printAreaMaxY);
+    _updateDesign(_design.updateElement(
+        el.id, el.copyWith(x: nx.toDouble(), y: ny.toDouble())));
+  }
+
+  /// Live opacity preview while dragging the slider (no history entry).
+  void _previewSelectedOpacity(double value) {
+    final el = _selectedElement;
+    if (el == null) return;
+    _previewElement(el.copyWith(opacity: value.clamp(0.0, 1.0)));
+  }
+
+  void _toggleFlip(String axis) {
+    final el = _selectedElement;
+    if (el == null) return;
+    final props = Map<String, dynamic>.from(el.properties)
+      ..[axis] = !(el.properties[axis] ?? false);
+    _updateDesign(
+        _design.updateElement(el.id, el.copyWith(properties: props)));
+  }
+
+  void _bringForwardSelected() {
+    final id = _selectedElementId;
+    if (id == null) return;
+    final sideElements = _design.elementsForSide(_side);
+    final idx = sideElements.indexWhere((e) => e.id == id);
+    if (idx >= 0 && idx < sideElements.length - 1) _reorderElements(idx, idx + 1);
+  }
+
+  void _sendBackSelected() {
+    final id = _selectedElementId;
+    if (id == null) return;
+    final sideElements = _design.elementsForSide(_side);
+    final idx = sideElements.indexWhere((e) => e.id == id);
+    if (idx > 0) _reorderElements(idx, idx - 1);
+  }
+
+  /// Opens the text editor pre-filled to edit an existing text element.
+  void _editElement(String id) {
+    final el = _design.elements
+        .cast<DesignElement?>()
+        .firstWhere((e) => e?.id == id, orElse: () => null);
+    if (el == null || el.type != DesignElementType.text) return;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => EnhancedTextEditor(
+        templateService: _templateService,
+        initialText: el.content,
+        initialFont: el.properties['fontFamily'] as String? ?? 'Outfit',
+        onAddTextElement: (text, font) {
+          final props = Map<String, dynamic>.from(el.properties)
+            ..['fontFamily'] = font;
+          _updateDesign(_design.updateElement(
+              id, el.copyWith(content: text, properties: props)));
+        },
+      ),
+    );
+  }
+
+  // ── Keyboard shortcuts (desktop / web) ───────────────────────────────────────
+
+  KeyEventResult _handleKey(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent) return KeyEventResult.ignored;
+    final key = event.logicalKey;
+
+    if (key == LogicalKeyboardKey.escape) {
+      if (_selectedElementId == null) return KeyEventResult.ignored;
+      setState(() => _selectedElementId = null);
+      return KeyEventResult.handled;
+    }
+
+    final id = _selectedElementId;
+    if (id == null) return KeyEventResult.ignored;
+
+    final hw = HardwareKeyboard.instance;
+    final ctrl = hw.isControlPressed || hw.isMetaPressed;
+    final step = hw.isShiftPressed ? 10.0 : 1.0;
+
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      _nudgeSelected(-step, 0);
+    } else if (key == LogicalKeyboardKey.arrowRight) {
+      _nudgeSelected(step, 0);
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      _nudgeSelected(0, -step);
+    } else if (key == LogicalKeyboardKey.arrowDown) {
+      _nudgeSelected(0, step);
+    } else if (key == LogicalKeyboardKey.delete ||
+        key == LogicalKeyboardKey.backspace) {
+      _deleteElement(id);
+    } else if (ctrl && key == LogicalKeyboardKey.keyD) {
+      _duplicateElement(id);
+    } else if (ctrl && key == LogicalKeyboardKey.bracketRight) {
+      _bringForwardSelected();
+    } else if (ctrl && key == LogicalKeyboardKey.bracketLeft) {
+      _sendBackSelected();
+    } else {
+      return KeyEventResult.ignored;
+    }
+    return KeyEventResult.handled;
+  }
+
   void _toggleTextEffect(DesignElement element, String effect) {
     final props = Map<String, dynamic>.from(element.properties)
       ..[effect] = !(element.properties[effect] ?? false);

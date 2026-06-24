@@ -20,8 +20,11 @@ class DesignCanvas extends StatelessWidget {
   final ValueChanged<DesignElement> onElementPreview;
   final VoidCallback onElementCommit;
   final ValueChanged<String> onElementDelete;
+  final ValueChanged<String>? onElementEdit;
   final ValueChanged<DesignSide> onSideChanged;
   final GlobalKey? canvasKey;
+  /// Live centre-snap guide state, toggled by element drags.
+  final ValueNotifier<({bool v, bool h})>? snapGuides;
 
   const DesignCanvas({
     super.key,
@@ -32,10 +35,12 @@ class DesignCanvas extends StatelessWidget {
     required this.onElementCommit,
     required this.onElementDelete,
     required this.onSideChanged,
+    this.onElementEdit,
     this.garmentType = 'tshirt',
     this.side = DesignSide.front,
     this.provenanceLabel,
     this.canvasKey,
+    this.snapGuides,
   });
 
   bool get _showBack => side == DesignSide.back;
@@ -152,10 +157,32 @@ class DesignCanvas extends StatelessWidget {
                         onPreview: (updated) => onElementPreview(updated),
                         onCommit: onElementCommit,
                         onDelete: () => onElementDelete(element.id),
+                        onEdit: onElementEdit == null
+                            ? null
+                            : () => onElementEdit!(element.id),
+                        onSnapChanged: (v, h) =>
+                            snapGuides?.value = (v: v, h: h),
                         child: DesignElementWidget(element: element),
                       ),
                     ),
                   ),
+
+              // Centre-snap guide lines (shown only while dragging onto centre)
+              if (snapGuides != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ValueListenableBuilder<({bool v, bool h})>(
+                      valueListenable: snapGuides!,
+                      builder: (_, g, __) => CustomPaint(
+                        painter: SnapGuidePainter(
+                          vertical: g.v,
+                          horizontal: g.h,
+                          color: AppColors.marigold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
 
               // Provenance chip (top-left) — driven by remix source
               if (provenanceLabel != null)

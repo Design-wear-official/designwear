@@ -106,9 +106,9 @@ Tap the rainbow `+` circle at the end of the swatches. A dialog prompts for a `#
 
 `design.trimColor` is `'auto'` (derive a contrasting shade from the fabric colour — legacy behaviour) or a hex string. The "Auto" pill resets to `'auto'`; the `trimSwatches` row sets an explicit accent. The canvas resolves it to a `Color?` (`null` when `'auto'`) and passes it to `GarmentOverlayPainter.trimColor`, which recolours the collar, pocket stitching and sleeve cuffs.
 
-### Sleeve cuffs & Fabric finish
+### Garment construction lives under the Shapes tool
 
-Two more style-chip sections drive `design.sleeveCuff` (`none`/`banded`/`rolled`) and `design.fabricFinish` (`solid`/`heather`/`vintage`). Both render in `GarmentOverlayPainter` — cuffs as accent bands at the sleeve hems, finish as a torso-clipped texture (heather flecks / vintage wash).
+`collarStyle`, `pocketStyle`, `sleeveCuff` and `fabricFinish` are **not** in the Colour panel — they moved to the **Shapes** tool (`_buildShapesPane()` → `GarmentOptions` widget at `widgets/garment_options.dart`), since "Shapes" owns garment form and "Colours" owns colour. `sleeveCuff` is `none`/`banded`/`rolled`; `fabricFinish` is `solid`/`heather`/`vintage`. All four render in `GarmentOverlayPainter` — cuffs as accent bands at the sleeve hems, finish as a torso-clipped texture (heather flecks / vintage wash). The **Trim / Accent** colour (`trimColor`) stays in the Colour panel and recolours these overlays.
 
 ---
 
@@ -157,9 +157,10 @@ Five tools, each renders a pane via `_buildActivePaneContent()`:
 | Tool ID | Pane |
 |---|---|
 | `layers` | `LayersPanel` — reorder / delete layers |
-| `color` | `ColorPanel` — colour swatches + collar + pocket |
+| `color` | `ColorPanel` — fabric swatches, recents, palettes, trim/accent |
 | `text` | `TextTab` — font picker + text input |
 | `emoji` | `StickersTab` — emoji grid |
+| `shapes` | `_buildShapesPane()` — garment construction (`GarmentOptions`) + add shape primitives |
 | `place` | `PlacementPanel` — print location selector |
 
 ---

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -58,6 +59,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   late DateTime _lastAutoSave = DateTime.now();
   bool _isPublishing = false;
 
+  // Live centre-snap guide state, shared with the canvas + element drags.
+  final ValueNotifier<({bool v, bool h})> _snapGuides =
+      ValueNotifier((v: false, h: false));
+
   final Product _baseProduct = Product(
     id: "custom-tee-001",
     title: "Men's Custom T-Shirt",
@@ -87,6 +92,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   @override
   void dispose() {
     _autoSaveDesign();
+    _snapGuides.dispose();
     super.dispose();
   }
 
@@ -125,8 +131,14 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
       appBar: _buildAppBar(context),
       body: Stack(
         children: [
-          SafeArea(
-            child: isMobile ? _buildMobileBody() : _buildDesktopTabletBody(),
+          // Focus enables desktop/web keyboard shortcuts for the selected
+          // element (nudge / delete / duplicate / z-order / deselect).
+          Focus(
+            autofocus: true,
+            onKeyEvent: _handleKey,
+            child: SafeArea(
+              child: isMobile ? _buildMobileBody() : _buildDesktopTabletBody(),
+            ),
           ),
           AgentChatWidget(
             currentDesign: _design,

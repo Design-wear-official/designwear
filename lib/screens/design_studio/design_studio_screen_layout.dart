@@ -191,7 +191,9 @@ extension _LayoutMethods on _DesignStudioScreenState {
                             onElementPreview: _previewElement,
                             onElementCommit: _commitElementChange,
                             onElementDelete: _deleteElement,
+                            onElementEdit: _editElement,
                             onSideChanged: (s) => setState(() => _side = s),
+                            snapGuides: _snapGuides,
                           ),
                           if (_isAutoGenerating) _buildGeneratingOverlay(),
                         ],
@@ -244,7 +246,9 @@ extension _LayoutMethods on _DesignStudioScreenState {
                       onElementPreview: _previewElement,
                       onElementCommit: _commitElementChange,
                       onElementDelete: _deleteElement,
+                      onElementEdit: _editElement,
                       onSideChanged: (s) => setState(() => _side = s),
+                      snapGuides: _snapGuides,
                     ),
                     if (_isAutoGenerating) _buildGeneratingOverlay(),
                   ],
@@ -372,64 +376,126 @@ extension _LayoutMethods on _DesignStudioScreenState {
         ),
         child: SafeArea(
           top: false,
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(_elementTypeIcon(selected.type), size: 15, color: cs.onSurface.withValues(alpha: 0.6)),
-              const SizedBox(width: 6),
-              Text(
-                _elementTypeName(selected.type),
-                style: GoogleFonts.outfit(
-                    fontWeight: FontWeight.w600, fontSize: 13, color: cs.onSurface),
-              ),
-              const SizedBox(width: 8),
-              _ElementActionBtn(
-                icon: Icons.flip_to_back,
-                tooltip: 'Send back',
-                enabled: canSendBack,
-                onTap: () => _reorderElements(idx, idx - 1),
-              ),
-              _ElementActionBtn(
-                icon: Icons.flip_to_front,
-                tooltip: 'Bring forward',
-                enabled: canBringForward,
-                onTap: () => _reorderElements(idx, idx + 1),
-              ),
-              _ElementActionBtn(
-                icon: Icons.copy_all_outlined,
-                tooltip: 'Duplicate',
-                onTap: () => _duplicateElement(_selectedElementId!),
-              ),
-              const Spacer(),
-              // Remove — prominent red button
-              GestureDetector(
-                onTap: () => _deleteElement(_selectedElementId!),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(8),
-                    border:
-                        Border.all(color: Colors.red.withValues(alpha: 0.35)),
+              Row(
+                children: [
+                  Icon(_elementTypeIcon(selected.type),
+                      size: 15, color: cs.onSurface.withValues(alpha: 0.6)),
+                  const SizedBox(width: 6),
+                  Text(
+                    _elementTypeName(selected.type),
+                    style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                        color: cs.onSurface),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.delete_outline,
-                          size: 16, color: Colors.red),
-                      const SizedBox(width: 5),
-                      Text('Remove',
-                          style: GoogleFonts.outfit(
-                              fontWeight: FontWeight.w700,
-                              fontSize: 13,
-                              color: Colors.red)),
-                    ],
+                  const SizedBox(width: 8),
+                  _ElementActionBtn(
+                    icon: Icons.flip_to_back,
+                    tooltip: 'Send back',
+                    enabled: canSendBack,
+                    onTap: () => _reorderElements(idx, idx - 1),
                   ),
-                ),
+                  _ElementActionBtn(
+                    icon: Icons.flip_to_front,
+                    tooltip: 'Bring forward',
+                    enabled: canBringForward,
+                    onTap: () => _reorderElements(idx, idx + 1),
+                  ),
+                  _ElementActionBtn(
+                    icon: Icons.copy_all_outlined,
+                    tooltip: 'Duplicate',
+                    onTap: () => _duplicateElement(_selectedElementId!),
+                  ),
+                  const Spacer(),
+                  // Remove — prominent red button
+                  GestureDetector(
+                    onTap: () => _deleteElement(_selectedElementId!),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                            color: Colors.red.withValues(alpha: 0.35)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.delete_outline,
+                              size: 16, color: Colors.red),
+                          const SizedBox(width: 5),
+                          Text('Remove',
+                              style: GoogleFonts.outfit(
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: Colors.red)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              _buildElementAdjustRow(selected, cs),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // ── Opacity + flip controls for the selected element ────────────────────────
+
+  Widget _buildElementAdjustRow(DesignElement selected, ColorScheme cs) {
+    final flipH = selected.properties['flipH'] == true;
+    final flipV = selected.properties['flipV'] == true;
+    final muted = cs.onSurface.withValues(alpha: 0.6);
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        children: [
+          Icon(Icons.opacity, size: 15, color: muted),
+          Expanded(
+            child: SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                trackHeight: 2.5,
+                overlayShape:
+                    const RoundSliderOverlayShape(overlayRadius: 12),
+                thumbShape:
+                    const RoundSliderThumbShape(enabledThumbRadius: 7),
+              ),
+              child: Slider(
+                value: selected.opacity.clamp(0.0, 1.0),
+                min: 0.1,
+                max: 1.0,
+                activeColor: AppColors.marigold,
+                onChanged: _previewSelectedOpacity,
+                onChangeEnd: (_) => _commitElementChange(),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 34,
+            child: Text('${(selected.opacity * 100).round()}%',
+                style: GoogleFonts.spaceMono(fontSize: 11, color: muted)),
+          ),
+          const SizedBox(width: 4),
+          _ElementActionBtn(
+            icon: Icons.swap_horiz,
+            tooltip: 'Flip horizontal',
+            onTap: () => _toggleFlip('flipH'),
+            active: flipH,
+          ),
+          _ElementActionBtn(
+            icon: Icons.swap_vert,
+            tooltip: 'Flip vertical',
+            onTap: () => _toggleFlip('flipV'),
+            active: flipV,
+          ),
+        ],
       ),
     );
   }
@@ -467,43 +533,59 @@ extension _LayoutMethods on _DesignStudioScreenState {
       'triangle': Icons.change_history, 'line': Icons.horizontal_rule,
     };
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Shapes',
-            style: GoogleFonts.outfit(
-                fontSize: 15, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 10,
-          runSpacing: 10,
-          children: shapes.map((s) {
-            return GestureDetector(
-              onTap: () => _addShapeElement(s),
-              child: Container(
-                width: 66,
-                height: 66,
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: cs.outline.withValues(alpha: 0.2)),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Garment construction (moved here from the Colours panel) ────────
+          Text('Garment',
+              style: GoogleFonts.outfit(
+                  fontSize: 15, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          GarmentOptions(design: _design, onDesignUpdate: _updateDesign),
+
+          const SizedBox(height: 20),
+          Container(height: 1, color: hair),
+          const SizedBox(height: 16),
+
+          // ── Add shape elements ─────────────────────────────────────────────
+          Text('Add Shape',
+              style: GoogleFonts.outfit(
+                  fontSize: 15, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: shapes.map((s) {
+              return GestureDetector(
+                onTap: () => _addShapeElement(s),
+                child: Container(
+                  width: 66,
+                  height: 66,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                        color: cs.outline.withValues(alpha: 0.2)),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(icons[s], size: 24, color: cs.onSurface),
+                      const SizedBox(height: 4),
+                      Text(labels[s] ?? s,
+                          style: GoogleFonts.outfit(
+                              fontSize: 10, color: cs.onSurface)),
+                    ],
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(icons[s], size: 24, color: cs.onSurface),
-                    const SizedBox(height: 4),
-                    Text(labels[s] ?? s,
-                        style: GoogleFonts.outfit(
-                            fontSize: 10, color: cs.onSurface)),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -603,26 +685,38 @@ class _ElementActionBtn extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final bool enabled;
+  final bool active;
   final VoidCallback? onTap;
 
   const _ElementActionBtn({
     required this.icon,
     required this.tooltip,
     this.enabled = true,
+    this.active = false,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = enabled
-        ? Theme.of(context).colorScheme.onSurface
-        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.25);
+    final cs = Theme.of(context).colorScheme;
+    final color = !enabled
+        ? cs.onSurface.withValues(alpha: 0.25)
+        : active
+            ? AppColors.marigold
+            : cs.onSurface;
     return Tooltip(
       message: tooltip,
       child: GestureDetector(
         onTap: enabled ? onTap : null,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
+        child: Container(
+          padding: const EdgeInsets.all(6),
+          margin: const EdgeInsets.all(2),
+          decoration: active
+              ? BoxDecoration(
+                  color: AppColors.marigold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                )
+              : null,
           child: Icon(icon, size: 20, color: color),
         ),
       ),
