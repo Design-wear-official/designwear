@@ -6,9 +6,10 @@ import 'package:designwear/screens/design_studio/design_studio_constants.dart';
 
 /// Direct-manipulation wrapper for a design element on the canvas.
 ///
-/// Supports: tap-to-select, drag-to-move (clamped to the print area),
-/// corner resize, rotate handle, and a delete handle. Live gestures call
-/// [onPreview] (no undo entry); the gesture end calls [onCommit] (push history).
+/// Supports: tap-to-select, double-tap-to-edit, drag-to-move (clamped to the
+/// print area, with centre snapping), corner resize, rotate handle (snaps to
+/// 45° steps), and a delete handle. Live gestures call [onPreview] (no undo
+/// entry); the gesture end calls [onCommit] (push history).
 class TransformableElementWidget extends StatefulWidget {
   final DesignElement element;
   final bool isSelected;
@@ -16,6 +17,9 @@ class TransformableElementWidget extends StatefulWidget {
   final ValueChanged<DesignElement> onPreview;
   final VoidCallback onCommit;
   final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+  /// Reports active centre-snap guides (vertical, horizontal) during a drag.
+  final void Function(bool vertical, bool horizontal)? onSnapChanged;
   final Widget child;
 
   const TransformableElementWidget({
@@ -27,6 +31,8 @@ class TransformableElementWidget extends StatefulWidget {
     required this.onCommit,
     required this.child,
     this.onDelete,
+    this.onEdit,
+    this.onSnapChanged,
   });
 
   @override
@@ -45,16 +51,54 @@ class _TransformableElementWidgetState
   double get _min => DesignStudioConstants.minElementSize;
   double get _max => DesignStudioConstants.maxElementSize;
 
+  // Canvas centre lines in canvas-pixel space, and the element anchor.
+  static const double _canvasCenterX =
+      (DesignStudioConstants.canvasWidth + 32) / 2; // 166
+  static const double _canvasCenterY =
+      (DesignStudioConstants.canvasWidth * 1.25 + 32) / 2; // 203.5
+  static const double _anchorX = DesignStudioConstants.elementCanvasOffsetX;
+  static const double _anchorY = DesignStudioConstants.elementCanvasOffsetY;
+
+  Size? get _bodySize =>
+      (_bodyKey.currentContext?.findRenderObject() as RenderBox?)?.size;
+
+  /// Applies centre snapping to a candidate position and reports active guides.
+  Offset _applySnap(Offset candidate) {
+    final size = _bodySize;
+    if (size == null) {
+      widget.onSnapChanged?.call(false, false);
+      return candidate;
+    }
+    final el = widget.element;
+    double dx = candidate.dx;
+    double dy = candidate.dy;
+    bool snapV = false, snapH = false;
+
+    final centerX = _anchorX + el.x + dx + size.width / 2;
+    if ((centerX - _canvasCenterX).abs() < DesignStudioConstants.snapThreshold) {
+      dx = _canvasCenterX - _anchorX - el.x - size.width / 2;
+      snapV = true;
+    }
+    final centerY = _anchorY + el.y + dy + size.height / 2;
+    if ((centerY - _canvasCenterY).abs() < DesignStudioConstants.snapThreshold) {
+      dy = _canvasCenterY - _anchorY - el.y - size.height / 2;
+      snapH = true;
+    }
+    widget.onSnapChanged?.call(snapV, snapH);
+    return Offset(dx, dy);
+  }
+
   void _commitMove() {
     final el = widget.element;
-    final nx = (el.x + _moveDelta.dx)
-        .clamp(DesignStudioConstants.printAreaMinX, DesignStudioConstants.printAreaMaxX);
-    final ny = (el.y + _moveDelta.dy)
-        .clamp(DesignStudioConstants.printAreaMinY, DesignStudioConstants.printAreaMaxY);
+    final nx = (el.x + _moveDelta.dx).clamp(
+        DesignStudioConstants.printAreaMinX, DesignStudioConstants.printAreaMaxX);
+    final ny = (el.y + _moveDelta.dy).clamp(
+        DesignStudioConstants.printAreaMinY, DesignStudioConstants.printAreaMaxY);
     setState(() {
       _moveDelta = Offset.zero;
       _moving = false;
     });
+    widget.onSnapChanged?.call(false, false);
     widget.onPreview(el.copyWith(x: nx.toDouble(), y: ny.toDouble()));
     widget.onCommit();
   }
@@ -86,7 +130,10 @@ class _TransformableElementWidgetState
     );
     // Rotate handle sits above the element, so a pointer directly above
     // (angle -90°) corresponds to 0° rotation.
-    final deg = angle * 180 / math.pi + 90;
+    var deg = angle * 180 / math.pi + 90;
+    // Snap to the nearest 45° step when close.
+    final nearest = (deg / 45).round() * 45.0;
+    if ((deg - nearest).abs() < 6) deg = nearest;
     widget.onPreview(widget.element.copyWith(rotation: deg));
   }
 
@@ -94,8 +141,18 @@ class _TransformableElementWidgetState
   Widget build(BuildContext context) {
     final el = widget.element;
     final selected = widget.isSelected;
+    final flipH = el.properties['flipH'] == true;
+    final flipV = el.properties['flipV'] == true;
 
     Widget content = Opacity(opacity: el.opacity.clamp(0.0, 1.0), child: widget.child);
+    if (flipH || flipV) {
+      content = Transform(
+        alignment: Alignment.center,
+        transform: Matrix4.identity()
+          ..scale(flipH ? -1.0 : 1.0, flipV ? -1.0 : 1.0),
+        child: content,
+      );
+    }
     content = Transform.rotate(
       angle: el.rotation * math.pi / 180,
       child: content,
@@ -106,20 +163,25 @@ class _TransformableElementWidgetState
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Body — tap to select, drag to move
+          // Body — tap to select, double-tap to edit, drag to move
           GestureDetector(
             behavior: HitTestBehavior.opaque,
             onTap: () => widget.onSelected(selected ? null : el.id),
+            onDoubleTap: widget.onEdit,
             onPanStart: (_) => setState(() {
               _moving = true;
               _moveDelta = Offset.zero;
             }),
-            onPanUpdate: (d) => setState(() => _moveDelta += d.delta),
+            onPanUpdate: (d) =>
+                setState(() => _moveDelta = _applySnap(_moveDelta + d.delta)),
             onPanEnd: (_) => _commitMove(),
-            onPanCancel: () => setState(() {
-              _moving = false;
-              _moveDelta = Offset.zero;
-            }),
+            onPanCancel: () {
+              widget.onSnapChanged?.call(false, false);
+              setState(() {
+                _moving = false;
+                _moveDelta = Offset.zero;
+              });
+            },
             child: Container(
               key: _bodyKey,
               decoration: BoxDecoration(

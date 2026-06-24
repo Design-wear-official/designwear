@@ -153,6 +153,9 @@ class CustomDesign {
   final DateTime? updatedAt;
   final String collarStyle; // 'crew' | 'vneck' | 'polo'
   final String pocketStyle; // 'none' | 'left' | 'right' | 'both'
+  final String trimColor;   // 'auto' or hex '0xFF...' — collar/pocket/cuff accent
+  final String sleeveCuff;  // 'none' | 'banded' | 'rolled'
+  final String fabricFinish; // 'solid' | 'heather' | 'vintage'
   // Runtime-only: AI-generated design graphic (base64, not persisted to JSON)
   final String? designImageBase64;
 
@@ -177,6 +180,9 @@ class CustomDesign {
     this.updatedAt,
     this.collarStyle = 'crew',
     this.pocketStyle = 'none',
+    this.trimColor = 'auto',
+    this.sleeveCuff = 'none',
+    this.fabricFinish = 'solid',
     this.designImageBase64,
   });
 
@@ -201,6 +207,9 @@ class CustomDesign {
     DateTime? updatedAt,
     String? collarStyle,
     String? pocketStyle,
+    String? trimColor,
+    String? sleeveCuff,
+    String? fabricFinish,
     Object? designImageBase64 = _keepExisting,
   }) {
     return CustomDesign(
@@ -224,6 +233,9 @@ class CustomDesign {
       updatedAt: updatedAt ?? this.updatedAt,
       collarStyle: collarStyle ?? this.collarStyle,
       pocketStyle: pocketStyle ?? this.pocketStyle,
+      trimColor: trimColor ?? this.trimColor,
+      sleeveCuff: sleeveCuff ?? this.sleeveCuff,
+      fabricFinish: fabricFinish ?? this.fabricFinish,
       designImageBase64: identical(designImageBase64, _keepExisting)
           ? this.designImageBase64
           : designImageBase64 as String?,
@@ -254,6 +266,9 @@ class CustomDesign {
       'updatedAt': updatedAt?.toIso8601String(),
       'collarStyle': collarStyle,
       'pocketStyle': pocketStyle,
+      'trimColor': trimColor,
+      'sleeveCuff': sleeveCuff,
+      'fabricFinish': fabricFinish,
       // Persisted so saved/published designs keep their AI graphic (was dropped before).
       'designImageBase64': designImageBase64,
     };
@@ -288,6 +303,9 @@ class CustomDesign {
           : null,
       collarStyle: json['collarStyle'] ?? 'crew',
       pocketStyle: json['pocketStyle'] ?? 'none',
+      trimColor: json['trimColor'] ?? 'auto',
+      sleeveCuff: json['sleeveCuff'] ?? 'none',
+      fabricFinish: json['fabricFinish'] ?? 'solid',
       designImageBase64: json['designImageBase64'] as String?,
     );
   }

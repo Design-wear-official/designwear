@@ -111,6 +111,12 @@ class DesignCanvas extends StatelessWidget {
                           DesignStudioUtils.parseColorFromHex(design.baseColor),
                       collarStyle: design.collarStyle,
                       pocketStyle: design.pocketStyle,
+                      trimColor: design.trimColor == 'auto'
+                          ? null
+                          : DesignStudioUtils.parseColorFromHex(
+                              design.trimColor),
+                      sleeveCuff: design.sleeveCuff,
+                      fabricFinish: design.fabricFinish,
                     ),
                   ),
                 ),

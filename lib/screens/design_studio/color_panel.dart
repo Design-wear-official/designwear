@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'design_studio_utils.dart';
@@ -21,6 +22,10 @@ class ColorPanel extends StatefulWidget {
 
 class _ColorPanelState extends State<ColorPanel> {
   Color? _customColor;
+  List<String> _recents = [];
+
+  static const String _recentsKey = 'ds_recent_colors';
+  static const int _maxRecents = 8;
 
   static const List<Map<String, dynamic>> fabrics = [
     // Whites & Neutrals
@@ -72,6 +77,95 @@ class _ColorPanelState extends State<ColorPanel> {
     {'name': 'Espresso', 'color': Color(0xFF3C1F0F)},
   ];
 
+  // Accent colours offered for collar / pocket / cuff trim.
+  static const List<Color> trimSwatches = [
+    Color(0xFF111111), // Black
+    Color(0xFFFFFFFF), // White
+    Color(0xFFC9A227), // Gold
+    Color(0xFF1A1F3C), // Navy
+    Color(0xFFDC143C), // Crimson
+    Color(0xFF2D5A27), // Forest
+    Color(0xFFFF6B35), // Coral
+    Color(0xFF475569), // Slate
+  ];
+
+  // Curated quick palettes — tap any dot to apply it as the fabric colour.
+  static const List<Map<String, dynamic>> palettes = [
+    {
+      'name': 'Mono',
+      'colors': [
+        Color(0xFFFFFFFF),
+        Color(0xFFCBCBCB),
+        Color(0xFF8A8A8A),
+        Color(0xFF2B2E33),
+        Color(0xFF111111),
+      ],
+    },
+    {
+      'name': 'Earth',
+      'colors': [
+        Color(0xFFF4D99C),
+        Color(0xFFC19A6B),
+        Color(0xFFB65D3C),
+        Color(0xFF6B7C3E),
+        Color(0xFF3C1F0F),
+      ],
+    },
+    {
+      'name': 'Neon',
+      'colors': [
+        Color(0xFFFF1493),
+        Color(0xFFFF6B35),
+        Color(0xFFF59E0B),
+        Color(0xFF32CD32),
+        Color(0xFF00CED1),
+      ],
+    },
+    {
+      'name': 'Pastel',
+      'colors': [
+        Color(0xFFFFB6C1),
+        Color(0xFFFFCBA4),
+        Color(0xFF8FC9A2),
+        Color(0xFF87BFDC),
+        Color(0xFFC8B8E0),
+      ],
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRecents();
+  }
+
+  Future<void> _loadRecents() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getStringList(_recentsKey);
+      if (stored != null && mounted) setState(() => _recents = stored);
+    } catch (_) {}
+  }
+
+  /// Applies [color] as the fabric base colour and records it as recent.
+  void _applyBase(Color color, {bool fromCustom = false}) {
+    setState(() => _customColor = fromCustom ? color : null);
+    widget.onDesignUpdate(
+      widget.design.copyWith(baseColor: DesignStudioUtils.colorToHex(color)),
+    );
+    _pushRecent(color);
+  }
+
+  Future<void> _pushRecent(Color color) async {
+    final hex = DesignStudioUtils.colorToHex(color);
+    final next = [hex, ..._recents.where((c) => c != hex)].take(_maxRecents).toList();
+    setState(() => _recents = next);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_recentsKey, next);
+    } catch (_) {}
+  }
+
   String _activeName() {
     if (_customColor != null &&
         DesignStudioUtils.isColorSelected(_customColor!, widget.design.baseColor)) {
@@ -83,7 +177,7 @@ class _ColorPanelState extends State<ColorPanel> {
         return fabric['name'] as String;
       }
     }
-    return fabrics[0]['name'] as String;
+    return 'Custom';
   }
 
   void _openCustomPicker() {
@@ -204,12 +298,7 @@ class _ColorPanelState extends State<ColorPanel> {
                   ),
                 ),
                 onPressed: () {
-                  setState(() => _customColor = previewColor);
-                  widget.onDesignUpdate(
-                    widget.design.copyWith(
-                      baseColor: DesignStudioUtils.colorToHex(previewColor),
-                    ),
-                  );
+                  _applyBase(previewColor, fromCustom: true);
                   Navigator.pop(ctx);
                 },
                 child: const Text('Apply'),
@@ -227,14 +316,14 @@ class _ColorPanelState extends State<ColorPanel> {
   }
 
   Widget _buildSwatch(Color color, bool isSelected, VoidCallback onTap,
-      {Widget? child}) {
+      {Widget? child, double size = 36}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        width: 36,
-        height: 36,
+        width: size,
+        height: size,
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
@@ -300,14 +389,7 @@ class _ColorPanelState extends State<ColorPanel> {
                 final color = fabric['color'] as Color;
                 final isSelected = DesignStudioUtils.isColorSelected(
                     color, widget.design.baseColor);
-                return _buildSwatch(color, isSelected, () {
-                  setState(() => _customColor = null);
-                  widget.onDesignUpdate(
-                    widget.design.copyWith(
-                      baseColor: DesignStudioUtils.colorToHex(color),
-                    ),
-                  );
-                });
+                return _buildSwatch(color, isSelected, () => _applyBase(color));
               }),
 
               // Custom color swatch (shown after picking via "+" button)
@@ -316,11 +398,7 @@ class _ColorPanelState extends State<ColorPanel> {
                   _customColor!,
                   DesignStudioUtils.isColorSelected(
                       _customColor!, widget.design.baseColor),
-                  () => widget.onDesignUpdate(
-                    widget.design.copyWith(
-                      baseColor: DesignStudioUtils.colorToHex(_customColor!),
-                    ),
-                  ),
+                  () => _applyBase(_customColor!, fromCustom: true),
                 ),
 
               // Rainbow "+" button — opens hex colour picker
@@ -357,6 +435,42 @@ class _ColorPanelState extends State<ColorPanel> {
               ),
             ],
           ),
+
+          // ── Recently used ──────────────────────────────────────────────────
+          if (_recents.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            _buildDivider(isDark),
+            const SizedBox(height: 16),
+            _buildSectionLabel('Recently used', isDark),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _recents.map((hex) {
+                final color = DesignStudioUtils.parseColorFromHex(hex);
+                final isSelected = DesignStudioUtils.isColorSelected(
+                    color, widget.design.baseColor);
+                return _buildSwatch(
+                    color, isSelected, () => _applyBase(color), size: 30);
+              }).toList(),
+            ),
+          ],
+
+          // ── Quick palettes ─────────────────────────────────────────────────
+          const SizedBox(height: 20),
+          _buildDivider(isDark),
+          const SizedBox(height: 16),
+          _buildSectionLabel('Quick palettes', isDark),
+          const SizedBox(height: 10),
+          ...palettes.map((p) => _buildPaletteRow(p, isDark)),
+
+          // ── Trim / accent ──────────────────────────────────────────────────
+          const SizedBox(height: 16),
+          _buildDivider(isDark),
+          const SizedBox(height: 16),
+          _buildSectionLabel('Trim / Accent', isDark),
+          const SizedBox(height: 10),
+          _buildTrimRow(isDark),
 
           const SizedBox(height: 20),
           _buildDivider(isDark),
@@ -400,8 +514,150 @@ class _ColorPanelState extends State<ColorPanel> {
           ),
 
           const SizedBox(height: 16),
+          _buildDivider(isDark),
+          const SizedBox(height: 16),
+
+          // ── Sleeve cuffs ───────────────────────────────────────────────────
+          _buildSectionLabel('Sleeve Cuffs', isDark),
+          const SizedBox(height: 10),
+          _buildStyleChips(
+            options: const [
+              {'id': 'none', 'label': 'Plain', 'icon': Icons.block},
+              {'id': 'banded', 'label': 'Banded', 'icon': Icons.horizontal_rule},
+              {'id': 'rolled', 'label': 'Rolled', 'icon': Icons.drag_handle},
+            ],
+            selected: widget.design.sleeveCuff,
+            onSelect: (id) => widget.onDesignUpdate(
+              widget.design.copyWith(sleeveCuff: id),
+            ),
+            isDark: isDark,
+          ),
+
+          const SizedBox(height: 16),
+          _buildDivider(isDark),
+          const SizedBox(height: 16),
+
+          // ── Fabric finish ──────────────────────────────────────────────────
+          _buildSectionLabel('Fabric Finish', isDark),
+          const SizedBox(height: 10),
+          _buildStyleChips(
+            options: const [
+              {'id': 'solid', 'label': 'Solid', 'icon': Icons.circle},
+              {'id': 'heather', 'label': 'Heather', 'icon': Icons.grain},
+              {'id': 'vintage', 'label': 'Vintage', 'icon': Icons.blur_on},
+            ],
+            selected: widget.design.fabricFinish,
+            onSelect: (id) => widget.onDesignUpdate(
+              widget.design.copyWith(fabricFinish: id),
+            ),
+            isDark: isDark,
+          ),
+
+          const SizedBox(height: 16),
         ],
       ),
+    );
+  }
+
+  Widget _buildPaletteRow(Map<String, dynamic> palette, bool isDark) {
+    final name = palette['name'] as String;
+    final colors = palette['colors'] as List<Color>;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 52,
+            child: Text(
+              name,
+              style: GoogleFonts.inter(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.stone : const Color(0xFF7A7B82),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          ...colors.map((c) {
+            final isSelected =
+                DesignStudioUtils.isColorSelected(c, widget.design.baseColor);
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _buildSwatch(c, isSelected, () => _applyBase(c), size: 26),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTrimRow(bool isDark) {
+    final isAuto = widget.design.trimColor == 'auto';
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        // "Auto" pill — derives a contrasting shade from the fabric colour.
+        GestureDetector(
+          onTap: () => widget.onDesignUpdate(
+            widget.design.copyWith(trimColor: 'auto'),
+          ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: isAuto
+                  ? (isDark ? Colors.white : const Color(0xFF15182B))
+                  : (isDark
+                      ? const Color(0xFF1A1F2E)
+                      : const Color(0xFFF2F1ED)),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isAuto
+                    ? Colors.transparent
+                    : (isDark
+                        ? const Color(0xFF262B3D)
+                        : const Color(0xFFDDDBD5)),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.auto_fix_high,
+                    size: 13,
+                    color: isAuto
+                        ? (isDark ? const Color(0xFF15182B) : Colors.white)
+                        : (isDark ? AppColors.stone : const Color(0xFF7A7B82))),
+                const SizedBox(width: 5),
+                Text(
+                  'Auto',
+                  style: GoogleFonts.inter(
+                    fontSize: 12,
+                    fontWeight: isAuto ? FontWeight.w700 : FontWeight.w500,
+                    color: isAuto
+                        ? (isDark ? const Color(0xFF15182B) : Colors.white)
+                        : (isDark ? AppColors.stone : const Color(0xFF7A7B82)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        ...trimSwatches.map((c) {
+          final isSelected = !isAuto &&
+              DesignStudioUtils.isColorSelected(c, widget.design.trimColor);
+          return _buildSwatch(
+            c,
+            isSelected,
+            () => widget.onDesignUpdate(
+              widget.design
+                  .copyWith(trimColor: DesignStudioUtils.colorToHex(c)),
+            ),
+            size: 30,
+          );
+        }),
+      ],
     );
   }
 

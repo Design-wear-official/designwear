@@ -7,11 +7,16 @@ import 'package:designwear/screens/design_studio/design_studio_utils.dart';
 class EnhancedTextEditor extends StatefulWidget {
   final DesignTemplateService templateService;
   final Function(String text, String fontFamily) onAddTextElement;
+  /// When set, the editor opens in "edit" mode pre-filled with this text.
+  final String? initialText;
+  final String? initialFont;
 
   const EnhancedTextEditor({
     super.key,
     required this.templateService,
     required this.onAddTextElement,
+    this.initialText,
+    this.initialFont,
   });
 
   @override
@@ -19,8 +24,11 @@ class EnhancedTextEditor extends StatefulWidget {
 }
 
 class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
-  final TextEditingController _textController = TextEditingController();
-  String _selectedFont = 'Outfit';
+  late final TextEditingController _textController =
+      TextEditingController(text: widget.initialText ?? '');
+  late String _selectedFont = widget.initialFont ?? 'Outfit';
+
+  bool get _isEditing => widget.initialText != null;
 
   @override
   void dispose() {
@@ -42,7 +50,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Add Text',
+            _isEditing ? 'Edit Text' : 'Add Text',
             style: GoogleFonts.outfit(
               fontWeight: FontWeight.bold,
               fontSize: 18,
@@ -152,7 +160,7 @@ class _EnhancedTextEditorState extends State<EnhancedTextEditor> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
-                  child: const Text('ADD TEXT'),
+                  child: Text(_isEditing ? 'SAVE' : 'ADD TEXT'),
                 ),
               ),
             ],

@@ -54,6 +54,9 @@ class CustomDesign {
   final String baseColor;     // hex e.g. "0xFFFFFFFF"
   final String collarStyle;   // 'crew' | 'vneck' | 'polo'
   final String pocketStyle;   // 'none' | 'left' | 'right' | 'both'
+  final String trimColor;     // 'auto' or hex — collar/pocket/cuff accent
+  final String sleeveCuff;    // 'none' | 'banded' | 'rolled'
+  final String fabricFinish;  // 'solid' | 'heather' | 'vintage'
 
   // Legacy text/sticker (pre-element system, kept for back-compat)
   final String text;
@@ -94,6 +97,18 @@ class CustomDesign {
 ### Custom colour picker
 
 Tap the rainbow `+` circle at the end of the swatches. A dialog prompts for a `#RRGGBB` hex string with a live preview circle. The picked colour is stored in `_ColorPanelState._customColor` and applied via `onDesignUpdate`.
+
+### Recently used + Quick palettes
+
+`ColorPanel` persists the last 8 base colours to `SharedPreferences` (key `ds_recent_colors`) via `_pushRecent()` — every `_applyBase()` records the colour. Below recents, four curated `palettes` (Mono / Earth / Neon / Pastel) render as labelled swatch rows; tapping any dot applies it as the fabric colour.
+
+### Trim / Accent colour
+
+`design.trimColor` is `'auto'` (derive a contrasting shade from the fabric colour — legacy behaviour) or a hex string. The "Auto" pill resets to `'auto'`; the `trimSwatches` row sets an explicit accent. The canvas resolves it to a `Color?` (`null` when `'auto'`) and passes it to `GarmentOverlayPainter.trimColor`, which recolours the collar, pocket stitching and sleeve cuffs.
+
+### Sleeve cuffs & Fabric finish
+
+Two more style-chip sections drive `design.sleeveCuff` (`none`/`banded`/`rolled`) and `design.fabricFinish` (`solid`/`heather`/`vintage`). Both render in `GarmentOverlayPainter` — cuffs as accent bands at the sleeve hems, finish as a torso-clipped texture (heather flecks / vintage wash).
 
 ---
 
