@@ -94,24 +94,88 @@ extension _LayoutMethods on _DesignStudioScreenState {
               size: 20),
           tooltip: 'Redo',
         ),
-        IconButton(
-          onPressed: () => SaveDesignDialog.show(context, _design, _storageService,
-              captureCallback: _captureCanvasPng),
-          icon: const Icon(Icons.save_outlined, size: 20),
-          tooltip: 'Save Design',
-        ),
-        IconButton(
-          onPressed: _navigateToTryOn,
-          icon: const Icon(Icons.face_retouching_natural_outlined, size: 20),
-          tooltip: 'Virtual Try-On',
-        ),
-        IconButton(
-          onPressed: () => setState(() => _showTemplates = !_showTemplates),
-          icon: Icon(Icons.style_outlined,
-              size: 20,
-              color: _showTemplates ? AppColors.marigold : cs.onSurface),
-          tooltip: 'Templates',
-        ),
+        // Secondary actions: inline on desktop/tablet, overflow menu on mobile
+        // so the bar doesn't overflow on narrow phones.
+        if (!ResponsiveUtils.isMobile(context)) ...[
+          IconButton(
+            onPressed: () => SaveDesignDialog.show(context, _design, _storageService,
+                captureCallback: _captureCanvasPng),
+            icon: const Icon(Icons.save_outlined, size: 20),
+            tooltip: 'Save Design',
+          ),
+          IconButton(
+            onPressed: _open3DPreview,
+            icon: const Icon(Icons.view_in_ar_outlined, size: 20),
+            tooltip: '3D Preview',
+          ),
+          IconButton(
+            onPressed: _navigateToTryOn,
+            icon: const Icon(Icons.face_retouching_natural_outlined, size: 20),
+            tooltip: 'Virtual Try-On',
+          ),
+          IconButton(
+            onPressed: () => setState(() => _showTemplates = !_showTemplates),
+            icon: Icon(Icons.style_outlined,
+                size: 20,
+                color: _showTemplates ? AppColors.marigold : cs.onSurface),
+            tooltip: 'Templates',
+          ),
+        ] else
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 20),
+            tooltip: 'More',
+            onSelected: (value) {
+              switch (value) {
+                case 'save':
+                  SaveDesignDialog.show(context, _design, _storageService,
+                      captureCallback: _captureCanvasPng);
+                  break;
+                case '3d':
+                  _open3DPreview();
+                  break;
+                case 'tryon':
+                  _navigateToTryOn();
+                  break;
+                case 'templates':
+                  setState(() => _showTemplates = !_showTemplates);
+                  break;
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'save',
+                child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.save_outlined, size: 20),
+                    title: Text('Save Design')),
+              ),
+              PopupMenuItem(
+                value: '3d',
+                child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.view_in_ar_outlined, size: 20),
+                    title: Text('3D Preview')),
+              ),
+              PopupMenuItem(
+                value: 'tryon',
+                child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.face_retouching_natural_outlined, size: 20),
+                    title: Text('Virtual Try-On')),
+              ),
+              PopupMenuItem(
+                value: 'templates',
+                child: ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(Icons.style_outlined, size: 20),
+                    title: Text('Templates')),
+              ),
+            ],
+          ),
         Padding(
           padding: const EdgeInsets.only(right: 12, left: 6),
           child: Center(

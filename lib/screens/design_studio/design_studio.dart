@@ -6,3 +6,4 @@ export 'templates_panel.dart';
 export 'tools_panel.dart';
 export 'color_panel.dart';
 export 'placement_panel.dart';
+export 'garment_3d_preview_screen.dart';

@@ -26,6 +26,10 @@ class DesignCanvas extends StatelessWidget {
   /// Live centre-snap guide state, toggled by element drags.
   final ValueNotifier<({bool v, bool h})>? snapGuides;
 
+  /// When true, renders only the garment + design (no card, grid, toggle,
+  /// readout or handles) — used to capture a clean texture for 3D preview.
+  final bool bare;
+
   const DesignCanvas({
     super.key,
     required this.design,
@@ -41,6 +45,7 @@ class DesignCanvas extends StatelessWidget {
     this.provenanceLabel,
     this.canvasKey,
     this.snapGuides,
+    this.bare = false,
   });
 
   bool get _showBack => side == DesignSide.back;
@@ -62,34 +67,37 @@ class DesignCanvas extends StatelessWidget {
         child: Container(
           width: DesignStudioConstants.canvasWidth + 32,
           height: DesignStudioConstants.canvasWidth * 1.25 + 32,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: const Alignment(0, -0.6),
-              radius: 1.3,
-              colors: isDark
-                  ? [const Color(0xFF1A1D2B), const Color(0xFF0D0F16)]
-                  : [const Color(0xFFFFFFFF), const Color(0xFFF1F0EC)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: hair, width: 1),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
-                blurRadius: 28,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
+          decoration: bare
+              ? null
+              : BoxDecoration(
+                  gradient: RadialGradient(
+                    center: const Alignment(0, -0.6),
+                    radius: 1.3,
+                    colors: isDark
+                        ? [const Color(0xFF1A1D2B), const Color(0xFF0D0F16)]
+                        : [const Color(0xFFFFFFFF), const Color(0xFFF1F0EC)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: hair, width: 1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
+                      blurRadius: 28,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
           child: Stack(
             alignment: Alignment.center,
             children: [
               // Grid lines sub-background
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.15,
-                  child: CustomPaint(painter: CanvasGridPainter(color: hair)),
+              if (!bare)
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: 0.15,
+                    child: CustomPaint(painter: CanvasGridPainter(color: hair)),
+                  ),
                 ),
-              ),
 
               // Garment artwork for the active face, or a placeholder
               if (_hasFaceAsset)
@@ -168,7 +176,7 @@ class DesignCanvas extends StatelessWidget {
                   ),
 
               // Centre-snap guide lines (shown only while dragging onto centre)
-              if (snapGuides != null)
+              if (!bare && snapGuides != null)
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ValueListenableBuilder<({bool v, bool h})>(
@@ -185,7 +193,7 @@ class DesignCanvas extends StatelessWidget {
                 ),
 
               // Provenance chip (top-left) — driven by remix source
-              if (provenanceLabel != null)
+              if (!bare && provenanceLabel != null)
                 Positioned(
                   left: 14,
                   top: 14,
@@ -228,6 +236,7 @@ class DesignCanvas extends StatelessWidget {
                 ),
 
               // Front / Back toggle pill (top-center)
+              if (!bare)
               Positioned(
                 top: 14,
                 child: Container(
@@ -258,6 +267,7 @@ class DesignCanvas extends StatelessWidget {
               ),
 
               // Print Size Readout (bottom-right)
+              if (!bare)
               Positioned(
                 right: 14,
                 bottom: 14,

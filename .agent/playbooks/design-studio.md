@@ -183,6 +183,29 @@ The canvas supports multiple garment types via `_garmentAssets` in `design_canva
 
 ---
 
+## 8b. 3D Preview (`view_in_ar` button → `Garment3DPreviewScreen`)
+
+Rotatable read-only 3D preview of the current design. Pipeline:
+
+1. **Mesh** — `tools/generate_tshirt_glb.py` emits a curved "inflated garment"
+   mesh (front bulge +Z / back bulge −Z, torso-proportioned) to
+   `assets/models/tshirt_mesh.bin` (geometry) and `tshirt_panel.glb` (full,
+   placeholder texture). Front faces map to UV.x 0–0.5, back to 0.5–1.0.
+2. **Texture** — `DesignCanvas(bare: true)` renders a chrome-free garment for
+   each side; the screen rasterises both via `RepaintBoundary.toImage`, then
+   composites a `[front | back]` atlas.
+3. **GLB** — `Garment3DModel.buildGlbDataUri()` bakes mesh + atlas into a
+   binary glTF returned as a `data:` URI (no JS, no temp files). Metadata
+   constants must stay in sync with the Python generator.
+4. **Render** — `model_viewer_plus` `ModelViewer` shows the data URI with
+   camera controls + auto-rotate.
+
+> v1 uses a curved panel, not a UV-unwrapped tee. The texture already contains
+> the tinted shirt photo + design, so it reads as a garment. Upgrade path:
+> author a real UV-mapped tee `.glb` in Blender and drop it in
+> `assets/models/`, then update the mesh metadata in `Garment3DModel`.
+> Back uses the front capture until `tshirt` gets a `backAsset`.
+
 ## 9. Save / Export Flow
 
 `_saveDesign()` in `design_studio_screen.dart`:

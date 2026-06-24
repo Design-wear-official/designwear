@@ -31,6 +31,12 @@
 
   <title>Design Wear</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- model_viewer_plus (web): the package strips its own loader, so the
+       <model-viewer> custom element must be registered here or 3D preview
+       renders blank. Served from the bundled package asset (no CDN). -->
+  <script type="module"
+          src="assets/packages/model_viewer_plus/assets/model-viewer.min.js"></script>
 </head>
 <body>
   <!-- Required by razorpay_flutter for web checkout -->

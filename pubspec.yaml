@@ -40,6 +40,9 @@ dependencies:
   firebase_auth: ^6.2.0
   flutter_screenutil: ^5.9.3
 
+  # 3D garment preview (rotatable front/back)
+  model_viewer_plus: ^1.9.3
+
 
 
 dev_dependencies:
@@ -52,4 +55,5 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/models/
     - assets/system_prompt.txt

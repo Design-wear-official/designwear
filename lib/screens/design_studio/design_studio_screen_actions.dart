@@ -497,6 +497,18 @@ extension _ActionMethods on _DesignStudioScreenState {
     );
   }
 
+  void _open3DPreview() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => Garment3DPreviewScreen(
+          design: _design,
+          garmentType: _selectedGarmentType,
+        ),
+      ),
+    );
+  }
+
   void _navigateToTryOn() async {
     showDialog(
       context: context,
