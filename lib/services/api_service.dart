@@ -297,6 +297,8 @@ class ApiService {
     Map<String, dynamic>? designJson,
     // base64-encoded PNG preview of the rendered canvas (becomes the thumbnail).
     String? previewImageBase64,
+    // base64-encoded PNG of the opposite garment face (back when front is active, etc.)
+    String? backPreviewImageBase64,
   }) async {
     final uri = Uri.parse('${webApiBaseUrl ?? _fallbackBaseUrl}/publish-remix');
     final response = await http
@@ -317,6 +319,7 @@ class ApiService {
             'tags': tags,
             'designJson': designJson,
             'previewImageBase64': previewImageBase64,
+            'backPreviewImageBase64': backPreviewImageBase64,
           }),
         )
         .timeout(const Duration(seconds: 45));

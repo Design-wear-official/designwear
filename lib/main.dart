@@ -101,6 +101,10 @@ Future<void> mainCommon(Flavor flavor) async {
     appVersion: '1.0.0+1',
   ));
 
+  // Load garment template URLs from CMS in the background.
+  // The registry falls back to bundled assets until this completes.
+  unawaited(GarmentService.loadGarments());
+
   runApp(DesignWearApp(flavor: flavor));
 }
 

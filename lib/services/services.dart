@@ -12,3 +12,4 @@ export 'razorpay_service.dart';
 export 'sanity_service.dart';
 export 'theme_provider.dart';
 export 'virtual_tryon_service.dart';
+export 'garment_service.dart';

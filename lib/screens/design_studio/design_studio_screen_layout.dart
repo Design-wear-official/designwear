@@ -259,6 +259,23 @@ extension _LayoutMethods on _DesignStudioScreenState {
                             onSideChanged: (s) => setState(() => _side = s),
                             snapGuides: _snapGuides,
                           ),
+                          // Off-screen canvas for capturing the opposite side during publish
+                          Offstage(
+                            child: DesignCanvas(
+                              canvasKey: _backCanvasKey,
+                              design: _design,
+                              selectedElementId: null,
+                              garmentType: _selectedGarmentType,
+                              side: _side == DesignSide.front
+                                  ? DesignSide.back
+                                  : DesignSide.front,
+                              onElementSelected: (_) {},
+                              onElementPreview: (_) {},
+                              onElementCommit: () {},
+                              onElementDelete: (_) {},
+                              onSideChanged: (_) {},
+                            ),
+                          ),
                           if (_isAutoGenerating) _buildGeneratingOverlay(),
                         ],
                       ),
@@ -313,6 +330,23 @@ extension _LayoutMethods on _DesignStudioScreenState {
                       onElementEdit: _editElement,
                       onSideChanged: (s) => setState(() => _side = s),
                       snapGuides: _snapGuides,
+                    ),
+                    // Off-screen canvas for capturing the opposite side during publish
+                    Offstage(
+                      child: DesignCanvas(
+                        canvasKey: _backCanvasKey,
+                        design: _design,
+                        selectedElementId: null,
+                        garmentType: _selectedGarmentType,
+                        side: _side == DesignSide.front
+                            ? DesignSide.back
+                            : DesignSide.front,
+                        onElementSelected: (_) {},
+                        onElementPreview: (_) {},
+                        onElementCommit: () {},
+                        onElementDelete: (_) {},
+                        onSideChanged: (_) {},
+                      ),
                     ),
                     if (_isAutoGenerating) _buildGeneratingOverlay(),
                   ],

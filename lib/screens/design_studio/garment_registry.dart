@@ -1,48 +1,111 @@
 import 'package:designwear/models/models.dart';
 
-/// Declarative descriptor for a garment the studio can render. Adding a garment
-/// (or a back asset) is data here, not code in the canvas.
+/// Descriptor for a garment the studio can render.
 ///
-/// `frontAsset`/`backAsset` are bundled image paths; `null` means "no artwork
-/// yet" — the canvas shows a placeholder but still lets the user design that
-/// face (elements are stored per [DesignSide]).
+/// Images are resolved in priority order:
+///   1. Network URL from the backend (`frontUrl` / `backUrl`)
+///   2. Bundled asset path (`frontAsset` / `backAsset`)
+///   3. `null` → canvas shows the "coming soon" placeholder
 class Garment {
   final String id;
   final String label;
   final String? frontAsset;
   final String? backAsset;
+  // Network URLs fetched from the backend CMS; override bundled assets when set.
+  final String? frontUrl;
+  final String? backUrl;
+  final bool supportsCollarPocketOverlay;
 
   const Garment({
     required this.id,
     required this.label,
     this.frontAsset,
     this.backAsset,
+    this.frontUrl,
+    this.backUrl,
+    this.supportsCollarPocketOverlay = false,
   });
 
-  String? asset(DesignSide side) =>
-      side == DesignSide.back ? backAsset : frontAsset;
+  /// Returns the network URL for [side] if available, otherwise the local asset path.
+  String? imageUrl(DesignSide side) {
+    if (side == DesignSide.back) return backUrl ?? backAsset;
+    return frontUrl ?? frontAsset;
+  }
 
-  bool hasAsset(DesignSide side) => asset(side) != null;
+  /// Whether to load [side] from the network (vs. a bundled asset).
+  bool isNetworkImage(DesignSide side) {
+    if (side == DesignSide.back) return backUrl != null;
+    return frontUrl != null;
+  }
 
-  /// True for garments whose front art uses the calibrated collar/pocket overlay.
-  bool get supportsCollarPocketOverlay => id == 'tshirt';
+  /// Backwards-compat helper — true when any image source is available.
+  bool hasAsset(DesignSide side) => imageUrl(side) != null;
+
+  Garment withUrls({String? frontUrl, String? backUrl}) => Garment(
+        id: id,
+        label: label,
+        frontAsset: frontAsset,
+        backAsset: backAsset,
+        frontUrl: frontUrl ?? this.frontUrl,
+        backUrl: backUrl ?? this.backUrl,
+        supportsCollarPocketOverlay: supportsCollarPocketOverlay,
+      );
+
+  factory Garment.fromJson(Map<String, dynamic> json) => Garment(
+        id: json['id'] as String,
+        label: json['label'] as String,
+        frontUrl: json['frontImageUrl'] as String?,
+        backUrl: json['backImageUrl'] as String?,
+        supportsCollarPocketOverlay:
+            json['supportsCollarPocket'] as bool? ?? false,
+      );
 }
 
 class GarmentRegistry {
   GarmentRegistry._();
 
-  static const List<Garment> all = [
+  // Bundled defaults — used before the backend response arrives and as fallback.
+  static const List<Garment> _defaults = [
     Garment(
       id: 'tshirt',
       label: 'T-Shirt',
       frontAsset: 'assets/images/tshirt_white.png',
-      // backAsset: add 'assets/images/tshirt_white_back.png' when available.
+      backAsset: 'assets/images/tshirt_white.png',
+      supportsCollarPocketOverlay: true,
     ),
-    Garment(id: 'hoodie', label: 'Hoodie'),
-    Garment(id: 'polo', label: 'Polo Shirt'),
-    Garment(id: 'cap', label: 'Cap'),
+    Garment(id: 'hoodie',  label: 'Hoodie'),
+    Garment(id: 'polo',    label: 'Polo Shirt'),
+    Garment(id: 'cap',     label: 'Cap'),
     Garment(id: 'totebag', label: 'Tote Bag'),
   ];
+
+  static List<Garment> _live = List.from(_defaults);
+
+  /// Called once at startup (or when backend data arrives) to replace the
+  /// registry entries with CMS-driven values, preserving bundled assets as
+  /// fallback for any garment the backend doesn't return.
+  static void updateFromBackend(List<Garment> backendGarments) {
+    final merged = <Garment>[];
+    for (final bg in backendGarments) {
+      final def = _defaults.where((d) => d.id == bg.id).firstOrNull;
+      merged.add(Garment(
+        id: bg.id,
+        label: bg.label,
+        frontAsset: def?.frontAsset,
+        backAsset: def?.backAsset,
+        frontUrl: bg.frontUrl,
+        backUrl: bg.backUrl,
+        supportsCollarPocketOverlay: bg.supportsCollarPocketOverlay,
+      ));
+    }
+    // Keep any local-only garments not returned by the backend.
+    for (final d in _defaults) {
+      if (!merged.any((g) => g.id == d.id)) merged.add(d);
+    }
+    _live = merged;
+  }
+
+  static List<Garment> get all => _live;
 
   /// Maps Sanity category slugs / variants onto canonical garment ids.
   static const Map<String, String> _aliases = {
@@ -61,7 +124,7 @@ class GarmentRegistry {
 
   static Garment byId(String id) {
     final key = _aliases[id] ?? id;
-    return all.firstWhere(
+    return _live.firstWhere(
       (g) => g.id == key,
       orElse: () => Garment(id: id, label: id),
     );

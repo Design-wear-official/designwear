@@ -36,6 +36,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   final DesignTemplateService _templateService = DesignTemplateService();
   final DesignStorageService _storageService = DesignStorageService();
   final GlobalKey _canvasKey = GlobalKey();
+  final GlobalKey _backCanvasKey = GlobalKey();
 
   final AIAgentService _aiService = AIAgentService();
   bool _isAutoGenerating = false;
@@ -87,6 +88,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     _loadAutoSavedDesign();
     _historyService.addToHistory(_design);
     _loadCategories();
+    // Ensure garment images are loaded from the backend before the first frame.
+    GarmentService.loadGarments();
   }
 
   @override

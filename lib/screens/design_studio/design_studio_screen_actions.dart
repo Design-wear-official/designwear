@@ -311,9 +311,9 @@ extension _ActionMethods on _DesignStudioScreenState {
 
   // ── Canvas capture ──────────────────────────────────────────────────────────
 
-  Future<String?> _captureCanvasPng() async {
+  Future<String?> _captureCanvasPng([GlobalKey? key]) async {
     try {
-      final boundary = _canvasKey.currentContext?.findRenderObject()
+      final boundary = (key ?? _canvasKey).currentContext?.findRenderObject()
           as RenderRepaintBoundary?;
       if (boundary == null) return null;
       final image = await boundary.toImage(pixelRatio: 2.0);
@@ -364,7 +364,11 @@ extension _ActionMethods on _DesignStudioScreenState {
         _design.name.isNotEmpty ? _design.name : 'Remix by $creatorHandle';
 
     setState(() => _isPublishing = true);
-    final previewImage = await _captureCanvasPng();
+    // Capture the active (front) canvas first, then the offstage opposite side.
+    final frontKey = _side == DesignSide.front ? _canvasKey : _backCanvasKey;
+    final backKey  = _side == DesignSide.front ? _backCanvasKey : _canvasKey;
+    final previewImage = await _captureCanvasPng(frontKey);
+    final backPreviewImage = await _captureCanvasPng(backKey);
     try {
       final apiService = ApiService.webApi(WebApiConfig.baseUrl);
       final productId = await apiService.publishRemix(
@@ -381,6 +385,7 @@ extension _ActionMethods on _DesignStudioScreenState {
         tags: remixSource?.tags ?? [],
         designJson: _design.toJson(),
         previewImageBase64: previewImage,
+        backPreviewImageBase64: backPreviewImage,
       );
 
       await _storageService.saveDesign(SavedDesign(

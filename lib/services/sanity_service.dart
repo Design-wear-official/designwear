@@ -30,7 +30,9 @@ class SanityService {
     garmentBaseColor, artText,
     remixedFromHandle, remixedFromVersion,
     likeCount, remixCount,
-    "lineage": lineage[]{handle, version, baseColor, artText}
+    "lineage": lineage[]{handle, version, baseColor, artText},
+    "previewImageUrl": previewImage.asset->url,
+    "backPreviewImageUrl": backPreviewImage.asset->url
   ''';
 
   Future<List<Product>> fetchProducts() async {

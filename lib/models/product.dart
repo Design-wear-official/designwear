@@ -20,6 +20,10 @@ class Product {
   final List<String> availableSizes;
   final List<String> availableColors;
 
+  // Canvas preview images saved at publish time
+  final String? previewImageUrl;
+  final String? backPreviewImageUrl;
+
   // Community / social fields (populated from Sanity "community" group)
   final String? creatorName;
   final String? creatorHandle;
@@ -53,6 +57,8 @@ class Product {
     this.productType,
     this.availableSizes = const ['S', 'M', 'L', 'XL', 'XXL'],
     this.availableColors = const [],
+    this.previewImageUrl,
+    this.backPreviewImageUrl,
     this.creatorName,
     this.creatorHandle,
     this.creatorFollowerCount = 0,
@@ -89,6 +95,8 @@ class Product {
     String? productType,
     List<String>? availableSizes,
     List<String>? availableColors,
+    String? previewImageUrl,
+    String? backPreviewImageUrl,
     String? creatorName,
     String? creatorHandle,
     int? creatorFollowerCount,
@@ -110,6 +118,8 @@ class Product {
       discountPercent: discountPercent ?? this.discountPercent,
       imageUrl: imageUrl ?? this.imageUrl,
       images: images ?? List.from(this.images),
+      previewImageUrl: previewImageUrl ?? this.previewImageUrl,
+      backPreviewImageUrl: backPreviewImageUrl ?? this.backPreviewImageUrl,
       categoryId: categoryId ?? this.categoryId,
       stockStatus: stockStatus ?? this.stockStatus,
       stockCount: stockCount ?? this.stockCount,
@@ -170,6 +180,8 @@ class Product {
               ?.map((e) => e.toString())
               .toList() ??
           [],
+      previewImageUrl: map['previewImageUrl']?.toString(),
+      backPreviewImageUrl: map['backPreviewImageUrl']?.toString(),
       categoryId: map['category'] is Map
           ? (map['category']['_ref'] ?? '')
           : (map['category']?.toString() ?? ''),
@@ -232,6 +244,8 @@ class Product {
       discountPercent: discountPercent,
       imageUrl: map['imageUrl'],
       images: (map['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      previewImageUrl: map['previewImageUrl']?.toString(),
+      backPreviewImageUrl: map['backPreviewImageUrl']?.toString(),
       categoryId: map['categoryId'] ?? '',
       stockStatus: map['stockStatus'] ?? 'inStock',
       stockCount: (map['stockCount'] as num?)?.toInt() ?? 0,
@@ -282,6 +296,8 @@ class Product {
       'discountPercent': discountPercent,
       'imageUrl': imageUrl,
       'images': images,
+      'previewImageUrl': previewImageUrl,
+      'backPreviewImageUrl': backPreviewImageUrl,
       'categoryId': categoryId,
       'stockStatus': stockStatus,
       'stockCount': stockCount,

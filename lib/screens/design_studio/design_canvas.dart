@@ -51,6 +51,7 @@ class DesignCanvas extends StatelessWidget {
   bool get _showBack => side == DesignSide.back;
   Garment get _garment => GarmentRegistry.byId(garmentType);
   bool get _hasFaceAsset => _garment.hasAsset(side);
+  bool get _isNetworkImage => _garment.isNetworkImage(side);
 
   @override
   Widget build(BuildContext context) {
@@ -106,11 +107,43 @@ class DesignCanvas extends StatelessWidget {
                     DesignStudioUtils.parseColorFromHex(design.baseColor),
                     BlendMode.modulate,
                   ),
-                  child: Image.asset(
-                    _garment.asset(side)!,
-                    width: DesignStudioConstants.canvasWidth,
-                    fit: BoxFit.contain,
-                  ),
+                  child: _isNetworkImage
+                      ? Image.network(
+                          _garment.imageUrl(side)!,
+                          width: DesignStudioConstants.canvasWidth,
+                          fit: BoxFit.contain,
+                          // Show the bundled local asset while the network
+                          // image loads, so there is no blank flash.
+                          frameBuilder: (ctx, child, frame, _) {
+                            final localPath = side == DesignSide.back
+                                ? _garment.backAsset
+                                : _garment.frontAsset;
+                            if (frame == null && localPath != null) {
+                              return Image.asset(
+                                localPath,
+                                width: DesignStudioConstants.canvasWidth,
+                                fit: BoxFit.contain,
+                              );
+                            }
+                            return child;
+                          },
+                          errorBuilder: (_, __, ___) {
+                            final fallback = (side == DesignSide.back
+                                    ? _garment.backAsset
+                                    : _garment.frontAsset) ??
+                                'assets/images/tshirt_white.png';
+                            return Image.asset(
+                              fallback,
+                              width: DesignStudioConstants.canvasWidth,
+                              fit: BoxFit.contain,
+                            );
+                          },
+                        )
+                      : Image.asset(
+                          _garment.imageUrl(side)!,
+                          width: DesignStudioConstants.canvasWidth,
+                          fit: BoxFit.contain,
+                        ),
                 )
               else
                 _buildPlaceholder(context),
