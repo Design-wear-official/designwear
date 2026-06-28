@@ -10,7 +10,7 @@ import 'package:designwear/screens/profile_screen.dart';
 import 'package:designwear/screens/design_studio_screen.dart';
 
 /// Top sticky app bar matching demo `.top` element.
-/// Contains: brand wordmark, search field, Create button, avatar, settings gear.
+/// Contains: brand wordmark, search field, Create button, avatar, cart.
 class HomeAppBar extends StatelessWidget {
   final bool isDesktop;
   final double hp;
@@ -18,7 +18,6 @@ class HomeAppBar extends StatelessWidget {
   final TextEditingController searchController;
   final FocusNode searchFocusNode;
   final VoidCallback onSearch;
-  final VoidCallback onOpenSettings;
 
   const HomeAppBar({
     super.key,
@@ -28,7 +27,6 @@ class HomeAppBar extends StatelessWidget {
     required this.searchController,
     required this.searchFocusNode,
     required this.onSearch,
-    required this.onOpenSettings,
   });
 
   @override
@@ -147,15 +145,6 @@ class HomeAppBar extends StatelessWidget {
               MaterialPageRoute(builder: (_) => const CartScreen(), settings: const RouteSettings(name: '/cart')),
             ),
           ),
-        ),
-        const SizedBox(width: 6),
-
-        // Settings gear
-        _IconActionBtn(
-          icon: Icons.settings_outlined,
-          isDark: isDark,
-          ink: ink,
-          onTap: onOpenSettings,
         ),
       ],
     );

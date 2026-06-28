@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:designwear/models/models.dart';
-import 'package:designwear/services/services.dart';
 import 'package:designwear/domain/usecases/product_use_cases.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/screens/home/home.dart';
@@ -27,8 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   // ── State ─────────────────────────────────────────────────────────────────
   String? _selectedCategoryId;
 
-  // ── Layout + theme ────────────────────────────────────────────────────────
-  FeedLayout _feedLayout = FeedLayout.grid;
 
   // ── Controllers ───────────────────────────────────────────────────────────
   final ScrollController _scrollController = ScrollController();
@@ -78,19 +75,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _openSettings() {
-    final tp = context.read<ThemeProvider>();
-    HomeSettingsSheet.show(
-      context,
-      isDarkMode: tp.isDarkMode,
-      isDetailLayout: _feedLayout == FeedLayout.detail,
-      onThemeChanged: (isDark) => tp.toggleTheme(isDark),
-      onLayoutChanged: (isDetail) {
-        setState(() => _feedLayout = isDetail ? FeedLayout.detail : FeedLayout.grid);
-      },
-    );
-  }
-
   // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
@@ -110,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
             searchController: _searchController,
             searchFocusNode: _searchFocusNode,
             onSearch: _goToSearch,
-            onOpenSettings: _openSettings,
           ),
 
           // Scrollable body
