@@ -35,16 +35,30 @@ extension _ActionMethods on _DesignStudioScreenState {
       if (!mounted || categories.isEmpty) return;
       setState(() {
         _garmentTypes = categories
-            .map((c) => {
-                  'id': c.slug.isNotEmpty ? c.slug : c.id,
-                  'label': c.title,
-                })
+            .map((c) {
+              final id = c.slug.isNotEmpty ? c.slug : c.id;
+              // Fall back to a humanized slug when the CMS title is empty so
+              // the chip never renders blank (e.g. "t-shirt" → "T-Shirt").
+              final label = c.title.isNotEmpty ? c.title : _humanizeSlug(id);
+              return {'id': id, 'label': label};
+            })
             .toList();
         if (!_garmentTypes.any((t) => t['id'] == _selectedGarmentType)) {
           _selectedGarmentType = _garmentTypes.first['id']!;
         }
       });
     } catch (_) {}
+  }
+
+  /// Turns a slug like "t-shirt" or "tote_bag" into a display label "T-Shirt"
+  /// / "Tote Bag". Used as a fallback when a category has no title set.
+  String _humanizeSlug(String slug) {
+    final words = slug.split(RegExp(r'[\s_]+'));
+    String cap(String w) =>
+        w.isEmpty ? w : w[0].toUpperCase() + w.substring(1);
+    return words
+        .map((w) => w.split('-').map(cap).join('-'))
+        .join(' ');
   }
 
   // ── AI generation ───────────────────────────────────────────────────────────

@@ -17,6 +17,7 @@ class Product {
   final List<String> tags;
   final String? material;
   final String? productType; // 'T-Shirt', 'Hoodie', etc.
+  final String? garmentType; // studio garment id: 'tshirt', 'hoodie', ... (designed garments only)
   final List<String> availableSizes;
   final List<String> availableColors;
 
@@ -55,6 +56,7 @@ class Product {
     this.tags = const [],
     this.material,
     this.productType,
+    this.garmentType,
     this.availableSizes = const ['S', 'M', 'L', 'XL', 'XXL'],
     this.availableColors = const [],
     this.previewImageUrl,
@@ -73,6 +75,25 @@ class Product {
 
   bool get isOnSale => discountPercent != null && discountPercent! > 0;
   bool get isInStock => stockStatus == 'inStock';
+
+  /// True when this product is a community design published from the Design
+  /// Studio (vs. a plain catalog product). `creatorHandle` is required by the
+  /// publish-remix endpoint, so it's the reliable signal; `previewImageUrl`
+  /// is a secondary fallback in case the handle didn't round-trip.
+  bool get isDesignedGarment =>
+      (creatorHandle != null && creatorHandle!.isNotEmpty) ||
+      (previewImageUrl != null && previewImageUrl!.isNotEmpty);
+
+  /// True when the design carries a separately-rendered back side.
+  bool get hasBackDesign =>
+      backPreviewImageUrl != null && backPreviewImageUrl!.isNotEmpty;
+
+  /// Preferred image for cards: the studio canvas snapshot when present,
+  /// otherwise the catalog photo.
+  String? get displayImageUrl =>
+      (previewImageUrl != null && previewImageUrl!.isNotEmpty)
+          ? previewImageUrl
+          : imageUrl;
 
   Product copyWith({
     String? id,
@@ -93,6 +114,7 @@ class Product {
     List<String>? tags,
     String? material,
     String? productType,
+    String? garmentType,
     List<String>? availableSizes,
     List<String>? availableColors,
     String? previewImageUrl,
@@ -129,6 +151,7 @@ class Product {
       tags: tags ?? List.from(this.tags),
       material: material ?? this.material,
       productType: productType ?? this.productType,
+      garmentType: garmentType ?? this.garmentType,
       availableSizes: availableSizes ?? List.from(this.availableSizes),
       availableColors: availableColors ?? List.from(this.availableColors),
       creatorName: creatorName ?? this.creatorName,
@@ -193,6 +216,7 @@ class Product {
       tags: (map['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       material: map['material']?.toString(),
       productType: map['productType']?.toString(),
+      garmentType: map['garmentType']?.toString() ?? map['productType']?.toString(),
       availableSizes: (map['availableSizes'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -255,6 +279,7 @@ class Product {
       tags: (map['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       material: map['material'],
       productType: map['productType'],
+      garmentType: (map['garmentType'] ?? map['productType'])?.toString(),
       availableSizes: (map['availableSizes'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -307,6 +332,7 @@ class Product {
       'tags': tags,
       'material': material,
       'productType': productType,
+      'garmentType': garmentType,
       'availableSizes': availableSizes,
       'availableColors': availableColors,
       'creatorName': creatorName,

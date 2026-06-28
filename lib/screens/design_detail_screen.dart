@@ -219,8 +219,8 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
             ),
             child: ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(24)),
-              child: _product.imageUrl != null
-                  ? SafeNetworkImage(imageUrl: _product.imageUrl!, fit: BoxFit.cover)
+              child: _product.displayImageUrl != null
+                  ? SafeNetworkImage(imageUrl: _product.displayImageUrl!, fit: BoxFit.cover)
                   : GarmentTile(
                       garmentColor: _garmentColor,
                       shape: _garmentShape,
@@ -301,8 +301,8 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
                   ),
                   child: ClipRRect(
                     borderRadius: const BorderRadius.all(Radius.circular(24)),
-                    child: _product.imageUrl != null
-                        ? SafeNetworkImage(imageUrl: _product.imageUrl!, fit: BoxFit.cover)
+                    child: _product.displayImageUrl != null
+                        ? SafeNetworkImage(imageUrl: _product.displayImageUrl!, fit: BoxFit.cover)
                         : GarmentTile(
                             garmentColor: _garmentColor,
                             shape: _garmentShape,

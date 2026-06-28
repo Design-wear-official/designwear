@@ -49,12 +49,12 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   String _activeTool = 'layers';
   bool _isPanelCollapsedOnMobile = false;
 
+  // Pre-load fallback shown until Sanity categories arrive. We currently sell
+  // only T-Shirts, so this lists T-Shirt only — hoodie/polo/cap/tote stay
+  // hidden from users until they're a real category. Once _loadCategories()
+  // returns, the live category list replaces this.
   List<Map<String, String>> _garmentTypes = [
-    {'id': 'tshirt',  'label': 'T-Shirt' },
-    {'id': 'hoodie',  'label': 'Hoodie'  },
-    {'id': 'polo',    'label': 'Polo'    },
-    {'id': 'cap',     'label': 'Cap'     },
-    {'id': 'totebag','label': 'Tote Bag'},
+    {'id': 'tshirt', 'label': 'T-Shirt'},
   ];
 
   late DateTime _lastAutoSave = DateTime.now();

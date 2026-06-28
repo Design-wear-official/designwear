@@ -20,7 +20,7 @@ You must always pass `--flavor` and `-t` together — omitting either will fail.
 flutter run --flavor internal -t lib/main_internal.dart
 
 # External flavor (appId: com.vishwamai.designwear)
-flutter run --flavor external -t lib/main_external.dart
+flutter run --release --flavor external -t lib/main_external.dart --dart-define-from-file=config/env.web.json
 ```
 
 ### Run (release)

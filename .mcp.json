@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "sanity": {
+      "type": "http",
+      "url": "https://mcp.sanity.io"
+    },
+    "firebase": {
+      "command": "cmd",
+      "args": ["/c", "firebase", "experimental:mcp"]
+    }
+  }
+}

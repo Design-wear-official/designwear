@@ -7,6 +7,80 @@ import 'package:designwear/screens/design_studio_screen.dart';
 import 'package:designwear/screens/design_detail_screen.dart';
 import 'home_constants.dart';
 
+/// Small pill marking a card as a remixable community design, with the
+/// creator handle. Shown only on designed garments (Product.isDesignedGarment).
+class _RemixableChip extends StatelessWidget {
+  final String? handle;
+  final int remixCount;
+  const _RemixableChip({this.handle, this.remixCount = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    final label = (handle != null && handle!.isNotEmpty)
+        ? (handle!.startsWith('@') ? handle! : '@$handle')
+        : 'Remixable';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        gradient: AppColors.neonGradient,
+        borderRadius: BorderRadius.circular(7),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.marigold.withValues(alpha: 0.45),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        const Icon(Icons.fork_right, color: Colors.white, size: 11),
+        const SizedBox(width: 3),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 9.5,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.2,
+          ),
+        ),
+        if (remixCount > 0) ...[
+          const SizedBox(width: 4),
+          Text(
+            '· $remixCount',
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.85),
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ]),
+    );
+  }
+}
+
+/// Tiny "Back" indicator shown when a design has a separate back side.
+class _BackDesignChip extends StatelessWidget {
+  const _BackDesignChip();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: const Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.flip, color: Colors.white, size: 10),
+        SizedBox(width: 3),
+        Text('Back', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w700)),
+      ]),
+    );
+  }
+}
+
 // ── Feed filter tab bar ───────────────────────────────────────────────────────
 
 /// Horizontal scrollable filter tabs matching demo `.tabs` element.
@@ -649,29 +723,37 @@ class HomeFeaturedProductsRow extends StatelessWidget {
                             tag: tag,
                             child: Container(
                               color: isDark ? AppColors.backgroundLight : const Color(0xFFF5F4F0),
-                              child: p.imageUrl != null
-                                  ? SafeNetworkImage(imageUrl: p.imageUrl!, fit: BoxFit.cover)
+                              child: p.displayImageUrl != null
+                                  ? SafeNetworkImage(imageUrl: p.displayImageUrl!, fit: BoxFit.cover)
                                   : const Icon(Icons.image_not_supported, size: 36),
                             ),
                           ),
+                          // Top-left: remixable chip for community designs, else NEW.
                           Positioned(
                             top: 8, left: 8,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.marigold,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                'NEW',
-                                style: TextStyle(
-                                  color: AppColors.marigoldInk,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
+                            child: p.isDesignedGarment
+                                ? _RemixableChip(handle: p.creatorHandle, remixCount: p.remixCount)
+                                : Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.marigold,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      'NEW',
+                                      style: TextStyle(
+                                        color: AppColors.marigoldInk,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
                           ),
+                          if (p.hasBackDesign)
+                            const Positioned(
+                              bottom: 8, left: 8,
+                              child: _BackDesignChip(),
+                            ),
                         ]),
                       ),
                       Padding(
@@ -908,8 +990,8 @@ class HomeProductGrid extends StatelessWidget {
                               tag: tag,
                               child: Container(
                                 color: isDark ? AppColors.backgroundLight : const Color(0xFFF5F4F0),
-                                child: p.imageUrl != null
-                                    ? SafeNetworkImage(imageUrl: p.imageUrl!, fit: BoxFit.cover)
+                                child: p.displayImageUrl != null
+                                    ? SafeNetworkImage(imageUrl: p.displayImageUrl!, fit: BoxFit.cover)
                                     : Icon(Icons.image_not_supported,
                                         color: ink.withValues(alpha: 0.4), size: 36),
                               ),
@@ -926,6 +1008,17 @@ class HomeProductGrid extends StatelessWidget {
                               child: const Icon(Icons.favorite_border, color: Colors.white, size: 14),
                             ),
                           ),
+                          // Special indication: remixable community design.
+                          if (p.isDesignedGarment)
+                            Positioned(
+                              top: 10, left: 10,
+                              child: _RemixableChip(handle: p.creatorHandle, remixCount: p.remixCount),
+                            ),
+                          if (p.hasBackDesign)
+                            const Positioned(
+                              bottom: 50, left: 10,
+                              child: _BackDesignChip(),
+                            ),
                           Positioned(
                             bottom: 0, left: 0, right: 0,
                             child: Container(
