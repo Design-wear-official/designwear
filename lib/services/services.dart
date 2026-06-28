@@ -7,6 +7,8 @@ export 'design_history_service.dart';
 export 'design_storage_service.dart';
 export 'design_studio_demo_service.dart';
 export 'design_template_service.dart';
+export 'custom_sticker_service.dart';
+export 'image_sanitizer.dart';
 export 'order_service.dart';
 export 'recent_emoji_service.dart';
 export 'razorpay_service.dart';

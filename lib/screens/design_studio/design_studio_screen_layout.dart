@@ -434,7 +434,10 @@ extension _LayoutMethods on _DesignStudioScreenState {
           onToggleTextEffect: _toggleTextEffect,
         );
       case 'emoji':
-        return StickersTab(onAddStickerElement: _addStickerElement);
+        return StickersTab(
+          onAddStickerElement: _addStickerElement,
+          onAddImageSticker: _addImageStickerElement,
+        );
       case 'shapes':
         return _buildShapesPane();
       case 'place':

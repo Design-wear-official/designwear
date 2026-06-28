@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Cloud Storage security rules.
+//
+// The app does NOT use the Firebase Storage client SDK. All writes go through
+// the backend (Admin SDK, which bypasses these rules), and reads happen via
+// tokenized download URLs (`?alt=media&token=...`) that also bypass rules.
+//
+// Therefore we deny ALL direct client access as defense-in-depth: no anonymous
+// listing, no client uploads, no overwriting another user's objects.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

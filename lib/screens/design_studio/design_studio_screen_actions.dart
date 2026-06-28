@@ -128,6 +128,24 @@ extension _ActionMethods on _DesignStudioScreenState {
     setState(() => _selectedElementId = element.id);
   }
 
+  /// Places an uploaded custom image sticker on the canvas. The bytes are
+  /// embedded as base64 (DesignElementType.image) so the existing canvas
+  /// rendering and publish-capture pipeline work unchanged.
+  void _addImageStickerElement(Uint8List pngBytes) {
+    final element = DesignElement(
+      id: DesignStudioUtils.generateElementId(DesignElementType.image),
+      type: DesignElementType.image,
+      content: base64Encode(pngBytes),
+      x: 0,
+      y: 0,
+      width: DesignStudioConstants.defaultImageSize,
+      height: DesignStudioConstants.defaultImageSize,
+      side: _side,
+    );
+    _updateDesign(_design.addElement(element));
+    setState(() => _selectedElementId = element.id);
+  }
+
   void _addShapeElement(String shape) {
     final element = DesignElement(
       id: DesignStudioUtils.generateElementId(DesignElementType.shape),
