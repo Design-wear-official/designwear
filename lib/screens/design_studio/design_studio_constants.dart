@@ -75,32 +75,8 @@ class DesignStudioConstants {
     Color(0xFF5C4033), // Dark Brown
   ];
 
-  // Available Stickers
-  static const List<String> availableStickers = [
-    '⭐',
-    '🔥',
-    '❤️',
-    '🎸',
-    '👑',
-    '😎',
-    '💀',
-    '🍕',
-    '🎉',
-    '⚽',
-    '🚀',
-    '🌈',
-    '🎨',
-    '🦄',
-    '🏆',
-    '💎',
-    '🌟',
-    '💯',
-    '✨',
-    '🎭',
-    '🎯',
-    '🎪',
-    '🌙',
-  ];
+  // Stickers/emojis are user-supplied — we don't ship a preset list.
+  // See StickersTab, where users type or paste their own emojis.
 
   // Tab Types
   static const List<Map<String, dynamic>> toolTabs = [
