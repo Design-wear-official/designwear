@@ -8,6 +8,7 @@ export 'design_storage_service.dart';
 export 'design_studio_demo_service.dart';
 export 'design_template_service.dart';
 export 'order_service.dart';
+export 'recent_emoji_service.dart';
 export 'razorpay_service.dart';
 export 'sanity_service.dart';
 export 'theme_provider.dart';

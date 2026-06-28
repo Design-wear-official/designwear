@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/services/recent_emoji_service.dart';
 
 /// Stickers tab — users add their OWN emojis. We don't ship a preset list.
 ///
-/// The user types or pastes an emoji into the field and adds it. Emojis added
-/// this session are kept for quick re-use; tapping one places it on the canvas.
+/// The user types or pastes an emoji into the field and adds it. Added emojis
+/// are persisted via [RecentEmojiService] so they survive app restarts and
+/// reappear next time the studio is opened; tapping one places it on the canvas.
 class StickersTab extends StatefulWidget {
   final Function(String) onAddStickerElement;
 
@@ -19,9 +21,23 @@ class StickersTab extends StatefulWidget {
 class _StickersTabState extends State<StickersTab> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
+  final RecentEmojiService _emojiService = RecentEmojiService();
 
-  /// Emojis the user has added this session, most-recent first.
-  final List<String> _userEmojis = [];
+  /// Emojis the user has added, most-recent first. Loaded from and persisted
+  /// to [RecentEmojiService].
+  List<String> _userEmojis = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedEmojis();
+  }
+
+  Future<void> _loadSavedEmojis() async {
+    final saved = await _emojiService.getRecentEmojis();
+    if (!mounted) return;
+    setState(() => _userEmojis = saved);
+  }
 
   @override
   void dispose() {
@@ -36,19 +52,26 @@ class _StickersTabState extends State<StickersTab> {
     return chars.where((c) => c.trim().isNotEmpty).toList();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final emojis = _splitGraphemes(_controller.text);
     if (emojis.isEmpty) return;
-    setState(() {
-      for (final e in emojis) {
-        _userEmojis.remove(e); // de-dupe, move to front
-        _userEmojis.insert(0, e);
-      }
-      _controller.clear();
-    });
+    _controller.clear();
+    // Persist each added emoji (oldest first so the last keeps front position).
+    List<String> updated = _userEmojis;
+    for (final e in emojis.reversed) {
+      updated = await _emojiService.addEmoji(e);
+    }
+    if (!mounted) return;
+    setState(() => _userEmojis = updated);
     // Add the first one straight to the canvas for immediate feedback.
     widget.onAddStickerElement(emojis.first);
     _focusNode.requestFocus();
+  }
+
+  Future<void> _removeEmoji(String emoji) async {
+    final updated = await _emojiService.removeEmoji(emoji);
+    if (!mounted) return;
+    setState(() => _userEmojis = updated);
   }
 
   @override
@@ -152,8 +175,7 @@ class _StickersTabState extends State<StickersTab> {
                     final sticker = _userEmojis[index];
                     return GestureDetector(
                       onTap: () => widget.onAddStickerElement(sticker),
-                      onLongPress: () =>
-                          setState(() => _userEmojis.removeAt(index)),
+                      onLongPress: () => _removeEmoji(sticker),
                       child: Container(
                         decoration: BoxDecoration(
                           color: paper,
