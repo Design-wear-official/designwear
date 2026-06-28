@@ -10,10 +10,16 @@ class AgentChatWidget extends StatefulWidget {
   final CustomDesign currentDesign;
   final Function(CustomDesign) onDesignUpdate;
 
+  /// Distance from the bottom of the screen for the floating launcher/chat.
+  /// Raised on mobile so the button clears the bottom tools row / open panel
+  /// instead of overlapping it.
+  final double bottomOffset;
+
   const AgentChatWidget({
     super.key,
     required this.currentDesign,
     required this.onDesignUpdate,
+    this.bottomOffset = 20,
   });
 
   @override
@@ -117,7 +123,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
     final chatH = (screenH * 0.45).clamp(280.0, 480.0);
 
     return Positioned(
-      bottom: 20,
+      bottom: widget.bottomOffset,
       right: 20,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,

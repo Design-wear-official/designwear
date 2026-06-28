@@ -129,6 +129,16 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   Widget build(BuildContext context) {
     final isMobile = ResponsiveUtils.isMobile(context);
 
+    // On mobile the AI launcher must clear the bottom tools row (64) and, when
+    // open, the active tool panel (240) instead of overlapping them.
+    double aiBottomOffset = 20;
+    if (isMobile) {
+      const toolsRowHeight = 64.0;
+      final panelHeight = _isPanelCollapsedOnMobile ? 0.0 : 240.0;
+      aiBottomOffset =
+          MediaQuery.paddingOf(context).bottom + toolsRowHeight + panelHeight + 14;
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _buildAppBar(context),
@@ -146,6 +156,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           AgentChatWidget(
             currentDesign: _design,
             onDesignUpdate: _onAiDesignUpdate,
+            bottomOffset: aiBottomOffset,
           ),
           if (_showTemplates)
             TemplatesPanel(
