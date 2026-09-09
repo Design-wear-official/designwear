@@ -56,13 +56,13 @@ class ToolsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final card = isDark ? AppColors.cardDark : AppColors.cardLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final sidebarBg = AppColors.dsBarBg(isDark);
+    final hair = AppColors.dsBorder(isDark);
 
     final child = isVertical
         ? Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: tools.map((tool) => _buildToolButton(context, tool)).toList(),
           )
         : Row(
@@ -72,13 +72,13 @@ class ToolsPanel extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: card,
+        color: sidebarBg,
         border: isVertical
             ? Border(right: BorderSide(color: hair, width: 1))
             : Border(top: BorderSide(color: hair, width: 1)),
       ),
       padding: isVertical
-          ? const EdgeInsets.symmetric(vertical: 16, horizontal: 8)
+          ? const EdgeInsets.symmetric(vertical: 12, horizontal: 10)
           : const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
       child: child,
     );
@@ -89,11 +89,8 @@ class ToolsPanel extends StatelessWidget {
     final id = tool['id'] as String;
     final isSelected = activeTool == id;
 
-    final color = isSelected
-        ? (isDark ? Colors.white : const Color(0xFF15182B))
-        : (isDark ? AppColors.stone : const Color(0xFF7A7B82));
-
-    final iconColor = isSelected ? AppColors.marigold : color;
+    final inactiveColor = AppColors.dsTextSecondary(isDark);
+    final color = isSelected ? AppColors.dsAccentInk : inactiveColor;
 
     final buttonContent = Column(
       mainAxisSize: MainAxisSize.min,
@@ -101,17 +98,17 @@ class ToolsPanel extends StatelessWidget {
       children: [
         Icon(
           isSelected ? tool['iconFilled'] as IconData : tool['iconOutline'] as IconData,
-          color: iconColor,
+          color: color,
           size: isVertical ? 20 : 18,
         ),
-        SizedBox(height: isVertical ? 5 : 2),
+        SizedBox(height: isVertical ? 6 : 2),
         Flexible(
           child: Text(
             tool['label'] as String,
             overflow: TextOverflow.ellipsis,
             style: GoogleFonts.outfit(
-              fontSize: isVertical ? 10 : 9,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: isVertical ? 11 : 9,
+              fontWeight: FontWeight.w600,
               color: color,
               letterSpacing: isVertical ? 0.2 : 0.1,
             ),
@@ -122,15 +119,14 @@ class ToolsPanel extends StatelessWidget {
 
     return GestureDetector(
       onTap: () => onToolSelected(id),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
+      child: Container(
+        width: isVertical ? 68 : null,
+        margin: isVertical ? const EdgeInsets.only(bottom: 6) : EdgeInsets.zero,
         padding: isVertical
-            ? const EdgeInsets.symmetric(vertical: 16)
-            : const EdgeInsets.symmetric(vertical: 2),
+            ? const EdgeInsets.symmetric(vertical: 10, horizontal: 4)
+            : const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (isDark ? Colors.white.withValues(alpha: 0.04) : const Color(0xFF15182B).withValues(alpha: 0.04))
-              : Colors.transparent,
+          color: isSelected ? AppColors.dsAccent : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: buttonContent,

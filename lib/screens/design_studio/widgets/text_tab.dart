@@ -26,26 +26,53 @@ class TextTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton.icon(
-                onPressed: () => _showEnhancedTextEditor(context),
-                icon: const Icon(Icons.add),
-                label: const Text('ADD TEXT'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.marigold,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  elevation: 0,
-                ),
+        Text(
+          'ADD TEXT',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            color: AppColors.dsTextSecondary(isDark),
+            letterSpacing: 0.6,
+          ),
+        ),
+        const SizedBox(height: 14),
+        GestureDetector(
+          onTap: () => _showEnhancedTextEditor(context),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              border: Border.all(color: AppColors.dsBorder(isDark)),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              'Type your text…',
+              style: GoogleFonts.outfit(
+                fontSize: 13,
+                color: AppColors.dsTextSecondary(isDark),
               ),
             ),
-          ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () => _showEnhancedTextEditor(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.dsAccent,
+              foregroundColor: AppColors.dsAccentInk,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              elevation: 0,
+              textStyle: GoogleFonts.outfit(fontWeight: FontWeight.w800, fontSize: 13),
+            ),
+            child: const Text('Add to design'),
+          ),
         ),
 
         if (selectedElementId != null && selectedElementId!.startsWith('text')) ...[

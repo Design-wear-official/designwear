@@ -374,12 +374,32 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
               ),
             ),
 
-          // Floating Button (Small, secondary-styled to not dominate the screen)
-          FloatingActionButton.small(
-            onPressed: () => setState(() => _isOpen = !_isOpen),
-            backgroundColor: isDark ? const Color(0xFF262B3D) : const Color(0xFFE4E2DA),
-            foregroundColor: AppColors.marigold,
-            child: const Icon(Icons.auto_awesome, size: 18),
+          // Floating AI assistant launcher — 48x48 solid-accent circle with a
+          // sparkle icon, per the Design Studio mockup spec.
+          Material(
+            color: Colors.transparent,
+            shape: const CircleBorder(),
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: () => setState(() => _isOpen = !_isOpen),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: AppColors.dsAccent,
+                  shape: BoxShape.circle,
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x4D000000), // rgba(0,0,0,0.3)
+                      blurRadius: 24,
+                      offset: Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.auto_awesome,
+                    size: 20, color: AppColors.dsAccentInk),
+              ),
+            ),
           ),
         ],
       ),

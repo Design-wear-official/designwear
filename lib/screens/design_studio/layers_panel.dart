@@ -64,18 +64,21 @@ class LayersPanel extends StatelessWidget {
               ),
             ),
           
-          if (provenanceLabel != null) ...[
-            Text(
-              'Inherited $provenanceLabel',
-              style: GoogleFonts.spaceMono(
-                fontWeight: FontWeight.bold,
-                fontSize: 11.5,
-                color: AppColors.stone,
-                letterSpacing: 0.5,
+          Builder(builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Text(
+                'INHERITED FROM ORIGINAL',
+                style: GoogleFonts.outfit(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 12,
+                  color: AppColors.dsTextSecondary(isDark),
+                  letterSpacing: 0.6,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-          ],
+            );
+          }),
 
           // Layers List
           Expanded(child: _buildLayersList(context)),
@@ -86,8 +89,8 @@ class LayersPanel extends StatelessWidget {
 
   Widget _buildLayersList(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final paper = AppColors.dsCardBg(isDark);
+    final hair = AppColors.dsBorder(isDark);
 
     final allLayers = DesignStudioUtils.generateLayersData(design);
 
@@ -173,7 +176,7 @@ class LayersPanel extends StatelessWidget {
                   fontSize: 9.5,
                   fontWeight: FontWeight.bold,
                   color: isLegacyItem
-                      ? (isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710))
+                      ? AppColors.dsTextSecondary(isDark)
                       : AppColors.stone,
                 ),
               ),
@@ -216,7 +219,7 @@ class LayersPanel extends StatelessWidget {
             color: Colors.transparent,
             borderRadius: BorderRadius.circular(11),
             border: Border.all(
-              color: isDark ? const Color(0xFF262B3D) : const Color(0xFFE4E2DA),
+              color: AppColors.dsAccent,
               width: 1.5,
               style: BorderStyle.solid, // Flutter doesn't have native dashed border natively easily without custom paint
             ),
@@ -278,8 +281,8 @@ class LayersPanel extends StatelessWidget {
     required bool isLegacy,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final paper = AppColors.dsCardBg(isDark);
+    final hair = AppColors.dsBorder(isDark);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
@@ -324,7 +327,7 @@ class LayersPanel extends StatelessWidget {
                   style: GoogleFonts.spaceMono(
                     fontSize: 9.5,
                     fontWeight: FontWeight.bold,
-                    color: isDark ? const Color(0xFFFFE9C2) : const Color(0xFF6F4710),
+                    color: AppColors.dsTextSecondary(isDark),
                   ),
                 ),
               ],
