@@ -4,11 +4,14 @@ extension _LayoutMethods on _DesignStudioScreenState {
   // ── AppBar ──────────────────────────────────────────────────────────────────
 
   PreferredSizeWidget _buildAppBar(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final barBg = AppColors.dsBarBg(isDark);
+    final hair = AppColors.dsBorder(isDark);
+    final textPrimary = AppColors.dsTextPrimary(isDark);
+    final textSecondary = AppColors.dsTextSecondary(isDark);
 
     return AppBar(
+      toolbarHeight: 64,
       titleSpacing: 16,
       title: ResponsiveUtils.isMobile(context)
           ? null
@@ -18,20 +21,20 @@ extension _LayoutMethods on _DesignStudioScreenState {
                 Text('DESIGN',
                     style: GoogleFonts.archivo(
                         fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        color: cs.onSurface,
-                        letterSpacing: 1.2)),
+                        fontSize: 18,
+                        color: textPrimary,
+                        letterSpacing: -0.1)),
                 Text('WEAR',
                     style: GoogleFonts.archivo(
                         fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        color: AppColors.marigold,
-                        letterSpacing: 1.2)),
+                        fontSize: 18,
+                        color: AppColors.dsAccent,
+                        letterSpacing: -0.1)),
               ],
             ),
       centerTitle: false,
-      backgroundColor: cs.surface,
-      foregroundColor: cs.onSurface,
+      backgroundColor: barBg,
+      foregroundColor: textPrimary,
       elevation: 0,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
@@ -44,32 +47,30 @@ extension _LayoutMethods on _DesignStudioScreenState {
             child: Center(
               child: Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? const Color(0xFF1F2232)
-                      : const Color(0xFFEBEBF0),
+                  color: AppColors.dsPillBg(isDark),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: hair),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.fork_right,
-                        size: 14,
-                        color: isDark ? AppColors.stone : Colors.black54),
+                    Icon(Icons.fork_right, size: 14, color: textSecondary),
                     const SizedBox(width: 4),
                     Text('Remixing ',
                         style: GoogleFonts.outfit(
-                            fontSize: 11.5,
-                            color: isDark ? AppColors.stone : Colors.black54)),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: textSecondary)),
                     Text(
                       widget.remixSource != null
                           ? '${widget.remixSource!.creatorHandle ?? widget.remixSource!.title}\'s ${widget.remixSource!.productType ?? 'Design'}'
-                          : 'New Design',
+                          : 'an original tee',
                       style: GoogleFonts.outfit(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: textPrimary),
                     ),
                   ],
                 ),
@@ -80,8 +81,8 @@ extension _LayoutMethods on _DesignStudioScreenState {
           onPressed: _historyService.canUndo ? _undo : null,
           icon: Icon(Icons.undo,
               color: _historyService.canUndo
-                  ? cs.onSurface
-                  : cs.onSurface.withValues(alpha: 0.3),
+                  ? textSecondary
+                  : textSecondary.withValues(alpha: 0.35),
               size: 20),
           tooltip: 'Undo',
         ),
@@ -89,40 +90,47 @@ extension _LayoutMethods on _DesignStudioScreenState {
           onPressed: _historyService.canRedo ? _redo : null,
           icon: Icon(Icons.redo,
               color: _historyService.canRedo
-                  ? cs.onSurface
-                  : cs.onSurface.withValues(alpha: 0.3),
+                  ? textSecondary
+                  : textSecondary.withValues(alpha: 0.35),
               size: 20),
           tooltip: 'Redo',
         ),
         // Secondary actions: inline on desktop/tablet, overflow menu on mobile
         // so the bar doesn't overflow on narrow phones.
         if (!ResponsiveUtils.isMobile(context)) ...[
+          Container(
+            width: 1,
+            height: 22,
+            margin: const EdgeInsets.symmetric(horizontal: 6),
+            color: hair,
+          ),
           IconButton(
             onPressed: () => SaveDesignDialog.show(context, _design, _storageService,
                 captureCallback: _captureCanvasPng),
-            icon: const Icon(Icons.save_outlined, size: 20),
+            icon: Icon(Icons.save_outlined, size: 20, color: textSecondary),
             tooltip: 'Save Design',
           ),
           IconButton(
             onPressed: _open3DPreview,
-            icon: const Icon(Icons.view_in_ar_outlined, size: 20),
+            icon: Icon(Icons.view_in_ar_outlined, size: 20, color: textSecondary),
             tooltip: '3D Preview',
           ),
           IconButton(
             onPressed: _navigateToTryOn,
-            icon: const Icon(Icons.face_retouching_natural_outlined, size: 20),
+            icon: Icon(Icons.face_retouching_natural_outlined,
+                size: 20, color: textSecondary),
             tooltip: 'Virtual Try-On',
           ),
           IconButton(
             onPressed: () => setState(() => _showTemplates = !_showTemplates),
             icon: Icon(Icons.style_outlined,
                 size: 20,
-                color: _showTemplates ? AppColors.marigold : cs.onSurface),
+                color: _showTemplates ? AppColors.dsAccent : textSecondary),
             tooltip: 'Templates',
           ),
         ] else
           PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 20),
+            icon: Icon(Icons.more_vert, size: 20, color: textSecondary),
             tooltip: 'More',
             onSelected: (value) {
               switch (value) {
@@ -182,14 +190,12 @@ extension _LayoutMethods on _DesignStudioScreenState {
             child: ElevatedButton(
               onPressed: _isPublishing ? null : _publishAndSync,
               style: ElevatedButton.styleFrom(
-                backgroundColor:
-                    isDark ? Colors.white : const Color(0xFF15182B),
-                foregroundColor:
-                    isDark ? const Color(0xFF15182B) : Colors.white,
+                backgroundColor: AppColors.dsPublishBg(isDark),
+                foregroundColor: AppColors.dsPublishText(isDark),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999)),
+                    borderRadius: BorderRadius.circular(20)),
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 22, vertical: 10),
                 elevation: 0,
               ),
               child: _isPublishing
@@ -198,14 +204,12 @@ extension _LayoutMethods on _DesignStudioScreenState {
                       height: 14,
                       child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: isDark
-                              ? const Color(0xFF15182B)
-                              : Colors.white))
+                          color: AppColors.dsPublishText(isDark)))
                   : Text('PUBLISH',
                       style: GoogleFonts.outfit(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11.5,
-                          letterSpacing: 0.8)),
+                          fontWeight: FontWeight.w800,
+                          fontSize: 13,
+                          letterSpacing: 0.4)),
             ),
           ),
         ),
@@ -217,7 +221,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
 
   Widget _buildDesktopTabletBody() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final hair = AppColors.dsBorder(isDark);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -232,14 +236,15 @@ extension _LayoutMethods on _DesignStudioScreenState {
         ),
         Expanded(
           child: Container(
-            color: Theme.of(context).colorScheme.surface,
+            color: AppColors.dsPageBg(isDark),
             child: Column(
               children: [
                 _buildGarmentTypeSelector(),
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 40, vertical: 32),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
@@ -288,12 +293,12 @@ extension _LayoutMethods on _DesignStudioScreenState {
           ),
         ),
         Container(
-          width: 320,
+          width: 340,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
+            color: AppColors.dsBarBg(isDark),
             border: Border(left: BorderSide(color: hair, width: 1)),
           ),
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           child: _buildActivePaneContent(),
         ),
       ],
@@ -303,12 +308,13 @@ extension _LayoutMethods on _DesignStudioScreenState {
   // ── Mobile layout ───────────────────────────────────────────────────────────
 
   Widget _buildMobileBody() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         _buildGarmentTypeSelector(),
         Expanded(
           child: Container(
-            color: Theme.of(context).colorScheme.surface,
+            color: AppColors.dsPageBg(isDark),
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 16),
@@ -361,12 +367,10 @@ extension _LayoutMethods on _DesignStudioScreenState {
             duration: const Duration(milliseconds: 200),
             height: 240,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
+              color: AppColors.dsBarBg(isDark),
               border: Border(
                 top: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.hairDark
-                      : AppColors.hairLight,
+                  color: AppColors.dsBorder(isDark),
                   width: 1,
                 ),
               ),
@@ -463,7 +467,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
     final canBringForward = idx >= 0 && idx < sideElements.length - 1;
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final hair = AppColors.dsBorder(isDark);
     final cs = Theme.of(context).colorScheme;
 
     return AnimatedSize(
@@ -472,7 +476,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: cs.surface,
+          color: AppColors.dsBarBg(isDark),
           border: Border(top: BorderSide(color: hair)),
         ),
         child: SafeArea(
@@ -635,7 +639,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
     };
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final hair = AppColors.dsBorder(isDark);
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -719,6 +723,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
   // ── Garment type selector ───────────────────────────────────────────────────
 
   Widget _buildGarmentTypeSelector() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SizedBox(
       height: 48.h,
       child: ListView.separated(
@@ -735,26 +740,13 @@ extension _LayoutMethods on _DesignStudioScreenState {
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.marigold : Colors.transparent,
+                color: isSelected ? AppColors.dsAccent : Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isSelected
-                      ? AppColors.marigold
-                      : Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withValues(alpha: 0.3),
+                  color: isSelected ? AppColors.dsAccent : AppColors.dsBorder(isDark),
                 ),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                            color: AppColors.marigold.withValues(alpha: 0.25),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2))
-                      ]
-                    : null,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -762,12 +754,11 @@ extension _LayoutMethods on _DesignStudioScreenState {
                   Text(
                     type['label']!,
                     style: GoogleFonts.outfit(
-                      fontSize: 12,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
                       color: isSelected
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.onSurface,
+                          ? AppColors.dsAccentInk
+                          : AppColors.dsTextPrimary(isDark),
                     ),
                   ),
                 ],

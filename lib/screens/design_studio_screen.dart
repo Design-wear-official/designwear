@@ -140,7 +140,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: AppColors.dsPageBg(
+          Theme.of(context).brightness == Brightness.dark),
       appBar: _buildAppBar(context),
       body: Stack(
         children: [

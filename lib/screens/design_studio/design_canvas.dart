@@ -55,9 +55,11 @@ class DesignCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final card = isDark ? AppColors.cardDark : AppColors.cardLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    // The canvas frame is a fixed white "print card" in both app themes, so
+    // the grid drawn on top of it uses a fixed light-gray line rather than a
+    // theme-dependent hairline (which would vanish against the white frame
+    // in dark mode).
+    const hair = Color(0x14141414); // ~8% black
 
     return RepaintBoundary(
       key: canvasKey,
@@ -71,20 +73,13 @@ class DesignCanvas extends StatelessWidget {
           decoration: bare
               ? null
               : BoxDecoration(
-                  gradient: RadialGradient(
-                    center: const Alignment(0, -0.6),
-                    radius: 1.3,
-                    colors: isDark
-                        ? [const Color(0xFF1A1D2B), const Color(0xFF0D0F16)]
-                        : [const Color(0xFFFFFFFF), const Color(0xFFF1F0EC)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: hair, width: 1),
-                  boxShadow: [
+                  color: AppColors.dsCanvasFrame,
+                  borderRadius: BorderRadius.circular(6),
+                  boxShadow: const [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
-                      blurRadius: 28,
-                      offset: const Offset(0, 8),
+                      color: Color(0x40000000), // rgba(0,0,0,0.25)
+                      blurRadius: 60,
+                      offset: Offset(0, 20),
                     ),
                   ],
                 ),
@@ -225,7 +220,9 @@ class DesignCanvas extends StatelessWidget {
                   ),
                 ),
 
-              // Provenance chip (top-left) — driven by remix source
+              // "from original" chip (top-left) — driven by remix source.
+              // Dark translucent chrome — same in both themes, since it sits
+              // on top of the garment mockup, not the page.
               if (!bare && provenanceLabel != null)
                 Positioned(
                   left: 14,
@@ -234,33 +231,21 @@ class DesignCanvas extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: isDark
-                          ? const Color(0xFF261D15)
-                          : const Color(0xFFF4E6CD),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: isDark
-                            ? const Color(0xFF4C3B24)
-                            : const Color(0xFFECD6A8),
-                      ),
+                      color: AppColors.dsFrameChrome,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.fork_right,
-                            size: 11,
-                            color: isDark
-                                ? const Color(0xFFFFE9C2)
-                                : const Color(0xFF6F4710)),
+                        const Icon(Icons.fork_right,
+                            size: 11, color: Color(0xFFE8E6DF)),
                         const SizedBox(width: 4),
                         Text(
                           provenanceLabel!,
-                          style: GoogleFonts.spaceMono(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 9,
-                            color: isDark
-                                ? const Color(0xFFFFE9C2)
-                                : const Color(0xFF6F4710),
+                          style: GoogleFonts.outfit(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 10,
+                            color: const Color(0xFFE8E6DF),
                           ),
                         ),
                       ],
@@ -268,16 +253,17 @@ class DesignCanvas extends StatelessWidget {
                   ),
                 ),
 
-              // Front / Back toggle pill (top-center)
+              // Front / Back toggle pill (top-right) — dark translucent
+              // segmented control, same chrome style in both themes.
               if (!bare)
               Positioned(
                 top: 14,
+                right: 14,
                 child: Container(
-                  padding: const EdgeInsets.all(2.5),
+                  padding: const EdgeInsets.all(3),
                   decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(color: hair),
+                    color: AppColors.dsFrameChrome,
+                    borderRadius: BorderRadius.circular(16),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -299,27 +285,24 @@ class DesignCanvas extends StatelessWidget {
                 ),
               ),
 
-              // Print Size Readout (bottom-right)
+              // Print Size Readout (bottom-right) — dark translucent chrome.
               if (!bare)
               Positioned(
                 right: 14,
                 bottom: 14,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? const Color(0xFF151824).withValues(alpha: 0.9)
-                        : Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: hair),
+                    color: AppColors.dsFrameChrome,
+                    borderRadius: BorderRadius.circular(6),
                   ),
                   child: Text(
                     'PRINT 30 × 40 cm',
-                    style: GoogleFonts.spaceMono(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 8.5,
-                      color: isDark ? AppColors.stone : const Color(0xFF15182B),
-                      letterSpacing: 0.5,
+                    style: GoogleFonts.outfit(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                      color: const Color(0xFFC9C6BC),
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
@@ -337,27 +320,25 @@ class DesignCanvas extends StatelessWidget {
     required bool isActive,
     required VoidCallback onTap,
   }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // This toggle lives on the dark translucent canvas-frame chrome, which is
+    // identical in both light and dark app themes (it overlays the garment
+    // mockup, not the page) — so its own colors are theme-independent.
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
         decoration: BoxDecoration(
-          color: isActive
-              ? (isDark ? Colors.white : const Color(0xFF15182B))
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(999),
+          color: isActive ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(13),
         ),
         child: Text(
           label.toUpperCase(),
-          style: GoogleFonts.spaceMono(
-            fontSize: 9,
-            fontWeight: FontWeight.bold,
-            color: isActive
-                ? (isDark ? const Color(0xFF15182B) : Colors.white)
-                : (isDark ? AppColors.stone : const Color(0xFF7A7B82)),
-            letterSpacing: 0.5,
+          style: GoogleFonts.outfit(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: isActive ? const Color(0xFF14161C) : const Color(0xFFC9C6BC),
+            letterSpacing: 0.6,
           ),
         ),
       ),

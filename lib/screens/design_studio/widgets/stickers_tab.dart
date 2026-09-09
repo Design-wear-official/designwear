@@ -184,7 +184,7 @@ class _StickersTabState extends State<StickersTab> {
 
   Widget _buildModeToggle(Color onSurface) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final hair = AppColors.dsBorder(isDark);
     final primary = Theme.of(context).colorScheme.primary;
 
     Widget pill(String label, _StickerMode mode) {
@@ -226,8 +226,8 @@ class _StickersTabState extends State<StickersTab> {
 
   Widget _buildEmojiView(Color onSurface) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final paper = AppColors.dsCardBg(isDark);
+    final hair = AppColors.dsBorder(isDark);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,8 +313,8 @@ class _StickersTabState extends State<StickersTab> {
 
   Widget _buildStickerView(Color onSurface) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final paper = AppColors.dsCardBg(isDark);
+    final hair = AppColors.dsBorder(isDark);
     final primary = Theme.of(context).colorScheme.primary;
 
     return Column(

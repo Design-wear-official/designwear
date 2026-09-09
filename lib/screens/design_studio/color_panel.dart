@@ -318,30 +318,26 @@ class _ColorPanelState extends State<ColorPanel> {
   Widget _buildSwatch(Color color, bool isSelected, VoidCallback onTap,
       {Widget? child, double size = 36}) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final ringColor =
+        isSelected ? AppColors.dsAccent : AppColors.dsBorder(isDark);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        width: size,
-        height: size,
+        width: size.isFinite ? size : null,
+        height: size.isFinite ? size : null,
         decoration: BoxDecoration(
           color: color,
           shape: BoxShape.circle,
           border: Border.all(
-            color: isSelected
-                ? (isDark ? Colors.white : Colors.black)
-                : (isDark
-                    ? const Color(0xFF262B3D)
-                    : const Color(0xFFE4E2DA)),
-            width: isSelected ? 3 : 1.5,
+            color: AppColors.dsBarBg(isDark),
+            width: 2,
           ),
           boxShadow: [
-            if (isSelected)
-              BoxShadow(
-                color: color.withValues(alpha: 0.4),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
+            BoxShadow(
+              color: ringColor,
+              spreadRadius: 2,
+            ),
           ],
         ),
         child: child ??
@@ -371,25 +367,29 @@ class _ColorPanelState extends State<ColorPanel> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Fabric colour — $activeName',
-            style: GoogleFonts.spaceMono(
-              fontWeight: FontWeight.bold,
+            'TEE COLOUR — $activeName',
+            style: GoogleFonts.outfit(
+              fontWeight: FontWeight.w700,
               fontSize: 12,
-              color: isDark ? AppColors.stone : const Color(0xFF7A7B82),
-              letterSpacing: 0.5,
+              color: AppColors.dsTextSecondary(isDark),
+              letterSpacing: 0.6,
             ),
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
+          const SizedBox(height: 14),
+          GridView.count(
+            crossAxisCount: 5,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1,
             children: [
               // Preset fabric swatches
               ...fabrics.map((fabric) {
                 final color = fabric['color'] as Color;
                 final isSelected = DesignStudioUtils.isColorSelected(
                     color, widget.design.baseColor);
-                return _buildSwatch(color, isSelected, () => _applyBase(color));
+                return _buildSwatch(color, isSelected, () => _applyBase(color), size: double.infinity);
               }),
 
               // Custom color swatch (shown after picking via "+" button)
@@ -399,6 +399,7 @@ class _ColorPanelState extends State<ColorPanel> {
                   DesignStudioUtils.isColorSelected(
                       _customColor!, widget.design.baseColor),
                   () => _applyBase(_customColor!, fromCustom: true),
+                  size: double.infinity,
                 ),
 
               // Rainbow "+" button — opens hex colour picker
@@ -406,14 +407,10 @@ class _ColorPanelState extends State<ColorPanel> {
                 onTap: _openCustomPicker,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 150),
-                  width: 36,
-                  height: 36,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: isDark
-                          ? const Color(0xFF262B3D)
-                          : const Color(0xFFD0D0D0),
+                      color: AppColors.dsBorder(isDark),
                       width: 1.5,
                     ),
                     gradient: const LinearGradient(

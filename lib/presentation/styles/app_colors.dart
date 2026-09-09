@@ -137,10 +137,12 @@ class AppColors {
   // ============================================================================
 
   /// Marigold — primary remix/CTA accent from demo
-  static const Color marigold = Color(0xFFE2A33C);
+  /// (matches the Design Studio mockup's `accent` token, #F5A623)
+  static const Color marigold = Color(0xFFF5A623);
 
   /// Marigold ink — dark text on marigold backgrounds
-  static const Color marigoldInk = Color(0xFF6F4710);
+  /// (matches the Design Studio mockup's `accentInk` token, #14161C)
+  static const Color marigoldInk = Color(0xFF14161C);
 
   /// Like / heart accent
   static const Color like = Color(0xFFE5654B);
@@ -174,6 +176,68 @@ class AppColors {
 
   /// Stone — secondary text
   static const Color stone = Color(0xFF7A7B82);
+
+  // ============================================================================
+  // DESIGN STUDIO MOCKUP TOKENS (exact hex match to the reference mockup)
+  // ============================================================================
+  //
+  // The Design Studio mockup uses a three-tier surface hierarchy that the
+  // legacy paper/card tokens above don't quite express (pageBg < barBg <
+  // cardBg, increasing lightness), so these are additive, dedicated tokens
+  // used only by the Design Studio screen and its panels.
+
+  /// Page background behind the canvas area.
+  static Color dsPageBg(bool isDark) =>
+      isDark ? const Color(0xFF12151D) : const Color(0xFFF5F3EE);
+
+  /// Top bar / left tools sidebar / right panel background.
+  static Color dsBarBg(bool isDark) =>
+      isDark ? const Color(0xFF171B25) : Colors.white;
+
+  /// Card surface inside panels (layer cards, emoji tiles, shape swatches,
+  /// placement rows).
+  static Color dsCardBg(bool isDark) =>
+      isDark ? const Color(0xFF1D2230) : const Color(0xFFF5F3EE);
+
+  /// Hairline border.
+  static Color dsBorder(bool isDark) =>
+      isDark ? const Color(0x14FFFFFF) : const Color(0x1A141414);
+
+  /// Primary (high-contrast) text.
+  static Color dsTextPrimary(bool isDark) =>
+      isDark ? const Color(0xFFF5F6F8) : const Color(0xFF14161C);
+
+  /// Secondary / muted text.
+  static Color dsTextSecondary(bool isDark) =>
+      isDark ? const Color(0xFF8B90A0) : const Color(0xFF6B6F7A);
+
+  /// "Remixing an original tee" pill background.
+  static Color dsPillBg(bool isDark) =>
+      isDark ? const Color(0xFF1D2230) : const Color(0xFFF0EDE6);
+
+  /// Accent color used for the active tool, garment badge, and primary CTAs.
+  /// Same value in both themes — alias of [marigold].
+  static const Color dsAccent = marigold;
+
+  /// Ink color on top of accent-colored surfaces. Alias of [marigoldInk].
+  static const Color dsAccentInk = marigoldInk;
+
+  /// Publish button background.
+  static Color dsPublishBg(bool isDark) =>
+      isDark ? Colors.white : const Color(0xFF14161C);
+
+  /// Publish button text.
+  static Color dsPublishText(bool isDark) =>
+      isDark ? const Color(0xFF14161C) : Colors.white;
+
+  /// White garment canvas-frame background — identical in both themes.
+  static const Color dsCanvasFrame = Colors.white;
+
+  /// Dark translucent chrome painted on top of the canvas frame (the
+  /// front/back/left/right toggle, "from original" tag, print-size tag).
+  /// This stays the same in both themes since it overlays the garment
+  /// mockup, not the page.
+  static const Color dsFrameChrome = Color(0xD9141418); // rgba(20,20,24,0.85)
 
   // ============================================================================
   // GRADIENT COLORS

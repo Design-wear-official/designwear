@@ -23,101 +23,76 @@ class PlacementPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Print location',
-          style: GoogleFonts.spaceMono(
-            fontWeight: FontWeight.bold,
+          'PRINT PLACEMENT',
+          style: GoogleFonts.outfit(
+            fontWeight: FontWeight.w700,
             fontSize: 12,
-            color: isDark ? AppColors.stone : const Color(0xFF7A7B82),
-            letterSpacing: 0.5,
+            color: AppColors.dsTextSecondary(isDark),
+            letterSpacing: 0.6,
           ),
         ),
-        const SizedBox(height: 12),
-        GridView.count(
-          crossAxisCount: 2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          mainAxisSpacing: 10,
-          crossAxisSpacing: 10,
-          childAspectRatio: 2.2,
-          children: [
-            _buildOptionButton(
-              context: context,
-              title: 'Centre chest',
-              subtitle: 'Inherited',
-              isSelected: isCentre,
-              onTap: () {
-                onDesignUpdate(design.copyWith(printLocation: 'centre_chest'));
-              },
-            ),
-            _buildOptionButton(
-              context: context,
-              title: 'Left chest',
-              subtitle: 'Pocket',
-              isSelected: isLeft,
-              onTap: () {
-                onDesignUpdate(design.copyWith(printLocation: 'left_chest'));
-              },
-            ),
-          ],
+        const SizedBox(height: 14),
+        _buildOptionRow(
+          context: context,
+          title: 'Centre chest',
+          isSelected: isCentre,
+          onTap: () =>
+              onDesignUpdate(design.copyWith(printLocation: 'centre_chest')),
+        ),
+        const SizedBox(height: 8),
+        _buildOptionRow(
+          context: context,
+          title: 'Left chest',
+          isSelected: isLeft,
+          onTap: () =>
+              onDesignUpdate(design.copyWith(printLocation: 'left_chest')),
         ),
       ],
     );
   }
 
-  Widget _buildOptionButton({
+  Widget _buildOptionRow({
     required BuildContext context,
     required String title,
-    required String subtitle,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final paper = isDark ? AppColors.paperDark : AppColors.paperLight;
-    final card = isDark ? AppColors.cardDark : AppColors.cardLight;
-    final hair = isDark ? AppColors.hairDark : AppColors.hairLight;
+    final card = AppColors.dsCardBg(isDark);
+    final border = AppColors.dsBorder(isDark);
+    final textSecondary = AppColors.dsTextSecondary(isDark);
+    final textPrimary = AppColors.dsTextPrimary(isDark);
 
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.all(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? card : paper,
+          color: card,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected
-                ? (isDark ? Colors.white : Colors.black)
-                : hair,
-            width: isSelected ? 2.0 : 1.5,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+          border: Border.all(color: border, width: 1),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               title,
               style: GoogleFonts.outfit(
-                fontWeight: FontWeight.w700,
-                fontSize: 13.5,
-                color: isSelected ? (isDark ? Colors.white : Colors.black) : (isDark ? AppColors.stone : Colors.black54),
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                color: textPrimary,
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: GoogleFonts.outfit(
-                fontSize: 11,
-                color: isSelected ? AppColors.marigold : (isDark ? AppColors.stone.withValues(alpha: 0.7) : Colors.black38),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isSelected ? AppColors.dsAccent : Colors.transparent,
+                border: Border.all(
+                  color: isSelected ? AppColors.dsAccent : textSecondary,
+                  width: 1.5,
+                ),
               ),
             ),
           ],
