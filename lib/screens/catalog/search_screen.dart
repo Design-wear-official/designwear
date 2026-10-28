@@ -211,7 +211,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           title: Text(p.title),
-          subtitle: Text(p.isInStock ? 'In stock' : 'Out of stock'),
+          subtitle: Text(p.stockLabel),
           trailing: Text(
             formatPrice(p.price),
             style: TextStyle(

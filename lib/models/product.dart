@@ -58,6 +58,17 @@ class Product {
 
   bool get isInStock => stockCount > 0;
 
+  /// Few enough left that shoppers should be told.
+  static const lowStockThreshold = 5;
+  bool get isLowStock => isInStock && stockCount <= lowStockThreshold;
+
+  /// What shoppers read: "In stock", "Only 3 left" or "Out of stock".
+  String get stockLabel => !isInStock
+      ? 'Out of stock'
+      : isLowStock
+      ? 'Only $stockCount left'
+      : 'In stock';
+
   /// 'inStock' or 'outOfStock', the values the product page switches on.
   String get stockStatus => isInStock ? 'inStock' : 'outOfStock';
 

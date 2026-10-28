@@ -200,14 +200,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: _getStockColor(widget.product.stockStatus)
-                          .withValues(alpha: 0.1),
+                      color: _stockColor(widget.product).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      _getStockText(widget.product.stockStatus),
+                      widget.product.isLowStock
+                          ? widget.product.stockLabel
+                          : _getStockText(widget.product.stockStatus),
                       style: TextStyle(
-                        color: _getStockColor(widget.product.stockStatus),
+                        color: _stockColor(widget.product),
                         fontWeight: FontWeight.w600,
                         fontSize: 12,
                       ),
@@ -463,6 +464,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       MaterialPageRoute(builder: (_) => const CartScreen()),
     );
   }
+
+  // Amber when only a few are left, otherwise by availability.
+  Color _stockColor(Product p) =>
+      p.isLowStock ? Colors.orange : _getStockColor(p.stockStatus);
 
   Color _getStockColor(String status) {
     switch (status) {
