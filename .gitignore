@@ -120,3 +120,4 @@ Thumbs.db
 # Rules/config are reviewed in git; they contain no secrets
 .claude/
 .vscode/
+.vercel
