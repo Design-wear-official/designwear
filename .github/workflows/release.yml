@@ -69,15 +69,11 @@ jobs:
           git tag -a "$TAG_NAME" -m "$TAG_NAME"
           git push origin "$TAG_NAME"
 
-      # The app bundles .env as an asset. Everything below is public client
-      # config: the CMS viewer token ships inside the app, so it must be a
-      # READ-ONLY token that only exposes the products collection.
+      # The app bundles .env as an asset, so only public values go in it. The CMS
+      # credentials live on the API server, never in a build of the app.
       - name: Write .env from repository secrets
         run: |
           cat > .env <<EOF
-          SETHUCMS_URL=${{ secrets.SETHUCMS_URL }}
-          SETHUCMS_CONNECTION_ID=${{ secrets.SETHUCMS_CONNECTION_ID }}
-          SETHUCMS_VIEWER_TOKEN=${{ secrets.SETHUCMS_VIEWER_TOKEN }}
           DESIGNWEAR_API_URL=${{ secrets.DESIGNWEAR_API_URL }}
           EOF
           printf '# CI placeholder\n' > .env.local

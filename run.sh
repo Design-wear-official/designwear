@@ -70,9 +70,9 @@ start_api_if_needed() {
     return 0
   fi
   echo "Starting the DesignWear API on port $port..."
-  ( set -a; . ./.env; set +a
-    cd "$dir" && PORT="$port" SETHUCMS_URL="$SETHUCMS_URL" SETHUCMS_CONNECTION_ID="$SETHUCMS_CONNECTION_ID" \
-      SETHUCMS_TOKEN="$SETHUCMS_VIEWER_TOKEN" exec node src/index.js ) > "${TMPDIR:-/tmp}/designwear-api.log" 2>&1 &
+  # The API reads its own settings (incl. the CMS credentials) from
+  # ../designwear-server/.env, so nothing secret passes through the app's .env.
+  ( cd "$dir" && PORT="$port" exec node --env-file-if-exists=.env src/index.js ) > "${TMPDIR:-/tmp}/designwear-api.log" 2>&1 &
   api_pid=$!
   for _ in $(seq 1 20); do
     curl -fs "$url/v1/health" >/dev/null 2>&1 && { echo "API is up (log: ${TMPDIR:-/tmp}/designwear-api.log)"; return 0; }

@@ -1,8 +1,13 @@
 # Security
 
-- **Content** comes from the SethuCMS gateway (`lib/cms/`). Put only a **read-only viewer
-  token** in `.env` (`SETHUCMS_VIEWER_TOKEN`) and expose only `products` to it. The token
-  ships inside the app (and `/assets/.env` on web), so assume it is public.
+- **Content** comes from SethuCMS, but **the app never holds a CMS token**: the DesignWear
+  API reads the catalog with a token kept in `designwear-server/.env` and serves only
+  sellable products. Anything bundled with the app (including `/assets/.env` on web) is
+  public, so no CMS credential belongs there.
+- **CMS side:** in the SethuCMS admin, expose only `products` to the API and keep the
+  connection read-only. Until `customers`, `orders`, `carts`, `inventory*` and
+  `operationLogs` are switched off there, any token for the connection can read them.
+  Rotate the token after changing that.
 - **Accounts, carts, orders, community designs, search and AI** go through the DesignWear
   API (`~/designwear-server`, set `DESIGNWEAR_API_URL`). It hashes passwords, prices orders
   itself, rate-limits, and keeps the AI/payment keys; none of those keys are in the app.
