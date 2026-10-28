@@ -57,6 +57,13 @@ jobs:
       - run: flutter pub get
       - run: flutter build web --release --dart-define=FLAVOR=external
 
-      # The token is read from VERCEL_TOKEN, never passed on the command line.
+      # Deployed from a copy outside the git checkout. Otherwise the CLI attaches the
+      # commit author, and Vercel blocks the deploy when that GitHub account is not a
+      # member of the Vercel team. The token is read from VERCEL_TOKEN.
       - name: Deploy build/web to Vercel (production)
-        run: npx --yes vercel@65.5.0 deploy build/web --prod --yes
+        run: |
+          site="$RUNNER_TEMP/site"
+          mkdir -p "$site"
+          cp -r build/web/. "$site"
+          cd "$site"
+          npx --yes vercel@65.5.0 deploy --prod --yes
