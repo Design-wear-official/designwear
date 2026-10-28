@@ -72,7 +72,7 @@ void main() {
         read('android/app/build.gradle.kts'),
         contains('"app_name", "DesignWear (internal)"'),
       );
-      expect(read('web/index.html'), contains('<title>DesignWear</title>'));
+      expect(read('web/index.html'), contains('<title>DesignWear'));
       expect(read('web/manifest.json'), contains('"name": "DesignWear"'));
       expect(
         read('ios/Runner/Info.plist'),

@@ -17,6 +17,8 @@ import 'flavours/flavour_selector.dart';
 import 'screens/errors/error_screen.dart';
 import 'screens/home/home_screen.dart';
 import 'services/auth/auth_service.dart';
+import 'services/notifications/notification_service.dart';
+import 'services/notifications/push_service.dart';
 import 'services/ai/ai_service.dart';
 import 'services/shop/cart_service.dart';
 import 'services/community/community_service.dart';
@@ -94,6 +96,7 @@ Future<void> main() async {
   final addresses = AddressStore();
   final payments = PaymentMethodStore();
   final orders = OrderStore(api: api);
+  final inbox = NotificationService(api: api);
   final community = api == null ? null : CommunityService(api);
   await Future.wait([
     auth.load(),
@@ -115,6 +118,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: addresses),
         ChangeNotifierProvider.value(value: payments),
         ChangeNotifierProvider.value(value: orders),
+        ChangeNotifierProvider.value(value: inbox),
       ],
       child: const DesignWearApp(),
     ),
@@ -130,9 +134,23 @@ Future<void> main() async {
     // Keep per-account state in step with the session: load it on sign-in and
     // clear it on sign-out so the next person doesn't see it.
     var wasSignedIn = auth.isSignedIn;
+    // Phone notifications (Android and iOS, when Firebase is set up). A message
+    // that arrives while the app is open is shown as a banner.
+    final push = PushService(
+      api: api,
+      inbox: inbox,
+      onForeground: (title, body) => scaffoldMessengerKey.currentState
+        ?..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(content: Text(body.isEmpty ? title : '$title: $body')),
+        ),
+    );
+
     Future<void> loadAccountState() async {
       await cart.syncFromServer();
       await orders.refresh();
+      await inbox.refresh();
+      unawaited(push.start());
     }
 
     auth.addListener(() {
@@ -140,14 +158,19 @@ Future<void> main() async {
       if (now && !wasSignedIn) {
         loadAccountState();
       } else if (!now && wasSignedIn) {
+        unawaited(push.stop());
         cart.clearLocal();
         orders.setAll(const []);
+        inbox.clear();
       }
       wasSignedIn = now;
     });
     if (wasSignedIn) unawaited(loadAccountState());
   }
 }
+
+/// Lets code outside the widget tree (a push arriving) show a banner.
+final scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
 class DesignWearApp extends StatelessWidget {
   const DesignWearApp({super.key});
@@ -165,6 +188,7 @@ class DesignWearApp extends StatelessWidget {
 
   Widget _buildApp(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: scaffoldMessengerKey,
       title: getAppTitle(),
       // Flutter's debug banner tracks build mode, not flavour, so it's off and
       // the mode banner below (tied to FLAVOR, shown in release too) replaces

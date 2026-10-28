@@ -4,7 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:designwear/presentation/styles/styles.dart';
+import 'package:designwear/screens/notifications/notifications_screen.dart';
 import 'package:designwear/services/auth/auth_service.dart';
+import 'package:designwear/services/notifications/notification_service.dart';
 import 'package:designwear/services/shop/cart_service.dart';
 import 'package:designwear/screens/cart/cart_screen.dart';
 import 'package:designwear/screens/account/auth_screens.dart' show LoginScreen;
@@ -98,6 +100,25 @@ class HomeAppBar extends StatelessWidget {
     return [
       _CreateButton(isDark: isDark, isMini: compact),
       gap,
+      Consumer2<AuthService, NotificationService>(
+        builder: (context, auth, inbox, _) => auth.isSignedIn && auth.isRemote
+            ? Padding(
+                padding: EdgeInsets.only(right: compact ? 8 : 12),
+                child: _IconActionBtn(
+                  icon: Icons.notifications_none,
+                  badge: inbox.unread > 0 ? '${inbox.unread}' : null,
+                  isDark: isDark,
+                  ink: ink,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationsScreen(),
+                      settings: const RouteSettings(name: '/notifications'),
+                    ),
+                  ),
+                ),
+              )
+            : const SizedBox.shrink(),
+      ),
       Consumer<AuthService>(
         builder: (context, auth, _) => _AvatarButton(
           auth: auth,
