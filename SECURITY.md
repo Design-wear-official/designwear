@@ -1,35 +1,54 @@
 # Security
 
-- **Content** comes from SethuCMS, but **the app never holds a CMS token**: the DesignWear
-  API reads the catalog with a token kept in `designwear-server/.env` and serves only
-  sellable products. Anything bundled with the app (including `/assets/.env` on web) is
-  public, so no CMS credential belongs there.
-- **CMS side:** in the SethuCMS admin, expose only `products` to the API and keep the
-  connection read-only. Until `customers`, `orders`, `carts`, `inventory*` and
-  `operationLogs` are switched off there, any token for the connection can read them.
-  Rotate the token after changing that.
-- **Accounts, carts, orders, community designs, search and AI** go through the DesignWear
-  API (`~/designwear-server`, set `DESIGNWEAR_API_URL`). It hashes passwords, prices orders
-  itself, rate-limits, and keeps the AI/payment keys; none of those keys are in the app.
-- Without `DESIGNWEAR_API_URL` the app runs on-device only (local accounts and orders).
-- The session token is stored with `shared_preferences` (browser storage on web). Sign out
-  on shared devices.
-- Set `ALLOWED_ORIGINS` on the API and `SETHUCMS_ALLOWED_ORIGINS` on the gateway to your web origin only.
-- Never commit `.env`, keystores or signing files (all gitignored).
+## How secrets are handled
 
-## Google sign-in (Firebase)
-Firebase is used only for the Google login; the API then issues the app's own session.
+| Secret | Where it lives | Why |
+|---|---|---|
+| CMS token | `designwear-server/.env` (API only) | anything bundled with the app, including `/assets/.env` on web, is public |
+| Gemini key, Razorpay secret, JWT secret, admin token | the API's environment | never reach a device |
+| Firebase app values | the app's `.env` | public by design; the API verifies every token itself |
 
-1. Firebase console: create a project, enable **Authentication → Google**, add your web
-   domain under Authorized domains, and register the Android/iOS/web apps.
-2. Android: register the app as `com.vishwamai.designwear` (the internal flavour is
-   `com.vishwamai.designwear.internal`) and add the debug and release **SHA-1/SHA-256**
-   fingerprints. iOS and macOS bundle id: `com.vishwamai.designwear`.
-   iOS: add the app's URL scheme (`app-1-<project number>-ios-<hash>`) to Info.plist.
-3. Copy the app values into `.env` (see `.env.example`, `FIREBASE_*`; the internal flavour
-   uses `FIREBASE_INTERNAL_*`), and set `FIREBASE_PROJECT_ID` on the API server to the same project.
-4. Until all of that is filled in the "Continue with Google" button stays hidden. Linux and
-   Windows don't support Firebase Auth, so the button never shows there.
+`.env` files, keystores and signing files are git-ignored, and the API's Docker image excludes
+its `.env`. The release workflow writes only `DESIGNWEAR_API_URL` into the app's bundled `.env`.
 
-Firebase web config is public by design (it identifies the project). The API verifies every
-Google token itself, so a forged or other-project token is rejected.
+## What the API enforces
+
+- Passwords are hashed with scrypt; sessions are signed tokens that a password change or reset invalidates.
+- Orders are priced on the server from the catalog; prices sent by the app are ignored.
+  Users can only read and change their own orders, carts, addresses and designs.
+- Google sign-in tokens are verified by the API (signature, issuer, audience, expiry, Google
+  provider, verified email). A different Google account can't take over a linked email.
+- Rate limits on sign-up, sign-in, reset, orders, publishing, AI and photos; login and reset
+  answers don't reveal whether an email has an account.
+- CORS allows only the configured origins; the photo proxy only fetches allow-listed image
+  hosts and strictly validated paths.
+- Error reports from the app are redacted (tokens, passwords, emails) on the device and again on the server.
+- In production the API refuses to start without a strong JWT secret, allowed origins and a mail webhook.
+
+Details: [docs/api.md](docs/api.md#rules-the-server-enforces).
+
+## What you must configure
+
+1. **SethuCMS admin (needed now).** The token the app used before could read every
+   collection, including `customers`, `orders` and `carts`. Expose only `products` to the
+   API, keep the connection read-only, then **rotate the token** and put the new one in the
+   API's `.env`. Until you do, anyone holding any token for that connection can read those collections.
+2. **Production settings** on the API: `DESIGNWEAR_JWT_SECRET`, `ALLOWED_ORIGINS`,
+   `MAIL_WEBHOOK_URL`. See [docs/deployment.md](docs/deployment.md).
+3. **Google sign-in** (optional): see [docs/accounts-and-sign-in.md](docs/accounts-and-sign-in.md#setup).
+4. If something calls the CMS gateway straight from a browser, set its own allowed origins
+   (`SETHUCMS_ALLOWED_ORIGINS`) to your web origin only. The app itself no longer does this.
+
+## Known limits
+
+- The session token is kept in `shared_preferences` (browser storage on web). Sign out on shared devices.
+- The API stores data in one file and keeps rate limits in memory, so it must run as a single
+  process; back up `/data/store.json`.
+- Orders live in the API's own store, not in SethuCMS, and online payments aren't switched on in the app yet.
+- Without `DESIGNWEAR_API_URL` the app runs on-device only (local accounts, hashed but on the same device as their data).
+- The GitHub Actions workflows haven't been observed running yet.
+
+## Reporting a problem
+
+Please use GitHub's private vulnerability reporting (Security tab → *Report a vulnerability*)
+on the relevant repository rather than opening a public issue.
