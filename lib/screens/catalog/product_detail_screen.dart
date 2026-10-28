@@ -35,7 +35,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   // Side by side from this width up; below it the phone layout is used.
   static const _wideBreakpoint = 900.0;
-  static const _wideMaxWidth = 1440.0;
+  static const _wideMaxWidth = 1600.0;
 
   @override
   Widget build(BuildContext context) {
@@ -284,194 +284,236 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
-  // Desktop: a centred panel with its own header, the picture beside the details,
-  // and the buying buttons inline (no bottom bar).
+  // Desktop: the whole page is the dark background, with a full-width header and
+  // three columns: picture, details, and a buy box (like a shop product page).
   Widget _wide(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final p = widget.product;
     final outOfStock = p.stockStatus == 'outOfStock';
     final text = Theme.of(context).textTheme;
+    final line = scheme.onSurface.withValues(alpha: 0.12);
+    // A separate buy box needs room; narrower desktops keep the buttons in the
+    // details column instead.
+    final threeColumns = MediaQuery.sizeOf(context).width >= 1180;
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _wideMaxWidth),
-          child: Container(
-            width: double.infinity,
-            color: scheme.surface,
-            child: Column(
+      body: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: line)),
+            ),
+            child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      SizedBox(
-                        width: 120,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.chevron_left, size: 20),
-                            label: const Text('Back'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: scheme.onSurface,
-                              side: BorderSide(
-                                color: scheme.onSurface.withValues(alpha: 0.15),
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                          ),
+                SizedBox(
+                  width: 140,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.chevron_left, size: 20),
+                      label: const Text('Back'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: scheme.onSurface,
+                        side: BorderSide(color: line),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ),
-                      Expanded(
-                        child: Center(
-                          child: HomeBrand(
-                            ink: scheme.onSurface,
-                            compact: false,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 120),
-                    ],
-                  ),
-                ),
-                Divider(
-                  height: 1,
-                  color: scheme.onSurface.withValues(alpha: 0.1),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(80, 24, 80, 48),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 6,
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: _hero(context, wide: true),
-                            ),
-                          ),
-                          const SizedBox(width: 32),
-                          Expanded(
-                            flex: 5,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  p.title,
-                                  style: text.displaySmall?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: scheme.onSurface,
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '₹${p.price.toStringAsFixed(2)}',
-                                      style: ResponsiveTypography.price(context)
-                                          .copyWith(color: context.accent),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _stockChip(context),
-                                  ],
-                                ),
-                                if (p.description.isNotEmpty) ...[
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    p.description,
-                                    style: ResponsiveTypography.body(
-                                      context,
-                                      color: scheme.onSurface.withValues(
-                                        alpha: 0.75,
-                                      ),
-                                    ).copyWith(height: 1.5),
-                                  ),
-                                ],
-                                const SizedBox(height: 24),
-                                Text(
-                                  'Select Size',
-                                  style: ResponsiveTypography.h4(context),
-                                ),
-                                const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 8,
-                                  children: [
-                                    for (final size in _sizes)
-                                      _SizeChip(
-                                        size: size,
-                                        isSelected: _selectedSize == size,
-                                        onTap: () => setState(
-                                          () => _selectedSize =
-                                              _selectedSize == size
-                                              ? null
-                                              : size,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 28),
-                                _wideButton(
-                                  context,
-                                  icon: Icons.fork_right,
-                                  label: 'Remix this T-shirt',
-                                  onPressed: _remix,
-                                  filled: true,
-                                ),
-                                _wideButton(
-                                  context,
-                                  icon: Icons.auto_awesome,
-                                  label: 'Try It On Virtually ✨',
-                                  onPressed: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          VirtualTryOnScreen(product: p),
-                                    ),
-                                  ),
-                                ),
-                                _wideButton(
-                                  context,
-                                  label: _isAddingToCart
-                                      ? 'Adding…'
-                                      : 'Add to cart',
-                                  onPressed: outOfStock || _isAddingToCart
-                                      ? null
-                                      : _addToCart,
-                                ),
-                                _wideButton(
-                                  context,
-                                  label: outOfStock
-                                      ? 'Out of stock'
-                                      : 'Buy now — ₹${p.price.toStringAsFixed(0)}',
-                                  onPressed: outOfStock || _isBuyingNow
-                                      ? null
-                                      : _buyNow,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   ),
                 ),
+                Expanded(
+                  child: Center(
+                    child: HomeBrand(ink: scheme.onSurface, compact: false),
+                  ),
+                ),
+                const SizedBox(width: 140),
               ],
             ),
           ),
-        ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: _wideMaxWidth),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(40, 28, 40, 48),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: _hero(context, wide: true),
+                          ),
+                        ),
+                        const SizedBox(width: 40),
+                        Expanded(
+                          flex: 5,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                p.title,
+                                style: text.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                  color: scheme.onSurface,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Text(
+                                    '₹${p.price.toStringAsFixed(2)}',
+                                    style: ResponsiveTypography.price(context)
+                                        .copyWith(color: context.accent),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  _stockChip(context),
+                                ],
+                              ),
+                              Divider(height: 40, color: line),
+                              Text(
+                                'Select Size',
+                                style: ResponsiveTypography.h4(context),
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                children: [
+                                  for (final size in _sizes)
+                                    _SizeChip(
+                                      size: size,
+                                      isSelected: _selectedSize == size,
+                                      onTap: () => setState(
+                                        () => _selectedSize =
+                                            _selectedSize == size ? null : size,
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              if (p.description.isNotEmpty) ...[
+                                Divider(height: 40, color: line),
+                                Text(
+                                  'About this item',
+                                  style: ResponsiveTypography.h4(context),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  p.description,
+                                  style: ResponsiveTypography.body(
+                                    context,
+                                    color: scheme.onSurface.withValues(
+                                      alpha: 0.75,
+                                    ),
+                                  ).copyWith(height: 1.5),
+                                ),
+                              ],
+                              Divider(height: 40, color: line),
+                              _wideButton(
+                                context,
+                                icon: Icons.fork_right,
+                                label: 'Remix this T-shirt',
+                                onPressed: _remix,
+                                filled: true,
+                              ),
+                              _wideButton(
+                                context,
+                                icon: Icons.auto_awesome,
+                                label: 'Try It On Virtually ✨',
+                                onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        VirtualTryOnScreen(product: p),
+                                  ),
+                                ),
+                              ),
+                              if (!threeColumns) ...[
+                                const SizedBox(height: 8),
+                                ..._buyButtons(context, outOfStock),
+                              ],
+                            ],
+                          ),
+                        ),
+                        if (threeColumns) ...[
+                          const SizedBox(width: 40),
+                          SizedBox(
+                            width: 320,
+                            child: Container(
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                color: scheme.surface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: line),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '₹${p.price.toStringAsFixed(2)}',
+                                    style: text.headlineMedium?.copyWith(
+                                      fontWeight: FontWeight.w800,
+                                      color: scheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Inclusive of all taxes',
+                                    style: text.bodySmall,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: _stockChip(context),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    _selectedSize == null
+                                        ? 'Choose a size to continue'
+                                        : 'Size $_selectedSize',
+                                    style: text.bodyMedium?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ..._buyButtons(context, outOfStock),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  List<Widget> _buyButtons(BuildContext context, bool outOfStock) => [
+    _wideButton(
+      context,
+      label: _isAddingToCart ? 'Adding…' : 'Add to cart',
+      onPressed: outOfStock || _isAddingToCart ? null : _addToCart,
+      solid: AppColors.marigold,
+    ),
+    _wideButton(
+      context,
+      label: outOfStock ? 'Out of stock' : 'Buy now',
+      onPressed: outOfStock || _isBuyingNow ? null : _buyNow,
+      solid: const Color(0xFFFFB300),
+    ),
+  ];
 
   Widget _stockChip(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -498,6 +540,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     required VoidCallback? onPressed,
     IconData? icon,
     bool filled = false,
+    Color? solid,
   }) {
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(30),
@@ -507,7 +550,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       style: GoogleFonts.outfit(
         fontSize: 15,
         fontWeight: FontWeight.w700,
-        color: filled ? AppColors.marigoldInk : null,
+        color: (filled || solid != null) ? AppColors.marigoldInk : null,
       ),
     );
     return Padding(
@@ -515,7 +558,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       child: SizedBox(
         width: double.infinity,
         height: 54,
-        child: filled
+        child: solid != null
+            ? ElevatedButton(
+                onPressed: onPressed,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: solid,
+                  foregroundColor: AppColors.marigoldInk,
+                  elevation: 0,
+                  shape: shape,
+                ),
+                child: child,
+              )
+            : filled
             ? ElevatedButton.icon(
                 onPressed: onPressed,
                 icon: Icon(icon, color: AppColors.marigoldInk),
@@ -561,7 +615,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               desktop: MediaQuery.sizeOf(context).height * 0.60,
             ),
       decoration: BoxDecoration(
-        color: wide ? Colors.white : Theme.of(context).colorScheme.surface,
+        color: wide
+            ? const Color(0xFFF8F8F8)
+            : Theme.of(context).colorScheme.surface,
         borderRadius: wide
             ? BorderRadius.circular(28)
             : const BorderRadius.only(

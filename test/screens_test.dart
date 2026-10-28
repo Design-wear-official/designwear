@@ -128,11 +128,19 @@ void _studioViewTests() {
       'Remix this T-shirt',
       'Try It On Virtually ✨',
       'Add to cart',
-      'Buy now — ₹499',
+      'Buy now',
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
     expect(find.text('Back'), findsOneWidget, reason: 'the desktop header');
+
+    // A narrower desktop has no separate buy box; the buttons stay on the page.
+    tester.view.physicalSize = const Size(1000, 900);
+    await tester.pumpWidget(_app(const ProductDetailScreen(product: product)));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull, reason: 'no overflow at 1000 wide');
+    expect(find.text('Add to cart'), findsOneWidget);
+    expect(find.text('Buy now'), findsOneWidget);
 
     tester.view.physicalSize = const Size(420, 900);
     await tester.pumpWidget(_app(const ProductDetailScreen(product: product)));
