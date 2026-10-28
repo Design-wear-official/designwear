@@ -77,6 +77,10 @@ class AppLog extends ChangeNotifier {
   /// off (before first use) so API calls don't leave save timers behind.
   static bool persistInstance = true;
 
+  /// Whether entries are also printed to the debug console. Tests turn this off
+  /// so their output stays readable.
+  static bool echoToConsole = true;
+
   static final AppLog instance = AppLog._();
 
   /// For tests: a fresh log not wired to global state.
@@ -175,7 +179,7 @@ class AppLog extends ChangeNotifier {
     if (_entries.length > maxInMemory) {
       _entries.removeRange(0, _entries.length - maxInMemory);
     }
-    if (kDebugMode) debugPrint(entry.toString());
+    if (kDebugMode && echoToConsole) debugPrint(entry.toString());
     notifyListeners();
     _scheduleSave();
 
