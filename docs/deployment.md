@@ -40,10 +40,24 @@ Check `https://<app>.fly.dev/v1/health`, then `/v1/config` to see which features
 
 Flutter web builds to static files, which suit Vercel (or any static host).
 
+### Deploy with a Vercel token (GitHub Actions)
+
+The `Deploy web (Vercel)` workflow builds the app and deploys `build/web` on every push to
+`main` (or run it by hand from the Actions tab).
+
+1. In Vercel, create a project (framework "Other") and a token: *Account Settings → Tokens*.
+2. Find the project's ids: run `npx vercel link` once locally, then read `orgId` and
+   `projectId` from `.vercel/project.json`. Don't commit that folder.
+3. In GitHub: *Settings → Secrets and variables → Actions*, add secrets `VERCEL_TOKEN`,
+   `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID` and `DESIGNWEAR_API_URL` (your API's `https://` address).
+
+`web/vercel.json` makes every path serve `index.html` (single-page app) and adds basic
+security headers. To deploy from your machine instead:
+
 ```sh
 # .env must contain DESIGNWEAR_API_URL=https://<your api>   (no CMS values)
 flutter build web --release --dart-define=FLAVOR=external
-npx vercel deploy build/web --prod
+VERCEL_TOKEN=… npx vercel deploy build/web --prod
 ```
 
 Then add the site's address to the API's `ALLOWED_ORIGINS` (`fly secrets set ALLOWED_ORIGINS=…`).

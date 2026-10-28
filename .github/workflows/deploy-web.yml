@@ -1,0 +1,62 @@
+name: Deploy web (Vercel)
+
+# Builds the Flutter web app and deploys it to Vercel with an access token.
+# Needs repository secrets VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID and
+# DESIGNWEAR_API_URL (the public address of the API). See docs/deployment.md.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**.md"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Build and deploy to Vercel
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check Vercel credentials
+        run: |
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Repository secret $name is not set (see docs/deployment.md)."
+              exit 1
+            fi
+          done
+
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # Installed by hand: subosito/flutter-action pulls in actions/cache@v5,
+      # which this repo's SHA-pinning policy rejects.
+      - name: Install Flutter
+        run: |
+          git clone --depth 1 --branch 3.47.6 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+
+      # The app bundles .env as an asset and the site serves it publicly, so only
+      # public values go in it. The CMS credentials live on the API server.
+      - name: Write public .env
+        env:
+          API_URL: ${{ secrets.DESIGNWEAR_API_URL }}
+        run: |
+          printf 'DESIGNWEAR_API_URL=%s\n' "$API_URL" > .env
+          printf '# CI placeholder\n' > .env.local
+
+      - run: flutter pub get
+      - run: flutter build web --release --dart-define=FLAVOR=external
+
+      # The token is read from VERCEL_TOKEN, never passed on the command line.
+      - name: Deploy build/web to Vercel (production)
+        run: npx --yes vercel@65.5.0 deploy build/web --prod --yes
