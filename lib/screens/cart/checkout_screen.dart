@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/cart_service.dart';
 import '../../services/shop/stores.dart';
 import '../account/addresses_screen.dart';
@@ -26,11 +28,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final addresses = context.read<AddressStore>().items;
     if (addresses.isNotEmpty) _address = addresses.first;
     _checkDelivery();
+    _checkOnlinePayments();
   }
 
   bool _placing = false;
   String? _error;
   bool _serviceable = true;
+
+  // Online payment needs the server to have Razorpay keys, and a device that
+  // can open the payment sheet.
+  bool _onlineAvailable = false;
+  bool _payOnline = false;
+
+  Future<void> _checkOnlinePayments() async {
+    final api = context.read<ApiClient?>();
+    if (api == null || !onlinePaymentSupported) return;
+    final features = await api.features();
+    if (mounted) setState(() => _onlineAvailable = features.onlinePayments);
+  }
 
   // Asks the server whether a local team delivers to the chosen address.
   Future<void> _checkDelivery() async {
@@ -43,13 +58,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _place() async {
     final cart = context.read<CartService>();
     final orders = context.read<OrderStore>();
+    final user = context.read<AuthService>().user;
     setState(() {
       _placing = true;
       _error = null;
     });
     if (orders.isRemote) {
       try {
-        final order = await orders.place(lines: cart.lines, address: _address!);
+        var order = await orders.place(
+          lines: cart.lines,
+          address: _address!,
+          online: _payOnline,
+        );
+        if (_payOnline) {
+          // The order exists and waits for payment. If paying fails or is
+          // cancelled it stays in My orders with a Pay now button.
+          try {
+            order = await orders.payOnline(order, user!);
+          } on PaymentFailure catch (e) {
+            if (!mounted) return;
+            setState(() {
+              _placing = false;
+              _error = e.cancelled
+                  ? 'Payment not completed. Your order is saved in My orders, where you can pay or cancel it.'
+                  : '${e.message} Your order is saved in My orders.';
+            });
+            return;
+          }
+        }
         cart.clear();
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
@@ -115,27 +151,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               },
             ),
           ),
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.payments_outlined),
-              title: Text(_payment.label),
-              trailing: const Icon(Icons.chevron_right),
-              subtitle: remote
-                  ? const Text('Pay when your order arrives')
-                  : null,
-              onTap: remote
-                  ? null
-                  : () async {
-                      final p = await Navigator.of(context).push<PaymentMethod>(
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              const PaymentMethodsScreen(pickMode: true),
-                        ),
-                      );
-                      if (p != null) setState(() => _payment = p);
-                    },
+          if (remote && _onlineAvailable)
+            Card(
+              child: RadioGroup<bool>(
+                groupValue: _payOnline,
+                onChanged: (v) => setState(() => _payOnline = v!),
+                child: const Column(
+                  children: [
+                    RadioListTile<bool>(
+                      value: false,
+                      title: Text('Cash on delivery'),
+                      subtitle: Text('Pay when your order arrives'),
+                    ),
+                    RadioListTile<bool>(
+                      value: true,
+                      title: Text('Pay online'),
+                      subtitle: Text('UPI, cards, netbanking, wallets'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.payments_outlined),
+                title: Text(_payment.label),
+                trailing: const Icon(Icons.chevron_right),
+                subtitle: remote
+                    ? const Text('Pay when your order arrives')
+                    : null,
+                onTap: remote
+                    ? null
+                    : () async {
+                        final p = await Navigator.of(context)
+                            .push<PaymentMethod>(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const PaymentMethodsScreen(pickMode: true),
+                              ),
+                            );
+                        if (p != null) setState(() => _payment = p);
+                      },
+              ),
             ),
-          ),
           const SizedBox(height: 8),
           for (final l in cart.lines)
             ListTile(
@@ -188,7 +247,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 _address == null || cart.isEmpty || _placing || !_serviceable
                 ? null
                 : _place,
-            child: Text(_placing ? 'Placing order…' : 'Place order'),
+            child: Text(
+              _placing
+                  ? 'Placing order…'
+                  : _payOnline
+                  ? 'Pay ${formatPrice(cart.total)}'
+                  : 'Place order',
+            ),
           ),
           const SizedBox(height: 8),
           Text(

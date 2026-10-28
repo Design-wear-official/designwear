@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../api/api_client.dart';
 import '../../models/commerce.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/stores.dart';
 import '../home/home_screen.dart' show formatPrice;
 
@@ -78,6 +81,26 @@ class _OrderCard extends StatelessWidget {
               dense: true,
               leading: const Icon(Icons.local_shipping_outlined),
               title: Text('Delivered by ${order.teamName}'),
+            ),
+          if (order.status == OrderStatus.awaitingPayment &&
+              order.payment.kind == PaymentKind.online)
+            Align(
+              alignment: Alignment.centerRight,
+              child: FilledButton(
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final orders = context.read<OrderStore>();
+                  final user = context.read<AuthService>().user!;
+                  try {
+                    await orders.payOnline(order, user);
+                  } on PaymentFailure catch (e) {
+                    messenger.showSnackBar(SnackBar(content: Text(e.message)));
+                  } on ApiException catch (e) {
+                    messenger.showSnackBar(SnackBar(content: Text(e.message)));
+                  }
+                },
+                child: Text('Pay ${formatPrice(order.total)} now'),
+              ),
             ),
           if (order.status == OrderStatus.placed ||
               order.status == OrderStatus.awaitingPayment)

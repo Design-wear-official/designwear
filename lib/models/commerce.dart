@@ -61,7 +61,7 @@ class Address {
   );
 }
 
-enum PaymentKind { cod, upi }
+enum PaymentKind { cod, upi, online }
 
 /// Only non-sensitive payment info is stored: never card numbers.
 class PaymentMethod {
@@ -192,11 +192,17 @@ class Order {
         'label': '',
         ...((j['address'] as Map).cast<String, Object?>()),
       }),
-      payment: const PaymentMethod(
-        id: 'cod',
-        kind: PaymentKind.cod,
-        label: 'Cash on delivery',
-      ),
+      payment: ((j['payment'] as Map?)?['method'] == 'razorpay')
+          ? const PaymentMethod(
+              id: 'razorpay',
+              kind: PaymentKind.online,
+              label: 'Paid online',
+            )
+          : const PaymentMethod(
+              id: 'cod',
+              kind: PaymentKind.cod,
+              label: 'Cash on delivery',
+            ),
       subtotal: (j['subtotal'] as num).toDouble(),
       tax: (j['tax'] as num).toDouble(),
       total: (j['total'] as num).toDouble(),

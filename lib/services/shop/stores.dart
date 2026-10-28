@@ -1,6 +1,7 @@
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
 import '../app/persisted_list.dart';
+import '../payments/razorpay_checkout.dart';
 
 class AddressStore extends PersistedList<Address> {
   AddressStore()
@@ -68,13 +69,15 @@ class OrderStore extends PersistedList<Order> {
   }
 
   /// Server mode: places the order; the server prices it from the catalog.
+  /// With [online] the order waits for payment until [payOnline] succeeds.
   Future<Order> place({
     required List<CartLine> lines,
     required Address address,
+    bool online = false,
   }) async {
     final j = await api!.post('/v1/orders', {
       'address': address.toJson(),
-      'paymentMethod': 'cod',
+      'paymentMethod': online ? 'razorpay' : 'cod',
       'lines': [
         for (final l in lines)
           {
@@ -88,6 +91,34 @@ class OrderStore extends PersistedList<Order> {
     final order = Order.fromApi((j['order'] as Map).cast());
     setAll([order, ...items.where((o) => o.id != order.id)]);
     return order;
+  }
+
+  /// Opens the payment sheet for an order that is waiting for payment, then lets
+  /// the server verify it. Throws [PaymentFailure] if the person backs out or the
+  /// payment fails, and [ApiException] if the server refuses.
+  Future<Order> payOnline(Order order, UserProfile user) async {
+    final created = await api!.post('/v1/payments/razorpay/order', {
+      'orderId': order.id,
+    });
+    final result = await openRazorpay(
+      PaymentRequest(
+        keyId: '${created['keyId']}',
+        razorpayOrderId: '${created['razorpayOrderId']}',
+        amountPaise: (created['amount'] as num).toInt(),
+        currency: '${created['currency']}',
+        name: user.name,
+        email: user.email,
+        phone: order.address.phone,
+      ),
+    );
+    final j = await api!.post('/v1/payments/razorpay/verify', {
+      'orderId': order.id,
+      'paymentId': result.paymentId,
+      'signature': result.signature,
+    });
+    final paid = Order.fromApi((j['order'] as Map).cast());
+    setAll([paid, ...items.where((o) => o.id != paid.id)]);
+    return paid;
   }
 
   Future<void> cancel(Order order) async {
