@@ -21,9 +21,13 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          channel: stable
+      # Installed by hand: subosito/flutter-action pulls in actions/cache@v5,
+      # which this repo's SHA-pinning policy rejects.
+      - name: Install Flutter
+        run: |
+          git clone --depth 1 --branch 3.47.6 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
 
       # pubspec.yaml lists .env/.env.local as assets (gitignored; real values
       # aren't needed to analyze/test). Empty files satisfy the asset check, so
@@ -65,9 +69,13 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
-        with:
-          channel: stable
+      # Installed by hand: subosito/flutter-action pulls in actions/cache@v5,
+      # which this repo's SHA-pinning policy rejects.
+      - name: Install Flutter
+        run: |
+          git clone --depth 1 --branch 3.47.6 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
 
       - run: printf '# CI placeholder\n' | tee .env .env.local >/dev/null
       - run: flutter pub get
