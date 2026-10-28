@@ -24,7 +24,6 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          cache: true
 
       # pubspec.yaml lists .env/.env.local as assets (gitignored; real values
       # aren't needed to analyze/test). Empty files satisfy the asset check, so
@@ -69,7 +68,6 @@ jobs:
       - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           channel: stable
-          cache: true
 
       - run: printf '# CI placeholder\n' | tee .env .env.local >/dev/null
       - run: flutter pub get
