@@ -151,6 +151,7 @@ class Order {
     required this.tax,
     required this.total,
     this.status = OrderStatus.placed,
+    this.teamName,
   });
 
   final String id;
@@ -160,6 +161,9 @@ class Order {
   final PaymentMethod payment;
   final double subtotal, tax, total;
   final OrderStatus status;
+
+  /// The local team that makes and delivers this order (server orders).
+  final String? teamName;
 
   Order copyWith({OrderStatus? status}) => Order(
     id: id,
@@ -171,6 +175,7 @@ class Order {
     tax: tax,
     total: total,
     status: status ?? this.status,
+    teamName: teamName,
   );
 
   /// Parses an order as returned by the DesignWear API (server-priced).
@@ -195,6 +200,7 @@ class Order {
       subtotal: (j['subtotal'] as num).toDouble(),
       tax: (j['tax'] as num).toDouble(),
       total: (j['total'] as num).toDouble(),
+      teamName: (j['team'] as Map?)?['name'] as String?,
       status: switch (status) {
         'awaiting_payment' => OrderStatus.awaitingPayment,
         'processing' => OrderStatus.processing,

@@ -55,6 +55,18 @@ class OrderStore extends PersistedList<Order> {
     } on ApiException catch (_) {}
   }
 
+  /// Whether a local team delivers to [pin]. Unknown (offline, errors) counts as
+  /// yes: the server makes the final call when the order is placed.
+  Future<bool> canDeliverTo(String pin) async {
+    if (api == null) return true;
+    try {
+      final j = await api!.get('/v1/serviceability', query: {'pin': pin});
+      return j['serviceable'] != false;
+    } catch (_) {
+      return true;
+    }
+  }
+
   /// Server mode: places the order; the server prices it from the catalog.
   Future<Order> place({
     required List<CartLine> lines,

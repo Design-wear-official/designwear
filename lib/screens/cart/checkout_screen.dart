@@ -25,10 +25,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.initState();
     final addresses = context.read<AddressStore>().items;
     if (addresses.isNotEmpty) _address = addresses.first;
+    _checkDelivery();
   }
 
   bool _placing = false;
   String? _error;
+  bool _serviceable = true;
+
+  // Asks the server whether a local team delivers to the chosen address.
+  Future<void> _checkDelivery() async {
+    final address = _address;
+    if (address == null) return;
+    final ok = await context.read<OrderStore>().canDeliverTo(address.pin);
+    if (mounted && _address == address) setState(() => _serviceable = ok);
+  }
 
   Future<void> _place() async {
     final cart = context.read<CartService>();
@@ -98,7 +108,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     builder: (_) => const AddressesScreen(pickMode: true),
                   ),
                 );
-                if (a != null) setState(() => _address = a);
+                if (a != null) {
+                  setState(() => _address = a);
+                  _checkDelivery();
+                }
               },
             ),
           ),
@@ -153,6 +166,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
           const SizedBox(height: 8),
+          if (!_serviceable)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                'We do not deliver to ${_address!.pin} yet. '
+                'Choose another address.',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -162,7 +184,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
           FilledButton(
-            onPressed: _address == null || cart.isEmpty || _placing
+            onPressed:
+                _address == null || cart.isEmpty || _placing || !_serviceable
                 ? null
                 : _place,
             child: Text(_placing ? 'Placing order…' : 'Place order'),

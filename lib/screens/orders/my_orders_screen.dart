@@ -73,6 +73,12 @@ class _OrderCard extends StatelessWidget {
             title: Text(order.address.oneLine),
             subtitle: Text('Pay: ${order.payment.label}'),
           ),
+          if (order.teamName != null)
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.local_shipping_outlined),
+              title: Text('Delivered by ${order.teamName}'),
+            ),
           if (order.status == OrderStatus.placed ||
               order.status == OrderStatus.awaitingPayment)
             Align(
