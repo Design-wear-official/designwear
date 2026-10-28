@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../presentation/styles/styles.dart' show AppColors;
 import '../../presentation/widgets/designwear_logo.dart';
+import '../../presentation/widgets/google_g_logo.dart';
 import '../../services/auth/auth_service.dart';
 import '../../theme/app_theme.dart' show AppThemeColors;
 
@@ -38,8 +39,8 @@ class _AuthScaffold extends StatelessWidget {
   );
 }
 
-/// "Continue with Google", shown only when Google sign-in is set up (API on and
-/// a Firebase project configured for this platform).
+/// "Continue with Google", shown whenever the API is on. It works once a Firebase
+/// project is configured for this platform; until then pressing it explains that.
 class _GoogleButton extends StatefulWidget {
   const _GoogleButton();
   @override
@@ -71,7 +72,9 @@ class _GoogleButtonState extends State<_GoogleButton> {
 
   @override
   Widget build(BuildContext context) {
-    if (!context.read<AuthService>().googleAvailable) {
+    // Shown whenever there is an API to sign in to. If this build has no Firebase
+    // project the press says so plainly instead of the button silently missing.
+    if (!context.read<AuthService>().isRemote) {
       return const SizedBox.shrink();
     }
     return Column(
@@ -91,23 +94,7 @@ class _GoogleButtonState extends State<_GoogleButton> {
         const SizedBox(height: 16),
         OutlinedButton.icon(
           onPressed: _busy ? null : _go,
-          icon: Container(
-            width: 22,
-            height: 22,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: AppColors.marigold,
-              shape: BoxShape.circle,
-            ),
-            child: const Text(
-              'G',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 13,
-                color: AppColors.marigoldInk,
-              ),
-            ),
-          ),
+          icon: const GoogleGLogo(),
           label: Text(_busy ? 'Opening Google…' : 'Continue with Google'),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 14),

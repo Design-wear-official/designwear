@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
+import '../../presentation/widgets/content_width.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/cart_service.dart';
@@ -125,145 +126,148 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final remote = context.read<OrderStore>().isRemote;
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Card(
-            child: ListTile(
-              leading: const Icon(Icons.location_on_outlined),
-              title: Text(
-                _address == null
-                    ? 'Add a delivery address'
-                    : '${_address!.label} · ${_address!.name}',
-              ),
-              subtitle: _address == null ? null : Text(_address!.oneLine),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () async {
-                final a = await Navigator.of(context).push<Address>(
-                  MaterialPageRoute(
-                    builder: (_) => const AddressesScreen(pickMode: true),
-                  ),
-                );
-                if (a != null) {
-                  setState(() => _address = a);
-                  _checkDelivery();
-                }
-              },
-            ),
-          ),
-          if (remote && _onlineAvailable)
-            Card(
-              child: RadioGroup<bool>(
-                groupValue: _payOnline,
-                onChanged: (v) => setState(() => _payOnline = v!),
-                child: const Column(
-                  children: [
-                    RadioListTile<bool>(
-                      value: false,
-                      title: Text('Cash on delivery'),
-                      subtitle: Text('Pay when your order arrives'),
-                    ),
-                    RadioListTile<bool>(
-                      value: true,
-                      title: Text('Pay online'),
-                      subtitle: Text('UPI, cards, netbanking, wallets'),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else
+      body: ContentWidth(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
             Card(
               child: ListTile(
-                leading: const Icon(Icons.payments_outlined),
-                title: Text(_payment.label),
+                leading: const Icon(Icons.location_on_outlined),
+                title: Text(
+                  _address == null
+                      ? 'Add a delivery address'
+                      : '${_address!.label} · ${_address!.name}',
+                ),
+                subtitle: _address == null ? null : Text(_address!.oneLine),
                 trailing: const Icon(Icons.chevron_right),
-                subtitle: remote
-                    ? const Text('Pay when your order arrives')
-                    : null,
-                onTap: remote
-                    ? null
-                    : () async {
-                        final p = await Navigator.of(context)
-                            .push<PaymentMethod>(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const PaymentMethodsScreen(pickMode: true),
-                              ),
-                            );
-                        if (p != null) setState(() => _payment = p);
-                      },
+                onTap: () async {
+                  final a = await Navigator.of(context).push<Address>(
+                    MaterialPageRoute(
+                      builder: (_) => const AddressesScreen(pickMode: true),
+                    ),
+                  );
+                  if (a != null) {
+                    setState(() => _address = a);
+                    _checkDelivery();
+                  }
+                },
               ),
             ),
-          const SizedBox(height: 8),
-          for (final l in cart.lines)
+            if (remote && _onlineAvailable)
+              Card(
+                child: RadioGroup<bool>(
+                  groupValue: _payOnline,
+                  onChanged: (v) => setState(() => _payOnline = v!),
+                  child: const Column(
+                    children: [
+                      RadioListTile<bool>(
+                        value: false,
+                        title: Text('Cash on delivery'),
+                        subtitle: Text('Pay when your order arrives'),
+                      ),
+                      RadioListTile<bool>(
+                        value: true,
+                        title: Text('Pay online'),
+                        subtitle: Text('UPI, cards, netbanking, wallets'),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else
+              Card(
+                child: ListTile(
+                  leading: const Icon(Icons.payments_outlined),
+                  title: Text(_payment.label),
+                  trailing: const Icon(Icons.chevron_right),
+                  subtitle: remote
+                      ? const Text('Pay when your order arrives')
+                      : null,
+                  onTap: remote
+                      ? null
+                      : () async {
+                          final p = await Navigator.of(context)
+                              .push<PaymentMethod>(
+                                MaterialPageRoute(
+                                  builder: (_) => const PaymentMethodsScreen(
+                                    pickMode: true,
+                                  ),
+                                ),
+                              );
+                          if (p != null) setState(() => _payment = p);
+                        },
+                ),
+              ),
+            const SizedBox(height: 8),
+            for (final l in cart.lines)
+              ListTile(
+                dense: true,
+                title: Text('${l.title}  ×${l.quantity}'),
+                subtitle: Text('Size ${l.size}'),
+                trailing: Text(formatPrice(l.total)),
+              ),
+            const Divider(),
             ListTile(
               dense: true,
-              title: Text('${l.title}  ×${l.quantity}'),
-              subtitle: Text('Size ${l.size}'),
-              trailing: Text(formatPrice(l.total)),
+              title: const Text('Subtotal'),
+              trailing: Text(formatPrice(cart.subtotal)),
             ),
-          const Divider(),
-          ListTile(
-            dense: true,
-            title: const Text('Subtotal'),
-            trailing: Text(formatPrice(cart.subtotal)),
-          ),
-          ListTile(
-            dense: true,
-            title: const Text('GST (18%)'),
-            trailing: Text(formatPrice(cart.tax)),
-          ),
-          ListTile(
-            title: const Text(
-              'Total',
-              style: TextStyle(fontWeight: FontWeight.w700),
+            ListTile(
+              dense: true,
+              title: const Text('GST (18%)'),
+              trailing: Text(formatPrice(cart.tax)),
             ),
-            trailing: Text(
-              formatPrice(cart.total),
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (!_serviceable)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Text(
-                'We do not deliver to ${_address!.pin} yet. '
-                'Choose another address.',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ListTile(
+              title: const Text(
+                'Total',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+              trailing: Text(
+                formatPrice(cart.total),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+            const SizedBox(height: 8),
+            if (!_serviceable)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  'We do not deliver to ${_address!.pin} yet. '
+                  'Choose another address.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  _error!,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ),
+            FilledButton(
+              onPressed:
+                  _address == null || cart.isEmpty || _placing || !_serviceable
+                  ? null
+                  : _place,
               child: Text(
-                _error!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                _placing
+                    ? 'Placing order…'
+                    : _payOnline
+                    ? 'Pay ${formatPrice(cart.total)}'
+                    : 'Place order',
               ),
             ),
-          FilledButton(
-            onPressed:
-                _address == null || cart.isEmpty || _placing || !_serviceable
-                ? null
-                : _place,
-            child: Text(
-              _placing
-                  ? 'Placing order…'
-                  : _payOnline
-                  ? 'Pay ${formatPrice(cart.total)}'
-                  : 'Place order',
+            const SizedBox(height: 8),
+            Text(
+              remote
+                  ? 'Prices are confirmed by the store when you place the order.'
+                  : 'Orders are saved on this device until the store backend is connected.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            remote
-                ? 'Prices are confirmed by the store when you place the order.'
-                : 'Orders are saved on this device until the store backend is connected.',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

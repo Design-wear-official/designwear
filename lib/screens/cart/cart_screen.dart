@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../presentation/widgets/content_width.dart';
 import '../../services/shop/cart_service.dart';
 import '../../theme/app_theme.dart';
 import '../account/auth_screens.dart';
@@ -22,91 +23,93 @@ class CartScreen extends StatelessWidget {
             TextButton(onPressed: cart.clear, child: const Text('Clear')),
         ],
       ),
-      body: cart.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+      body: ContentWidth(
+        child: cart.isEmpty
+            ? Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.shopping_bag_outlined,
+                      size: 48,
+                      color: context.muted,
+                    ),
+                    SizedBox(height: 12),
+                    Text('Your cart is empty'),
+                  ],
+                ),
+              )
+            : Column(
                 children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 48,
-                    color: context.muted,
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: cart.lines.length,
+                      separatorBuilder: (_, _) => const Divider(height: 24),
+                      itemBuilder: (_, i) {
+                        final line = cart.lines[i];
+                        return Row(
+                          children: [
+                            SizedBox(
+                              width: 72,
+                              height: 72,
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: ProductImage(url: line.imageUrl),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    line.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    'Size ${line.size}',
+                                    style: TextStyle(color: context.muted),
+                                  ),
+                                  Text(
+                                    formatPrice(line.total),
+                                    style: TextStyle(
+                                      color: context.accent,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Decrease',
+                              icon: Icon(
+                                Icons.remove_circle_outline,
+                                color: context.accent,
+                              ),
+                              onPressed: () =>
+                                  cart.setQuantity(line, line.quantity - 1),
+                            ),
+                            Text('${line.quantity}'),
+                            IconButton(
+                              tooltip: 'Increase',
+                              icon: Icon(
+                                Icons.add_circle_outline,
+                                color: context.accent,
+                              ),
+                              onPressed: () =>
+                                  cart.setQuantity(line, line.quantity + 1),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                  SizedBox(height: 12),
-                  Text('Your cart is empty'),
+                  _Summary(cart: cart),
                 ],
               ),
-            )
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: cart.lines.length,
-                    separatorBuilder: (_, _) => const Divider(height: 24),
-                    itemBuilder: (_, i) {
-                      final line = cart.lines[i];
-                      return Row(
-                        children: [
-                          SizedBox(
-                            width: 72,
-                            height: 72,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: ProductImage(url: line.imageUrl),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  line.title,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  'Size ${line.size}',
-                                  style: TextStyle(color: context.muted),
-                                ),
-                                Text(
-                                  formatPrice(line.total),
-                                  style: TextStyle(
-                                    color: context.accent,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            tooltip: 'Decrease',
-                            icon: Icon(
-                              Icons.remove_circle_outline,
-                              color: context.accent,
-                            ),
-                            onPressed: () =>
-                                cart.setQuantity(line, line.quantity - 1),
-                          ),
-                          Text('${line.quantity}'),
-                          IconButton(
-                            tooltip: 'Increase',
-                            icon: Icon(
-                              Icons.add_circle_outline,
-                              color: context.accent,
-                            ),
-                            onPressed: () =>
-                                cart.setQuantity(line, line.quantity + 1),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-                _Summary(cart: cart),
-              ],
-            ),
+      ),
     );
   }
 }

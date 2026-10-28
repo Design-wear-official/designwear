@@ -65,7 +65,7 @@ class HomeAppBar extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: sidePad, vertical: 12),
               child: Row(
                 children: [
-                  _Brand(ink: ink, compact: compact),
+                  HomeBrand(ink: ink, compact: compact),
                   SizedBox(width: compact ? 10 : 16),
                   Expanded(
                     child: _SearchField(
@@ -132,8 +132,8 @@ class HomeAppBar extends StatelessWidget {
   }
 }
 
-class _Brand extends StatelessWidget {
-  const _Brand({required this.ink, required this.compact});
+class HomeBrand extends StatelessWidget {
+  const HomeBrand({super.key, required this.ink, required this.compact});
   final Color ink;
   final bool compact;
 

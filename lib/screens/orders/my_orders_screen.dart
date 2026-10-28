@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
+import '../../presentation/widgets/content_width.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/stores.dart';
@@ -27,20 +28,22 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
     final orders = store.items;
     return Scaffold(
       appBar: AppBar(title: const Text('My orders')),
-      body: RefreshIndicator(
-        onRefresh: store.refresh,
-        child: orders.isEmpty
-            ? ListView(
-                children: const [
-                  SizedBox(height: 200),
-                  Center(child: Text('No orders yet')),
-                ],
-              )
-            : ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: orders.length,
-                itemBuilder: (_, i) => _OrderCard(order: orders[i]),
-              ),
+      body: ContentWidth(
+        child: RefreshIndicator(
+          onRefresh: store.refresh,
+          child: orders.isEmpty
+              ? ListView(
+                  children: const [
+                    SizedBox(height: 200),
+                    Center(child: Text('No orders yet')),
+                  ],
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: orders.length,
+                  itemBuilder: (_, i) => _OrderCard(order: orders[i]),
+                ),
+        ),
       ),
     );
   }

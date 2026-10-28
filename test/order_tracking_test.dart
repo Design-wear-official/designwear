@@ -31,7 +31,11 @@ Map<String, Object?> apiOrder(String status) => {
   'tracking': {'id': 'TRK9', 'carrier': 'Delhivery'},
   'history': [
     {'status': 'placed', 'at': '2026-10-28T10:00:00.000Z'},
-    {'status': 'confirmed', 'at': '2026-10-28T11:00:00.000Z', 'note': 'Thanks!'},
+    {
+      'status': 'confirmed',
+      'at': '2026-10-28T11:00:00.000Z',
+      'note': 'Thanks!',
+    },
   ],
 };
 

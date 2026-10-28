@@ -116,14 +116,23 @@ void _studioViewTests() {
     await tester.pump(const Duration(milliseconds: 100));
     expect(tester.takeException(), isNull, reason: 'no overflow at 1440 wide');
     final image = tester.getRect(find.byType(Hero).first);
-    final title = tester.getRect(find.text('GRAPHIC TEE'));
+    final title = tester.getRect(find.text('Graphic Tee'));
     expect(
       image.right,
       lessThan(title.left),
       reason: 'the picture sits beside the details, not above them',
     );
-    expect(image.width, lessThan(700), reason: 'the picture is not full width');
-    expect(find.text('ADD TO CART'), findsOneWidget);
+    expect(image.width, lessThan(800), reason: 'the picture is not full width');
+    expect(image.width, closeTo(image.height, 1), reason: 'a square card');
+    for (final label in [
+      'Remix this T-shirt',
+      'Try It On Virtually ✨',
+      'Add to cart',
+      'Buy now — ₹499',
+    ]) {
+      expect(find.text(label), findsOneWidget, reason: label);
+    }
+    expect(find.text('Back'), findsOneWidget, reason: 'the desktop header');
 
     tester.view.physicalSize = const Size(420, 900);
     await tester.pumpWidget(_app(const ProductDetailScreen(product: product)));
@@ -155,7 +164,7 @@ void _studioViewTests() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(find.text('REMIX THIS T-SHIRT'));
+    await tester.tap(find.text('Remix this T-shirt'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     expect(
@@ -256,7 +265,7 @@ void _productPageTests() {
   testWidgets('product page: needs a size, then adds to the cart', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.physicalSize = const Size(600, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     final cart = CartService();
@@ -298,7 +307,7 @@ void _productPageTests() {
   });
 
   testWidgets('product page: out of stock disables buying', (tester) async {
-    tester.view.physicalSize = const Size(1000, 2400);
+    tester.view.physicalSize = const Size(600, 2400);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
     await tester.pumpWidget(
