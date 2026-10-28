@@ -46,12 +46,24 @@ jobs:
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
 
       # The app bundles .env as an asset and the site serves it publicly, so only
-      # public values go in it. The CMS credentials live on the API server.
+      # public values go in it. The CMS credentials live on the API server. The
+      # Firebase web config (not secret: it identifies the project) switches on
+      # "Continue with Google"; leave those secrets out and the button stays hidden.
       - name: Write public .env
         env:
           API_URL: ${{ secrets.DESIGNWEAR_API_URL }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+          FIREBASE_WEB_APP_ID: ${{ secrets.FIREBASE_WEB_APP_ID }}
         run: |
           printf 'DESIGNWEAR_API_URL=%s\n' "$API_URL" > .env
+          for name in FIREBASE_PROJECT_ID FIREBASE_MESSAGING_SENDER_ID FIREBASE_AUTH_DOMAIN \
+                      FIREBASE_STORAGE_BUCKET FIREBASE_WEB_API_KEY FIREBASE_WEB_APP_ID; do
+            if [ -n "${!name}" ]; then printf '%s=%s\n' "$name" "${!name}" >> .env; fi
+          done
           printf '# CI placeholder\n' > .env.local
 
       - run: flutter pub get

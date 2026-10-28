@@ -86,3 +86,16 @@ nothing else. This path hasn't been run end to end yet.
 4. Decide whether orders should also be written into SethuCMS. Today they are kept in the
    API's own store and do not reduce CMS stock.
 5. Test on a phone, in a browser, and on one desktop platform.
+
+### Google sign-in on the website
+
+"Continue with Google" appears only when the build knows the Firebase project. Add these as
+GitHub secrets (Firebase console → Project settings → Your apps → Web app → config; they
+identify the project and are not private) and re-run **Deploy web (Vercel)**:
+
+`FIREBASE_PROJECT_ID`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_AUTH_DOMAIN`,
+`FIREBASE_WEB_API_KEY`, `FIREBASE_WEB_APP_ID` (and optionally `FIREBASE_STORAGE_BUCKET`).
+
+Also: enable the Google provider (Authentication → Sign-in method), add the site's domain
+under Authentication → Settings → Authorized domains, and set `FIREBASE_PROJECT_ID` on the
+API server (same project) so it accepts the sign-in.

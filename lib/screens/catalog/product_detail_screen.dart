@@ -32,8 +32,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _isAddingToCart = false;
   bool _isBuyingNow = false;
 
+  // Side by side from this width up; below it the phone layout is used.
+  static const _wideBreakpoint = 900.0;
+  static const _wideMaxWidth = 1200.0;
+
   @override
   Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= _wideBreakpoint;
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       extendBodyBehindAppBar: true,
@@ -56,206 +61,46 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Hero(
-              tag: widget.heroTag ?? widget.product.id,
-              child: Container(
-                width: double.infinity,
-                height: ResponsiveUtils.getResponsiveValue<double>(
-                  context,
-                  mobile: MediaQuery.sizeOf(context).height * 0.50,
-                  tablet: MediaQuery.sizeOf(context).height * 0.55,
-                  desktop: MediaQuery.sizeOf(context).height * 0.60,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surface,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(40),
-                    bottomRight: Radius.circular(40),
-                  ),
-                ),
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(40),
-                    bottomRight: Radius.circular(40),
-                  ),
-                  child: widget.product.imageUrl != null
-                      ? SafeNetworkImage(
-                          imageUrl: widget.product.imageUrl!,
-                          fit: BoxFit.cover,
-                        )
-                      : Icon(
-                          Icons.image_not_supported,
-                          size: 100,
-                          color: Theme.of(context).colorScheme.onSurface
-                              .withValues(alpha: 0.5),
+            if (wide)
+              Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: _wideMaxWidth),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(32, 96, 32, 32),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 5,
+                          child: AspectRatio(
+                            aspectRatio: 4 / 5,
+                            child: _hero(context, wide: true),
+                          ),
                         ),
-                ),
-              ),
-            ),
-
-            // Virtual Try-On Button
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveSizes.horizontalPadding(context),
-                vertical: 16.0,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            VirtualTryOnScreen(product: widget.product),
-                      ),
-                    );
-                  },
-                  icon: const Icon(
-                    Icons.auto_awesome,
-                    color: AppColors.marigold,
-                  ),
-                  label: Text(
-                    'Try It On Virtually ✨',
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.marigold,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: AppColors.marigold, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    backgroundColor: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-              ),
-            ),
-            // Remix this T-shirt: opens the Design Studio on a copy of it.
-            Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: ResponsiveSizes.horizontalPadding(context),
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _remix,
-                  icon: const Icon(
-                    Icons.fork_right,
-                    color: AppColors.marigoldInk,
-                  ),
-                  label: Text(
-                    'REMIX THIS T-SHIRT',
-                    style: GoogleFonts.outfit(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                      color: AppColors.marigoldInk,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.marigold,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                        const SizedBox(width: 48),
+                        Expanded(
+                          flex: 6,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _info(context),
+                              _tryOn(context),
+                              _remixButton(context),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(
-                ResponsiveSizes.horizontalPadding(context),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.product.title.toUpperCase(),
-                        style: ResponsiveTypography.h3(
-                          context,
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ).copyWith(letterSpacing: 1.1),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        '₹${widget.product.price.toStringAsFixed(2)}',
-                        style: ResponsiveTypography.price(context)
-                            .copyWith(color: context.accent),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _stockColor(widget.product).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      widget.product.isLowStock
-                          ? widget.product.stockLabel
-                          : _getStockText(widget.product.stockStatus),
-                      style: TextStyle(
-                        color: _stockColor(widget.product),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Size Selection
-                  Text('Select Size', style: ResponsiveTypography.h4(context)),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    children: _sizes.map((size) {
-                      final isSelected = _selectedSize == size;
-                      return _SizeChip(
-                        size: size,
-                        isSelected: isSelected,
-                        onTap: () {
-                          setState(() {
-                            _selectedSize = isSelected ? null : size;
-                          });
-                        },
-                      );
-                    }).toList(),
-                  ),
-
-                  const SizedBox(height: 24),
-                  Text(
-                    'Description',
-                    style: ResponsiveTypography.h4(
-                      context,
-                    ).copyWith(color: Theme.of(context).colorScheme.onSurface),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    widget.product.description,
-                    style: ResponsiveTypography.body(
-                      context,
-                      color: Theme.of(context).colorScheme.onSurface
-                          .withValues(alpha: 0.7),
-                    ).copyWith(height: 1.5),
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
+              )
+            else ...[
+              _hero(context, wide: false),
+              _tryOn(context),
+              _remixButton(context),
+              _info(context),
+            ],
           ],
         ),
       ),
@@ -274,98 +119,104 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ),
         child: SafeArea(
-          child: Row(
-            children: [
-              // Add to Cart Button
-              Expanded(
-                child: OutlinedButton(
-                  onPressed:
-                      (widget.product.stockStatus == 'outOfStock' ||
-                          _isAddingToCart)
-                      ? null
-                      : () => _addToCart(),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(0, 56),
-                    side: BorderSide(color: AppColors.marigold, width: 1.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  child: _isAddingToCart
-                      ? SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.marigold,
-                          ),
-                        )
-                      : Text(
-                          'ADD TO CART',
-                          style: GoogleFonts.outfit(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                            color: AppColors.marigold,
-                          ),
+          child: Center(
+            heightFactor: 1,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: _wideMaxWidth - 64),
+              child: Row(
+                children: [
+                  // Add to Cart Button
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed:
+                          (widget.product.stockStatus == 'outOfStock' ||
+                              _isAddingToCart)
+                          ? null
+                          : () => _addToCart(),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 56),
+                        side: BorderSide(color: AppColors.marigold, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
-                ),
-              ),
-              const SizedBox(width: 16),
-              // Buy Now Button
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(30),
-                    gradient: AppColors.goldGradient,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.marigold.withValues(alpha: 0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
                       ),
-                    ],
-                  ),
-                  child: ElevatedButton(
-                    onPressed:
-                        (widget.product.stockStatus == 'outOfStock' ||
-                            _isBuyingNow)
-                        ? null
-                        : () => _buyNow(),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.transparent,
-                      shadowColor: Colors.transparent,
-                      foregroundColor: AppColors.marigoldInk,
-                      minimumSize: const Size(0, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 0,
+                      child: _isAddingToCart
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.marigold,
+                              ),
+                            )
+                          : Text(
+                              'ADD TO CART',
+                              style: GoogleFonts.outfit(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                                color: AppColors.marigold,
+                              ),
+                            ),
                     ),
-                    child: _isBuyingNow
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.marigoldInk,
-                            ),
-                          )
-                        : Text(
-                            widget.product.stockStatus == 'outOfStock'
-                                ? 'OUT OF STOCK'
-                                : 'BUY NOW',
-                            style: GoogleFonts.outfit(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                              color: AppColors.marigoldInk,
-                            ),
-                          ),
                   ),
-                ),
+                  const SizedBox(width: 16),
+                  // Buy Now Button
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(30),
+                        gradient: AppColors.goldGradient,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.marigold.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: ElevatedButton(
+                        onPressed:
+                            (widget.product.stockStatus == 'outOfStock' ||
+                                _isBuyingNow)
+                            ? null
+                            : () => _buyNow(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
+                          foregroundColor: AppColors.marigoldInk,
+                          minimumSize: const Size(0, 56),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isBuyingNow
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.marigoldInk,
+                                ),
+                              )
+                            : Text(
+                                widget.product.stockStatus == 'outOfStock'
+                                    ? 'OUT OF STOCK'
+                                    : 'BUY NOW',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1,
+                                  color: AppColors.marigoldInk,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -464,6 +315,208 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       MaterialPageRoute(builder: (_) => const CartScreen()),
     );
   }
+
+  Widget _hero(BuildContext context, {required bool wide}) => Hero(
+    tag: widget.heroTag ?? widget.product.id,
+    child: Container(
+      width: double.infinity,
+      height: wide
+          ? null
+          : ResponsiveUtils.getResponsiveValue<double>(
+              context,
+              mobile: MediaQuery.sizeOf(context).height * 0.50,
+              tablet: MediaQuery.sizeOf(context).height * 0.55,
+              desktop: MediaQuery.sizeOf(context).height * 0.60,
+            ),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: wide
+            ? BorderRadius.circular(28)
+            : const BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
+              ),
+      ),
+      child: ClipRRect(
+        borderRadius: wide
+            ? BorderRadius.circular(28)
+            : const BorderRadius.only(
+                bottomLeft: Radius.circular(40),
+                bottomRight: Radius.circular(40),
+              ),
+        child: widget.product.imageUrl != null
+            ? SafeNetworkImage(
+                imageUrl: widget.product.imageUrl!,
+                fit: BoxFit.cover,
+              )
+            : Icon(
+                Icons.image_not_supported,
+                size: 100,
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.5),
+              ),
+      ),
+    ),
+  );
+
+  Widget _tryOn(BuildContext context) => Column(
+    children: [
+      Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveSizes.horizontalPadding(context),
+          vertical: 16.0,
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => VirtualTryOnScreen(product: widget.product),
+                ),
+              );
+            },
+            icon: const Icon(Icons.auto_awesome, color: AppColors.marigold),
+            label: Text(
+              'Try It On Virtually ✨',
+              style: GoogleFonts.outfit(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.marigold,
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              side: BorderSide(color: AppColors.marigold, width: 1.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.surface,
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _remixButton(BuildContext context) => Column(
+    children: [
+      Padding(
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveSizes.horizontalPadding(context),
+        ),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: _remix,
+            icon: const Icon(Icons.fork_right, color: AppColors.marigoldInk),
+            label: Text(
+              'REMIX THIS T-SHIRT',
+              style: GoogleFonts.outfit(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1,
+                color: AppColors.marigoldInk,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.marigold,
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _info(BuildContext context) => Padding(
+    padding: EdgeInsets.all(ResponsiveSizes.horizontalPadding(context)),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.product.title.toUpperCase(),
+              style: ResponsiveTypography.h3(
+                context,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ).copyWith(letterSpacing: 1.1),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '₹${widget.product.price.toStringAsFixed(2)}',
+              style: ResponsiveTypography.price(context)
+                  .copyWith(color: context.accent),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: _stockColor(widget.product).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            widget.product.isLowStock
+                ? widget.product.stockLabel
+                : _getStockText(widget.product.stockStatus),
+            style: TextStyle(
+              color: _stockColor(widget.product),
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+
+        // Size Selection
+        Text('Select Size', style: ResponsiveTypography.h4(context)),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          children: _sizes.map((size) {
+            final isSelected = _selectedSize == size;
+            return _SizeChip(
+              size: size,
+              isSelected: isSelected,
+              onTap: () {
+                setState(() {
+                  _selectedSize = isSelected ? null : size;
+                });
+              },
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 24),
+        Text(
+          'Description',
+          style: ResponsiveTypography.h4(context)
+              .copyWith(color: Theme.of(context).colorScheme.onSurface),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          widget.product.description,
+          style: ResponsiveTypography.body(
+            context,
+            color: Theme.of(context).colorScheme.onSurface
+                .withValues(alpha: 0.7),
+          ).copyWith(height: 1.5),
+        ),
+        const SizedBox(height: 40),
+      ],
+    ),
+  );
 
   // Amber when only a few are left, otherwise by availability.
   Color _stockColor(Product p) =>

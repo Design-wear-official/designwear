@@ -200,7 +200,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                             ),
                             const SizedBox(height: 20),
-                            if (featured.isNotEmpty) ...[
+                            // Only worth a row of its own when it picks some products
+                            // out; if every product is featured it would just repeat
+                            // the list below.
+                            if (featured.isNotEmpty &&
+                                featured.length < products.length) ...[
                               HomeSectionTitle(
                                 title: 'Featured Products',
                                 onSeeAll: _scrollToAll,

@@ -98,6 +98,44 @@ void main() {
 }
 
 void _studioViewTests() {
+  testWidgets('product page is two columns on desktop and one on a phone', (
+    tester,
+  ) async {
+    addTearDown(tester.view.reset);
+    const product = Product(
+      id: 'p1',
+      title: 'Graphic Tee',
+      price: 499,
+      stockCount: 3,
+      description: 'Soft cotton',
+    );
+
+    tester.view.physicalSize = const Size(1440, 900);
+    tester.view.devicePixelRatio = 1;
+    await tester.pumpWidget(_app(const ProductDetailScreen(product: product)));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull, reason: 'no overflow at 1440 wide');
+    final image = tester.getRect(find.byType(Hero).first);
+    final title = tester.getRect(find.text('GRAPHIC TEE'));
+    expect(
+      image.right,
+      lessThan(title.left),
+      reason: 'the picture sits beside the details, not above them',
+    );
+    expect(image.width, lessThan(700), reason: 'the picture is not full width');
+    expect(find.text('ADD TO CART'), findsOneWidget);
+
+    tester.view.physicalSize = const Size(420, 900);
+    await tester.pumpWidget(_app(const ProductDetailScreen(product: product)));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(tester.takeException(), isNull);
+    expect(
+      tester.getRect(find.byType(Hero).first).width,
+      420,
+      reason: 'on a phone the picture still spans the screen',
+    );
+  });
+
   testWidgets('remix button opens the studio on a copy of the product', (
     tester,
   ) async {
