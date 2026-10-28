@@ -69,6 +69,16 @@ jobs:
       - run: flutter pub get
       - run: flutter build web --release --dart-define=FLAVOR=external
 
+      # robots.txt, sitemap.xml and the page's link-preview tags need the site's own
+      # address. Set the repository variable SITE_URL when you move to a custom domain.
+      - name: Fill in the site address
+        env:
+          SITE_URL: ${{ vars.SITE_URL || 'https://designwear-tawny.vercel.app' }}
+        run: |
+          site="${SITE_URL%/}"
+          sed -i "s#__SITE_URL__#${site}#g" build/web/index.html build/web/robots.txt build/web/sitemap.xml
+          if grep -rl "__SITE_URL__" build/web >/dev/null; then echo "::error::SITE_URL placeholder left behind"; exit 1; fi
+
       # Deployed from a copy outside the git checkout. Otherwise the CLI attaches the
       # commit author, and Vercel blocks the deploy when that GitHub account is not a
       # member of the Vercel team. The token is read from VERCEL_TOKEN.
