@@ -164,6 +164,21 @@ void main() {
       expect(find.text('Continue with Google'), findsNothing);
     });
 
+    testWidgets('without a Firebase project the button is there and says why', (
+      tester,
+    ) async {
+      final auth = AuthService(
+        api: _api((_) {}),
+        google: const NoGoogleSignIn(),
+      );
+      await tester.pumpWidget(testApp(const LoginScreen(), auth: auth));
+      await tester.pump();
+      expect(find.text('Continue with Google'), findsOneWidget);
+      await tester.tap(find.text('Continue with Google'));
+      await tester.pump();
+      expect(find.text('Google sign-in is not set up yet.'), findsOneWidget);
+    });
+
     testWidgets('tapping it signs in and closes the screen', (tester) async {
       final auth = AuthService(api: _api((_) {}), google: _FakeGoogle('t'));
       await tester.pumpWidget(
