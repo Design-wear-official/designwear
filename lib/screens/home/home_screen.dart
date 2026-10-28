@@ -145,8 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? 'Catalog not connected'
                         : "Couldn't load products",
                     body: notConfigured
-                        ? 'Set SETHUCMS_URL, SETHUCMS_CONNECTION_ID and '
-                              'SETHUCMS_VIEWER_TOKEN in .env.'
+                        ? 'Set DESIGNWEAR_API_URL in .env (the address of '
+                              'the DesignWear API) and rebuild.'
                         : 'Check your connection and try again.',
                     onRetry: notConfigured ? null : _retry,
                   );
