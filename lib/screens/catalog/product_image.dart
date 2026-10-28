@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../presentation/widgets/image_proxy.dart';
+
 /// Network image with a neutral placeholder when the URL is missing or fails.
 class ProductImage extends StatelessWidget {
   const ProductImage({
@@ -29,7 +31,7 @@ class ProductImage extends StatelessWidget {
     final u = url;
     if (u == null || u.isEmpty) return placeholder;
     return Image.network(
-      u,
+      ImageProxy.resolve(u, width: (maxWidth * 2).round()),
       fit: fit,
       cacheWidth: (maxWidth * MediaQuery.devicePixelRatioOf(context)).round(),
       errorBuilder: (_, _, _) => placeholder,

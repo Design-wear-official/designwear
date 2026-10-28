@@ -29,7 +29,7 @@ class AIAgentService {
     List<File>? imageAttachments,
   }) async {
     final ai = AiService.instance;
-    if (!ai.chatEnabled) {
+    if (!ai.agentEnabled) {
       return AgentResponse(
         text: 'The design assistant is not connected yet. You can still design by hand.',
       );

@@ -11,29 +11,13 @@ class RemoteAiService implements AiService {
   final ServerFeatures features;
 
   @override
-  bool get isConfigured => features.chat || features.tryOn;
+  bool get isConfigured => features.designAgent || features.tryOn;
 
   @override
-  bool get chatEnabled => features.chat;
+  bool get agentEnabled => features.designAgent;
 
   @override
   bool get tryOnEnabled => features.tryOn;
-
-  @override
-  Future<String> chat(List<({bool fromUser, String text})> history) async {
-    try {
-      final j = await _api.post('/v1/ai/chat', {
-        'messages': [
-          for (final m in history)
-            {'role': m.fromUser ? 'user' : 'assistant', 'content': m.text},
-        ],
-      });
-      return '${j['reply']}';
-    } on ApiException catch (e) {
-      if (e.status == 503) throw const AiUnavailable();
-      throw AiFailure(e.message);
-    }
-  }
 
   @override
   Future<List<int>> tryOn({

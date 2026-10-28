@@ -1,15 +1,14 @@
-/// AI features (chat, virtual try-on, the Design Studio assistant) need a
-/// server that holds the model keys; the app never ships one. Until
-/// [AiService.instance] is replaced by [RemoteAiService] they report
-/// "not connected".
+/// AI features need a server that holds the model keys; the app never ships
+/// one. There is exactly one chat bot: the Design Studio assistant
+/// ([designAgent]), which edits the design from what the user asks. Virtual
+/// try-on and graphic generation are not chats. Until [AiService.instance] is
+/// replaced by [RemoteAiService] everything reports "not connected".
 abstract class AiService {
   static AiService instance = const UnconfiguredAiService();
 
   bool get isConfigured;
-  bool get chatEnabled => isConfigured;
+  bool get agentEnabled => isConfigured;
   bool get tryOnEnabled => isConfigured;
-
-  Future<String> chat(List<({bool fromUser, String text})> history);
 
   /// A photo of the person wearing the product, or their custom design when
   /// [garmentImage] is given instead of a catalog [productId].
@@ -40,14 +39,10 @@ class UnconfiguredAiService implements AiService {
   bool get isConfigured => false;
 
   @override
-  bool get chatEnabled => false;
+  bool get agentEnabled => false;
 
   @override
   bool get tryOnEnabled => false;
-
-  @override
-  Future<String> chat(List<({bool fromUser, String text})> history) async =>
-      throw const AiUnavailable();
 
   @override
   Future<List<int>> tryOn({

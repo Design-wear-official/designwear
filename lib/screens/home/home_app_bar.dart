@@ -516,12 +516,13 @@ class _SearchFieldState extends State<_SearchField> {
                       height: 1.2,
                       color: text,
                     ),
+                    // Fill the bar's full height and centre the text in it: the
+                    // placeholder then sits on the same line as the icons in the
+                    // browser too, whatever the font's own metrics are.
+                    expands: true,
+                    minLines: null,
+                    maxLines: null,
                     textAlignVertical: TextAlignVertical.center,
-                    strutStyle: const StrutStyle(
-                      fontSize: 13,
-                      height: 1.2,
-                      forceStrutHeight: true,
-                    ),
                     textInputAction: TextInputAction.search,
                     cursorColor: AppColors.marigold,
                     onSubmitted: (_) => widget.onSearch(),

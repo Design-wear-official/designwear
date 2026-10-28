@@ -292,22 +292,42 @@ void main() {
       expect(bodies[1].containsKey('previewImage'), isFalse);
     });
 
-    test('AI: remote chat/try-on map server states', () async {
+    test('AI: the design agent returns a reply and an edit; try-on maps server states', () async {
+      late Map sent;
       final api = _client((r) async {
-        if (r.url.path == '/v1/ai/chat') {
-          return _json(200, {'reply': 'Try navy.'});
+        if (r.url.path == '/v1/ai/design-agent') {
+          sent = jsonDecode(r.body) as Map;
+          return _json(200, {
+            'text': 'Made it navy.',
+            'design': {'baseColor': '0xFF1A237E', 'elements': []},
+          });
         }
         return _json(503, {
           'error': {'code': 'ai_unavailable', 'message': 'off'},
         });
       });
-      final ai = RemoteAiService(api, const ServerFeatures(chat: true));
-      expect(await ai.chat([(fromUser: true, text: 'hi')]), 'Try navy.');
+      final ai = RemoteAiService(api, const ServerFeatures(designAgent: true));
+      final reply = await ai.designAgent(
+        message: 'make the shirt navy',
+        design: {'elements': []},
+        history: [
+          (fromUser: true, text: 'hi'),
+          (fromUser: false, text: 'hello'),
+        ],
+      );
+      expect(reply.text, 'Made it navy.');
+      expect(reply.design!['baseColor'], '0xFF1A237E');
+      expect(sent['message'], 'make the shirt navy');
+      expect((sent['history'] as List).map((m) => (m as Map)['role']), [
+        'user',
+        'assistant',
+      ]);
+
       await expectLater(
         ai.tryOn(personPhoto: [1], productId: 'p'),
         throwsA(isA<AiUnavailable>()),
       );
-      expect(ai.chatEnabled, isTrue);
+      expect(ai.agentEnabled, isTrue);
       expect(ai.tryOnEnabled, isFalse);
     });
   });

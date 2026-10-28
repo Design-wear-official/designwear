@@ -191,6 +191,13 @@ void alignmentTests() {
         final searchIcon = tester.getRect(find.byIcon(Icons.search).first);
 
         // Profile and cart are the same 40x40 rounded square.
+        // The text field fills the whole bar and centres its text, so the
+        // placeholder shares the icons' centre line in the browser too.
+        expect(
+          field.height,
+          bar.height - 2,
+          reason: 'the bar minus its 1px border',
+        );
         expect(profile.size, const Size(40, 40));
         expect(cart.size, const Size(40, 40));
         // Everything sits on the bar's centre line.

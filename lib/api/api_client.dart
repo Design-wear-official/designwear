@@ -157,7 +157,7 @@ class ApiClient {
     try {
       final j = await get('/v1/config');
       return ServerFeatures(
-        chat: j['chat'] == true,
+        designAgent: j['designAgent'] == true,
         tryOn: j['tryOn'] == true,
         onlinePayments: j['onlinePayments'] == true,
       );
@@ -169,9 +169,9 @@ class ApiClient {
 
 class ServerFeatures {
   const ServerFeatures({
-    this.chat = false,
+    this.designAgent = false,
     this.tryOn = false,
     this.onlinePayments = false,
   });
-  final bool chat, tryOn, onlinePayments;
+  final bool designAgent, tryOn, onlinePayments;
 }

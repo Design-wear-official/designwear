@@ -1,6 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import 'image_proxy.dart';
+
 class SafeNetworkImage extends StatelessWidget {
   final String imageUrl;
   final double? width;
@@ -21,11 +23,18 @@ class SafeNetworkImage extends StatelessWidget {
       return _buildPlaceholder();
     }
 
+    // On web, CDN photos come through the API (see ImageProxy), at about twice the
+    // displayed width so they stay sharp on high-density screens.
+    final url = ImageProxy.resolve(
+      imageUrl,
+      width: ((width ?? 400) * 2).round(),
+    );
+
     // On Web, use Image.network to avoid CORS issues with cached_network_image
     // and leverage browser caching.
     if (const bool.fromEnvironment('dart.library.js_util')) {
       return Image.network(
-        imageUrl,
+        url,
         width: width,
         height: height,
         fit: fit,
@@ -46,7 +55,7 @@ class SafeNetworkImage extends StatelessWidget {
     }
 
     return CachedNetworkImage(
-      imageUrl: imageUrl,
+      imageUrl: url,
       width: width,
       height: height,
       fit: fit,

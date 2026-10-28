@@ -1,11 +1,13 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 
 import 'api/api_client.dart';
+import 'presentation/widgets/image_proxy.dart';
 import 'services/auth/google_id_token_source.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -53,6 +55,9 @@ Future<void> main() async {
   if (apiUrl.isNotEmpty) {
     try {
       api = ApiClient(apiUrl);
+      // Browsers can't load the image CDN directly (its CORS list), so on web the
+      // API fetches product photos.
+      if (kIsWeb) ImageProxy.configure(api.baseUrl);
     } on ArgumentError catch (e) {
       AppLog.instance.warning(
         'startup',

@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import '../../services/auth/auth_service.dart';
 import '../../theme/app_theme.dart';
 import 'addresses_screen.dart';
-import '../ai/ai_chat_screen.dart';
 import 'auth_screens.dart';
 import '../orders/my_orders_screen.dart';
 import 'payment_methods_screen.dart';
@@ -103,11 +102,6 @@ class ProfileScreen extends StatelessWidget {
             leading: const Icon(Icons.palette_outlined),
             title: const Text('Saved designs'),
             onTap: () => _open(context, const SavedDesignsScreen()),
-          ),
-          ListTile(
-            leading: const Icon(Icons.smart_toy_outlined),
-            title: const Text('Design assistant'),
-            onTap: () => _open(context, const AiChatScreen()),
           ),
           ListTile(
             leading: const Icon(Icons.settings_outlined),
