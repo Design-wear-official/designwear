@@ -134,10 +134,20 @@ class CartLine {
 enum OrderStatus {
   awaitingPayment,
   placed,
+  confirmed,
+  packed,
   processing,
   shipped,
   delivered,
   cancelled,
+}
+
+/// One step in an order's journey, as the server recorded it.
+class OrderEvent {
+  const OrderEvent({required this.status, required this.at, this.note});
+  final String status;
+  final DateTime at;
+  final String? note;
 }
 
 class Order {
@@ -152,6 +162,9 @@ class Order {
     required this.total,
     this.status = OrderStatus.placed,
     this.teamName,
+    this.history = const [],
+    this.trackingId,
+    this.carrier,
   });
 
   final String id;
@@ -165,6 +178,10 @@ class Order {
   /// The local team that makes and delivers this order (server orders).
   final String? teamName;
 
+  /// Each step the order has been through, oldest first (server orders).
+  final List<OrderEvent> history;
+  final String? trackingId, carrier;
+
   Order copyWith({OrderStatus? status}) => Order(
     id: id,
     createdAt: createdAt,
@@ -176,6 +193,9 @@ class Order {
     total: total,
     status: status ?? this.status,
     teamName: teamName,
+    history: history,
+    trackingId: trackingId,
+    carrier: carrier,
   );
 
   /// Parses an order as returned by the DesignWear API (server-priced).
@@ -207,8 +227,20 @@ class Order {
       tax: (j['tax'] as num).toDouble(),
       total: (j['total'] as num).toDouble(),
       teamName: (j['team'] as Map?)?['name'] as String?,
+      trackingId: (j['tracking'] as Map?)?['id'] as String?,
+      carrier: (j['tracking'] as Map?)?['carrier'] as String?,
+      history: [
+        for (final e in (j['history'] as List? ?? const []))
+          OrderEvent(
+            status: '${(e as Map)['status']}',
+            at: DateTime.parse('${e['at']}'),
+            note: e['note'] as String?,
+          ),
+      ],
       status: switch (status) {
         'awaiting_payment' => OrderStatus.awaitingPayment,
+        'confirmed' => OrderStatus.confirmed,
+        'packed' => OrderStatus.packed,
         'processing' => OrderStatus.processing,
         'shipped' => OrderStatus.shipped,
         'delivered' => OrderStatus.delivered,

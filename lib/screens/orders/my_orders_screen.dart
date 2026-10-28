@@ -46,6 +46,94 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   }
 }
 
+/// The steps an order goes through, with the ones reached ticked off.
+class _Timeline extends StatelessWidget {
+  const _Timeline({required this.order});
+  final Order order;
+
+  static const _steps = [
+    ('placed', 'Order placed'),
+    ('confirmed', 'Confirmed'),
+    ('packed', 'Packed'),
+    ('shipped', 'Shipped'),
+    ('delivered', 'Delivered'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final reached = {for (final e in order.history) e.status: e};
+    final cancelled = order.status == OrderStatus.cancelled;
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final (key, label) in _steps)
+            _row(
+              context,
+              label: label,
+              event: reached[key],
+              color: reached.containsKey(key) ? scheme.primary : scheme.outline,
+            ),
+          if (cancelled)
+            _row(
+              context,
+              label: 'Cancelled',
+              event: reached['cancelled'],
+              color: scheme.error,
+            ),
+          if (order.trackingId != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4, left: 32),
+              child: Text(
+                'Tracking: ${order.carrier ?? ''} ${order.trackingId}'.trim(),
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(
+    BuildContext context, {
+    required String label,
+    required OrderEvent? event,
+    required Color color,
+  }) {
+    final done = event != null;
+    final t = event?.at.toLocal();
+    final when = t == null
+        ? ''
+        : '${t.day.toString().padLeft(2, '0')}/${t.month.toString().padLeft(2, '0')} '
+              '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: [
+          Icon(
+            done ? Icons.check_circle : Icons.radio_button_unchecked,
+            size: 20,
+            color: color,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              event?.note == null ? label : '$label · ${event!.note}',
+              style: TextStyle(
+                fontWeight: done ? FontWeight.w600 : FontWeight.w400,
+                color: done ? null : Theme.of(context).colorScheme.outline,
+              ),
+            ),
+          ),
+          Text(when, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
 class _OrderCard extends StatelessWidget {
   const _OrderCard({required this.order});
   final Order order;
@@ -70,6 +158,7 @@ class _OrderCard extends StatelessWidget {
               subtitle: Text('Size ${l.size} · ×${l.quantity}'),
               trailing: Text(formatPrice(l.total)),
             ),
+          if (order.history.isNotEmpty) _Timeline(order: order),
           ListTile(
             dense: true,
             leading: const Icon(Icons.location_on_outlined),
