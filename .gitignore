@@ -1,0 +1,122 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Widget Preview related
+.widget_preview/
+
+# Firebase (keep secrets/config out of git; use `flutterfire configure` locally)
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log*
+firebase-debug.*.log
+.firebase/
+.firebaserc
+*-firebase-adminsdk-*.json
+serviceAccount*.json
+service-account*.json
+**/ios/firebase_app_id_file.json
+**/macos/firebase_app_id_file.json
+functions/node_modules/
+functions/lib/
+
+# SethuCMS (API tokens / local config)
+.sethucms*
+sethucms.config.*
+sethucms*.json
+!sethucms*.example.json
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.key
+secrets.dart
+secrets.json
+
+# Android signing & local config
+key.properties
+*.jks
+*.keystore
+local.properties
+**/android/.gradle/
+**/android/captures/
+**/android/app/.cxx/
+**/android/gradle-wrapper.jar
+
+# iOS / macOS
+**/ios/Pods/
+**/macos/Pods/
+**/ios/**/xcuserdata/
+**/ios/**/*.xcworkspace/xcuserdata/
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Flutter/ephemeral/
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# Node / web tooling
+node_modules/
+.dart_tool/
+.packages
+.flutter-plugins
+pubspec_overrides.yaml
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# OS
+Thumbs.db
+
+!.env.example
+
+# Rules/config are reviewed in git; they contain no secrets
+.claude/
+.vscode/

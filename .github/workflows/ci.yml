@@ -1,0 +1,81 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch/PR cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  app:
+    name: Analyze, test, build web
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # pubspec.yaml lists .env/.env.local as assets (gitignored; real values
+      # aren't needed to analyze/test). Empty files satisfy the asset check, so
+      # no secrets ever reach a pull-request build.
+      - run: printf '# CI placeholder\n' | tee .env .env.local >/dev/null
+
+      - run: flutter pub get
+
+      - run: flutter analyze
+
+      - name: Check formatting (non-blocking)
+        run: dart format --output=none --set-exit-if-changed .
+        continue-on-error: true
+
+      - name: Run tests
+        run: flutter test --coverage
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/lcov.info
+          if-no-files-found: ignore
+
+      # Proves the web target still compiles (the app runs on web, phones and desktop).
+      - name: Build web
+        run: flutter build web --release
+
+  android:
+    name: Build Android (debug)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - run: printf '# CI placeholder\n' | tee .env .env.local >/dev/null
+      - run: flutter pub get
+
+      # Both flavours must keep building; internal has its own applicationId.
+      - name: Build external flavour
+        run: flutter build apk --debug --flavor external --dart-define=FLAVOR=external
+      - name: Build internal flavour
+        run: flutter build apk --debug --flavor internal --dart-define=FLAVOR=internal

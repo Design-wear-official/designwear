@@ -1,0 +1,91 @@
+import '../../api/api_client.dart';
+import '../../models/commerce.dart';
+import '../app/persisted_list.dart';
+
+class AddressStore extends PersistedList<Address> {
+  AddressStore()
+    : super(
+        key: 'addresses.v1',
+        fromJson: Address.fromJson,
+        toJson: (a) => a.toJson(),
+        idOf: (a) => a.id,
+      );
+}
+
+class PaymentMethodStore extends PersistedList<PaymentMethod> {
+  PaymentMethodStore()
+    : super(
+        key: 'payments.v1',
+        fromJson: PaymentMethod.fromJson,
+        toJson: (p) => p.toJson(),
+        idOf: (p) => p.id,
+      );
+
+  /// Cash on delivery is always available.
+  static const cod = PaymentMethod(
+    id: 'cod',
+    kind: PaymentKind.cod,
+    label: 'Cash on delivery',
+  );
+  List<PaymentMethod> get all => [cod, ...items];
+}
+
+/// Orders. With an [ApiClient] they live on the server and are priced there;
+/// otherwise they are kept on this device.
+class OrderStore extends PersistedList<Order> {
+  OrderStore({this.api})
+    : super(
+        key: 'orders.v1',
+        fromJson: Order.fromJson,
+        toJson: (o) => o.toJson(),
+        idOf: (o) => o.id,
+      );
+
+  final ApiClient? api;
+  bool get isRemote => api != null;
+
+  /// Server mode: reload this user's orders. Errors leave the list unchanged.
+  Future<void> refresh() async {
+    if (api == null || !api!.hasToken) return;
+    try {
+      final j = await api!.get('/v1/orders');
+      setAll([
+        for (final o in (j['orders'] as List)) Order.fromApi((o as Map).cast()),
+      ]);
+    } on ApiException catch (_) {}
+  }
+
+  /// Server mode: places the order; the server prices it from the catalog.
+  Future<Order> place({
+    required List<CartLine> lines,
+    required Address address,
+  }) async {
+    final j = await api!.post('/v1/orders', {
+      'address': address.toJson(),
+      'paymentMethod': 'cod',
+      'lines': [
+        for (final l in lines)
+          {
+            'productId': l.productId,
+            'designId': l.designId,
+            'size': l.size,
+            'quantity': l.quantity,
+          },
+      ],
+    });
+    final order = Order.fromApi((j['order'] as Map).cast());
+    setAll([order, ...items.where((o) => o.id != order.id)]);
+    return order;
+  }
+
+  Future<void> cancel(Order order) async {
+    if (api == null) {
+      return upsert(order.copyWith(status: OrderStatus.cancelled));
+    }
+    final j = await api!.post(
+      '/v1/orders/${Uri.encodeComponent(order.id)}/cancel',
+    );
+    final updated = Order.fromApi((j['order'] as Map).cast());
+    setAll([for (final o in items) o.id == updated.id ? updated : o]);
+  }
+}
