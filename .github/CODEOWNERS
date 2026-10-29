@@ -1,0 +1,17 @@
+# Code owners: GitHub asks these people to review every change that touches the
+# matching files. The last matching line wins.
+
+# Everything
+*                       @kasinadhsarma
+
+# Build, release and deploy pipelines, and the settings that guard them
+/.github/               @kasinadhsarma
+/scripts/               @kasinadhsarma
+/web/vercel.json        @kasinadhsarma
+/SECURITY.md            @kasinadhsarma
+
+# Platform projects and signing
+/android/               @kasinadhsarma
+/ios/                   @kasinadhsarma
+/macos/                 @kasinadhsarma
+/pubspec.yaml           @kasinadhsarma
