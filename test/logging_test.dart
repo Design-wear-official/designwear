@@ -10,6 +10,26 @@ import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  test('a log line shows a picture for the tag instead of brackets', () {
+    final line = LogEntry(
+      at: DateTime.utc(2026, 10, 31),
+      level: LogLevel.error,
+      tag: 'api',
+      message: 'GET /v1/orders -> 500',
+    ).toString();
+    expect(line, contains('🌐 api GET /v1/orders -> 500'));
+    expect(line, isNot(contains('[api]')));
+    expect(
+      LogEntry(
+        at: DateTime.now(),
+        level: LogLevel.info,
+        tag: 'new',
+        message: 'x',
+      ).tagIcon,
+      '🔹',
+    );
+  });
+
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   test('redact removes tokens, passwords and emails', () {

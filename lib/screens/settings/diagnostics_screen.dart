@@ -108,7 +108,7 @@ class _DiagnosticsScreenState extends State<DiagnosticsScreen> {
                               style: TextStyle(color: _color(context, e.level)),
                             ),
                             subtitle: Text(
-                              '$time · ${e.level.name} · ${e.tag}',
+                              '$time · ${e.level.name} · ${e.tagIcon} ${e.tag}',
                             ),
                             onTap: e.stack == null
                                 ? null

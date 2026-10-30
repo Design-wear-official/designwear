@@ -42,9 +42,24 @@ class LogEntry {
     stack: j['stack'] as String?,
   );
 
+  /// A small picture for the tag, so a log line is easy to scan.
+  static const _tagIcons = <String, String>{
+    'api': '🌐',
+    'auth': '🔐',
+    'cart': '🛒',
+    'ai': '🤖',
+    'storage': '💾',
+    'push': '📲',
+    'notifications': '🔔',
+    'studio': '🎨',
+    'stickers': '🏷️',
+  };
+
+  String get tagIcon => _tagIcons[tag] ?? '🔹';
+
   @override
   String toString() =>
-      '${at.toIso8601String()} ${level.name.toUpperCase().padRight(7)} [$tag] $message'
+      '${at.toIso8601String()} ${level.name.toUpperCase().padRight(7)} $tagIcon $tag $message'
       '${stack == null ? '' : '\n$stack'}';
 }
 
