@@ -194,6 +194,27 @@ class _OrderCard extends StatelessWidget {
                 child: Text('Pay ${formatPrice(order.total)} now'),
               ),
             ),
+          if (order.status != OrderStatus.awaitingPayment &&
+              context.read<OrderStore>().api != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await context.read<OrderStore>().emailReceipt(order);
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('Receipt sent to your email'),
+                      ),
+                    );
+                  } on ApiException catch (e) {
+                    messenger.showSnackBar(SnackBar(content: Text(e.message)));
+                  }
+                },
+                child: const Text('Email receipt'),
+              ),
+            ),
           if (order.status == OrderStatus.placed ||
               order.status == OrderStatus.awaitingPayment)
             Align(

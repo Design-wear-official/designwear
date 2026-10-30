@@ -10,6 +10,7 @@ import '../../theme/app_theme.dart' show AppThemeColors;
 import '../account/auth_screens.dart' show LoginScreen;
 import '../account/profile_screen.dart';
 import '../cart/cart_screen.dart';
+import '../help/help_screen.dart';
 import '../notifications/notifications_screen.dart';
 import '../settings/settings_screen.dart';
 import '../studio/editor/design_studio_screen.dart';
@@ -157,6 +158,11 @@ class _HomeProfileMenuState extends State<HomeProfileMenu> {
                   icon: Icons.settings_outlined,
                   label: 'Settings',
                   onTap: () => _go('/settings', const SettingsScreen()),
+                ),
+                _Item(
+                  icon: Icons.help_outline,
+                  label: 'Help & support',
+                  onTap: () => _go('/help', const HelpScreen()),
                 ),
               ],
             ),

@@ -70,6 +70,7 @@ void main() {
       'Cart',
       'Sign in', // signed out, so profile is the sign-in page
       'Settings',
+      'Help & support',
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }

@@ -121,6 +121,11 @@ class OrderStore extends PersistedList<Order> {
     return paid;
   }
 
+  /// Asks the server to email the receipt for [order] again.
+  Future<void> emailReceipt(Order order) async {
+    await api!.post('/v1/orders/${Uri.encodeComponent(order.id)}/receipt');
+  }
+
   Future<void> cancel(Order order) async {
     if (api == null) {
       return upsert(order.copyWith(status: OrderStatus.cancelled));
