@@ -25,7 +25,7 @@ its `.env`. The release workflow writes only `DESIGNWEAR_API_URL` into the app's
 - Error reports from the app are redacted (tokens, passwords, emails) on the device and again on the server.
 - In production the API refuses to start without a strong JWT secret, allowed origins and a mail webhook.
 
-Details: [docs/api.md](docs/api.md#rules-the-server-enforces).
+Details: [api (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/02-api/endpoints.md).
 
 ## What you must configure
 
@@ -34,8 +34,8 @@ Details: [docs/api.md](docs/api.md#rules-the-server-enforces).
    API, keep the connection read-only, then **rotate the token** and put the new one in the
    API's `.env`. Until you do, anyone holding any token for that connection can read those collections.
 2. **Production settings** on the API: `DESIGNWEAR_JWT_SECRET`, `ALLOWED_ORIGINS`,
-   `MAIL_WEBHOOK_URL`. See [docs/deployment.md](docs/deployment.md).
-3. **Google sign-in** (optional): see [docs/accounts-and-sign-in.md](docs/accounts-and-sign-in.md#setup).
+   `MAIL_WEBHOOK_URL`. See [deployment (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/07-deployment/README.md).
+3. **Google sign-in** (optional): see [accounts-and-sign-in (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/guides/accounts-and-sign-in.md).
 4. If something calls the CMS gateway straight from a browser, set its own allowed origins
    (`SETHUCMS_ALLOWED_ORIGINS`) to your web origin only. The app itself no longer does this.
 

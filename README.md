@@ -18,7 +18,7 @@ One Flutter codebase for **Android, iOS, web, Windows, macOS and Linux**, backed
 ```
 
 The app never holds a CMS token or an AI key: everything secret lives on the API server.
-See [docs/architecture.md](docs/architecture.md).
+See [architecture (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/01-system-overview/README.md).
 
 ## Features
 
@@ -26,13 +26,13 @@ See [docs/architecture.md](docs/architecture.md).
   with sizes, cart, checkout (cash on delivery), order history, saved addresses.
 - **Design Studio:** layers, colours, text, emoji and your own stickers, templates, undo/redo,
   snap guides, keyboard shortcuts, front/back/left/right views. See
-  [docs/design-studio.md](docs/design-studio.md).
+  [design-studio (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/guides/design-studio.md).
 - **DesignBot:** the one chat bot. Ask for a design in plain words and it edits your design.
 - **Community:** publish designs, like, remix (with a visible lineage), weekly challenges
   with a leaderboard.
 - **Virtual try-on** with a catalog product or your own design.
 - **Accounts:** email and password, password reset by emailed code, or Google sign-in.
-  See [docs/accounts-and-sign-in.md](docs/accounts-and-sign-in.md).
+  See [accounts-and-sign-in (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/guides/accounts-and-sign-in.md).
 - **Diagnostics:** local log viewer, with opt-out reporting of warnings and errors.
 - **Two flavours** (`external`, `internal`) that install side by side.
 
@@ -44,14 +44,14 @@ You need Flutter (stable) and Node 20 or newer.
 git clone https://github.com/Design-wear-official/designwear.git
 git clone https://github.com/Design-wear-official/designwear-backend.git designwear-server   # sibling folder
 
-cd designwear-server && cp .env.example .env     # fill in the CMS settings (see docs/configuration.md)
+cd designwear-server && cp .env.example .env     # fill in the CMS settings (see the documentation repo)
 cd ../designwear && cp .env.example .env         # set DESIGNWEAR_API_URL=http://localhost:8787
 ./run.sh                                         # pick flavour and device; it starts the API for you
 ```
 
 `run.sh` offers Linux desktop, "let Flutter choose" (phones, Chrome) and **web in your own
 browser** (it picks a free port). Details and the phone setup are in
-[docs/getting-started.md](docs/getting-started.md).
+[getting-started (documentation repo)](https://github.com/Design-wear-official/documentation/blob/main/06-development/README.md).
 
 ## Tests
 
@@ -75,22 +75,22 @@ lib/
   services/     ai, app, auth, community, shop, studio
   theme/        theme wrapper and colour helpers
 test/           unit, widget and layout tests
-docs/           documentation
+(documentation lives in the Design-wear-official/documentation repo)
 ```
 
 ## Documentation
 
 | | |
 |---|---|
-| [Getting started](docs/getting-started.md) | set up, run on every platform, phone and web tips |
-| [Architecture](docs/architecture.md) | how the pieces fit, data flow, why the choices |
-| [Configuration](docs/configuration.md) | every environment setting, app and server |
-| [Design Studio](docs/design-studio.md) | editor, views, DesignBot, publishing |
-| [Accounts and sign-in](docs/accounts-and-sign-in.md) | login, reset, Google sign-in setup |
-| [API](docs/api.md) | endpoints, auth, limits |
-| [Deployment](docs/deployment.md) | host the API and the web app |
-| [CI/CD](docs/ci-cd.md) | workflows, releases, secrets |
-| [Troubleshooting](docs/troubleshooting.md) | problems we hit and their fixes |
+| [Getting started](https://github.com/Design-wear-official/documentation/blob/main/06-development/README.md) | set up, run on every platform, phone and web tips |
+| [Architecture](https://github.com/Design-wear-official/documentation/blob/main/01-system-overview/README.md) | how the pieces fit, data flow, why the choices |
+| [Configuration](https://github.com/Design-wear-official/documentation/blob/main/guides/configuration.md) | every environment setting, app and server |
+| [Design Studio](https://github.com/Design-wear-official/documentation/blob/main/guides/design-studio.md) | editor, views, DesignBot, publishing |
+| [Accounts and sign-in](https://github.com/Design-wear-official/documentation/blob/main/guides/accounts-and-sign-in.md) | login, reset, Google sign-in setup |
+| [API](https://github.com/Design-wear-official/documentation/blob/main/02-api/endpoints.md) | endpoints, auth, limits |
+| [Deployment](https://github.com/Design-wear-official/documentation/blob/main/07-deployment/README.md) | host the API and the web app |
+| [CI/CD](https://github.com/Design-wear-official/documentation/blob/main/guides/ci-cd.md) | workflows, releases, secrets |
+| [Troubleshooting](https://github.com/Design-wear-official/documentation/blob/main/guides/troubleshooting.md) | problems we hit and their fixes |
 | [Security](SECURITY.md) | what is protected and what you must configure |
 
 ## Branches and repositories

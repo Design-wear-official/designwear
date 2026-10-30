@@ -2,12 +2,12 @@ name: Deploy web (Vercel)
 
 # Builds the Flutter web app and deploys it to Vercel with an access token.
 # Needs repository secrets VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID and
-# DESIGNWEAR_API_URL (the public address of the API). See docs/deployment.md.
+# DESIGNWEAR_API_URL (the public address of the API). See the documentation repo (07-deployment).
 
 on:
   push:
     branches: [main]
-    paths-ignore: ["docs/**", "**.md"]
+    paths-ignore: ["**.md"]
   workflow_dispatch:
 
 concurrency:
@@ -31,7 +31,7 @@ jobs:
         run: |
           for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID; do
             if [ -z "${!name}" ]; then
-              echo "::error::Repository secret $name is not set (see docs/deployment.md)."
+              echo "::error::Repository secret $name is not set (see the documentation repo, 07-deployment)."
               exit 1
             fi
           done
