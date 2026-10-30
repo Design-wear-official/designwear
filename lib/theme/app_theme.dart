@@ -17,6 +17,14 @@ ThemeData buildAppTheme([Brightness brightness = Brightness.dark]) {
       primary: dark ? AppColors.marigold : const Color(0xFF9A5B00),
       onPrimary: dark ? AppColors.marigoldInk : Colors.white,
     ),
+    // The original app bar title style has no colour, so titles (Profile,
+    // Settings, ...) drew white on the light theme's off-white bar. Give it the
+    // bar's own foreground colour.
+    appBarTheme: base.appBarTheme.copyWith(
+      titleTextStyle: base.appBarTheme.titleTextStyle?.copyWith(
+        color: base.appBarTheme.foregroundColor,
+      ),
+    ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: dark ? AppColors.marigold : const Color(0xFF9A5B00),
     ),
