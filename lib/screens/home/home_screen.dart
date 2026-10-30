@@ -12,7 +12,6 @@ import '../../theme/app_theme.dart' show AppThemeColors;
 import '../../services/community/community_service.dart';
 import 'home_app_bar.dart';
 import 'home_challenge_banner.dart';
-import 'home_menu.dart';
 import 'home_sections.dart';
 import '../catalog/search_screen.dart';
 import '../studio/community/challenge_screen.dart';
@@ -36,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchFocus = FocusNode();
   bool _searchFocused = false;
   final _allKey = GlobalKey();
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -134,8 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Focus(
         autofocus: true,
         child: Scaffold(
-          key: _scaffoldKey,
-          drawer: HomeMenuDrawer(onSearch: _goToSearch),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           body: Column(
             children: [
@@ -146,7 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 searchController: _searchController,
                 searchFocusNode: _searchFocus,
                 onSearch: _goToSearch,
-                onMenu: () => _scaffoldKey.currentState?.openDrawer(),
                 suggestionPool: _suggestionPool,
               ),
               Expanded(

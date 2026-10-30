@@ -5,6 +5,7 @@ import 'package:designwear/cms/cms_service.dart';
 import 'package:designwear/data/product_repository.dart';
 import 'package:designwear/screens/catalog/search_screen.dart';
 import 'package:designwear/screens/home/home_screen.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -46,12 +47,18 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('the hamburger opens a menu with cart, profile and settings', (
+  Finder avatar() => find.byIcon(Icons.person_outline).first;
+
+  testWidgets('hovering the profile icon shows the menu; leaving hides it', (
     tester,
   ) async {
-    await open(tester, const Size(600, 900));
+    await open(tester, const Size(1200, 900));
+    expect(find.text('Settings'), findsNothing);
 
-    await tester.tap(find.byTooltip('Menu'));
+    final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
+    await mouse.addPointer(location: Offset.zero);
+    addTearDown(mouse.removePointer);
+    await mouse.moveTo(tester.getCenter(avatar()));
     await tester.pumpAndSettle();
 
     for (final label in const [
@@ -63,24 +70,30 @@ void main() {
     ]) {
       expect(find.text(label), findsOneWidget, reason: label);
     }
+
+    await mouse.moveTo(const Offset(5, 5));
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.text('Settings'), findsNothing);
   });
 
-  testWidgets('menu entries open their page and close the menu', (
-    tester,
-  ) async {
-    await open(tester, const Size(600, 900));
-    await tester.tap(find.byTooltip('Menu'));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'on a touch screen a tap opens the menu and an entry opens its page',
+    (tester) async {
+      await open(tester, const Size(390, 844));
 
-    await tester.tap(find.text('Settings'));
-    await tester.pumpAndSettle();
+      await tester.tap(avatar());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Settings'));
+      await tester.pumpAndSettle();
 
-    expect(find.widgetWithText(AppBar, 'Settings'), findsOneWidget);
-  });
+      expect(find.widgetWithText(AppBar, 'Settings'), findsOneWidget);
+    },
+  );
 
   testWidgets('"Search designs" opens the search page', (tester) async {
-    await open(tester, const Size(600, 900));
-    await tester.tap(find.byTooltip('Menu'));
+    await open(tester, const Size(390, 844));
+    await tester.tap(avatar());
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Search designs'));
