@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
@@ -11,6 +12,7 @@ import '../../theme/app_theme.dart' show AppThemeColors;
 import '../../services/community/community_service.dart';
 import 'home_app_bar.dart';
 import 'home_challenge_banner.dart';
+import 'home_menu.dart';
 import 'home_sections.dart';
 import '../catalog/search_screen.dart';
 import '../studio/community/challenge_screen.dart';
@@ -34,6 +36,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchFocus = FocusNode();
   bool _searchFocused = false;
   final _allKey = GlobalKey();
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -97,6 +100,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  /// Ctrl+K or Cmd+K: jump to the search field from anywhere on the page.
+  void _focusSearch() {
+    _scroll.hasClients ? _scroll.jumpTo(0) : null;
+    _searchFocus.requestFocus();
+  }
+
   void _scrollToAll() {
     final ctx = _allKey.currentContext;
     if (ctx != null) {
@@ -113,131 +122,148 @@ class _HomeScreenState extends State<HomeScreen> {
     final isDesktop = ResponsiveUtils.isDesktop(context);
     final hp = ResponsiveSizes.horizontalPadding(context);
 
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Column(
-        children: [
-          HomeAppBar(
-            isDesktop: isDesktop,
-            hp: hp,
-            searchFocused: _searchFocused,
-            searchController: _searchController,
-            searchFocusNode: _searchFocus,
-            onSearch: _goToSearch,
-            suggestionPool: _suggestionPool,
-          ),
-          Expanded(
-            child: FutureBuilder<List<Product>>(
-              future: _products,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState != ConnectionState.done) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  final notConfigured =
-                      snapshot.error is StateError &&
-                      '${snapshot.error}'.contains('not-configured');
-                  return _Message(
-                    icon: notConfigured
-                        ? Icons.settings_outlined
-                        : Icons.cloud_off,
-                    title: notConfigured
-                        ? 'Catalog not connected'
-                        : "Couldn't load products",
-                    body: notConfigured
-                        ? 'Set DESIGNWEAR_API_URL in .env (the address of '
-                              'the DesignWear API) and rebuild.'
-                        : 'Check your connection and try again.',
-                    onRetry: notConfigured ? null : _retry,
-                  );
-                }
-                final products = snapshot.data!;
-                if (products.isEmpty) {
-                  return const _Message(
-                    icon: Icons.checkroom_outlined,
-                    title: 'No products yet',
-                    body: 'Published products will show up here.',
-                  );
-                }
-                final featured = products.where((p) => p.featured).toList();
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    _retry();
-                    await _products;
-                  },
-                  child: SingleChildScrollView(
-                    controller: _scroll,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    // Content stops at 1440px and sits in the middle on wide
-                    // screens, matching the bar above it.
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1440),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // The running weekly challenge, if there is one. Hidden when
-                            // the API is off or no challenge is open.
-                            FutureBuilder<Challenge?>(
-                              future: _challenge,
-                              builder: (context, snap) {
-                                final challenge = snap.data;
-                                if (challenge == null) {
-                                  return const SizedBox.shrink();
-                                }
-                                return HomeChallengeBanner(
-                                  challenge: challenge,
-                                  isDesktop: isDesktop,
-                                  hp: hp,
-                                  onRemix: () => Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (_) =>
-                                          ChallengeScreen(challenge: challenge),
-                                    ),
+    // `Focus` gives the page keyboard focus on arrival, so the shortcut works
+    // before anything has been clicked.
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.keyK, control: true):
+            _focusSearch,
+        const SingleActivator(LogicalKeyboardKey.keyK, meta: true):
+            _focusSearch,
+      },
+      child: Focus(
+        autofocus: true,
+        child: Scaffold(
+          key: _scaffoldKey,
+          drawer: HomeMenuDrawer(onSearch: _goToSearch),
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Column(
+            children: [
+              HomeAppBar(
+                isDesktop: isDesktop,
+                hp: hp,
+                searchFocused: _searchFocused,
+                searchController: _searchController,
+                searchFocusNode: _searchFocus,
+                onSearch: _goToSearch,
+                onMenu: () => _scaffoldKey.currentState?.openDrawer(),
+                suggestionPool: _suggestionPool,
+              ),
+              Expanded(
+                child: FutureBuilder<List<Product>>(
+                  future: _products,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState != ConnectionState.done) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      final notConfigured =
+                          snapshot.error is StateError &&
+                          '${snapshot.error}'.contains('not-configured');
+                      return _Message(
+                        icon: notConfigured
+                            ? Icons.settings_outlined
+                            : Icons.cloud_off,
+                        title: notConfigured
+                            ? 'Catalog not connected'
+                            : "Couldn't load products",
+                        body: notConfigured
+                            ? 'Set DESIGNWEAR_API_URL in .env (the address of '
+                                  'the DesignWear API) and rebuild.'
+                            : 'Check your connection and try again.',
+                        onRetry: notConfigured ? null : _retry,
+                      );
+                    }
+                    final products = snapshot.data!;
+                    if (products.isEmpty) {
+                      return const _Message(
+                        icon: Icons.checkroom_outlined,
+                        title: 'No products yet',
+                        body: 'Published products will show up here.',
+                      );
+                    }
+                    final featured = products.where((p) => p.featured).toList();
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _retry();
+                        await _products;
+                      },
+                      child: SingleChildScrollView(
+                        controller: _scroll,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        // Content stops at 1440px and sits in the middle on wide
+                        // screens, matching the bar above it.
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1440),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // The running weekly challenge, if there is one. Hidden when
+                                // the API is off or no challenge is open.
+                                FutureBuilder<Challenge?>(
+                                  future: _challenge,
+                                  builder: (context, snap) {
+                                    final challenge = snap.data;
+                                    if (challenge == null) {
+                                      return const SizedBox.shrink();
+                                    }
+                                    return HomeChallengeBanner(
+                                      challenge: challenge,
+                                      isDesktop: isDesktop,
+                                      hp: hp,
+                                      onRemix: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => ChallengeScreen(
+                                            challenge: challenge,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 20),
+                                // Only worth a row of its own when it picks some products
+                                // out; if every product is featured it would just repeat
+                                // the list below.
+                                if (featured.isNotEmpty &&
+                                    featured.length < products.length) ...[
+                                  HomeSectionTitle(
+                                    title: 'Featured Products',
+                                    onSeeAll: _scrollToAll,
                                   ),
-                                );
-                              },
+                                  HomeFeaturedProductsRow(
+                                    future: Future.value(featured),
+                                    isDesktop: isDesktop,
+                                    hp: hp,
+                                  ),
+                                ],
+                                HomeSectionTitle(
+                                  key: _allKey,
+                                  title: 'All Products',
+                                  onSeeAll: _scrollToAll,
+                                ),
+                                HomeProductGrid(
+                                  future: Future.value(products),
+                                  searchQuery: '',
+                                  selectedCategoryId: null,
+                                  onRetry: _retry,
+                                  onClearFilters: _retry,
+                                ),
+                                const SizedBox(height: 32),
+                              ],
                             ),
-                            const SizedBox(height: 20),
-                            // Only worth a row of its own when it picks some products
-                            // out; if every product is featured it would just repeat
-                            // the list below.
-                            if (featured.isNotEmpty &&
-                                featured.length < products.length) ...[
-                              HomeSectionTitle(
-                                title: 'Featured Products',
-                                onSeeAll: _scrollToAll,
-                              ),
-                              HomeFeaturedProductsRow(
-                                future: Future.value(featured),
-                                isDesktop: isDesktop,
-                                hp: hp,
-                              ),
-                            ],
-                            HomeSectionTitle(
-                              key: _allKey,
-                              title: 'All Products',
-                              onSeeAll: _scrollToAll,
-                            ),
-                            HomeProductGrid(
-                              future: Future.value(products),
-                              searchQuery: '',
-                              selectedCategoryId: null,
-                              onRetry: _retry,
-                              onClearFilters: _retry,
-                            ),
-                            const SizedBox(height: 32),
-                          ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

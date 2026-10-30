@@ -26,6 +26,9 @@ class HomeAppBar extends StatelessWidget {
   final FocusNode searchFocusNode;
   final VoidCallback onSearch;
 
+  /// Opens the hamburger menu.
+  final VoidCallback? onMenu;
+
   /// Words to suggest while typing (product titles, tags, types).
   final List<String> suggestionPool;
 
@@ -37,6 +40,7 @@ class HomeAppBar extends StatelessWidget {
     required this.searchController,
     required this.searchFocusNode,
     required this.onSearch,
+    this.onMenu,
     this.suggestionPool = const [],
   });
 
@@ -51,7 +55,8 @@ class HomeAppBar extends StatelessWidget {
     final bg = isDark ? const Color(0xFF17171D) : AppColors.paperLight;
     final line = isDark ? const Color(0x1FFFFFFF) : AppColors.hairLight;
     final ink = isDark ? AppColors.inkDark : AppColors.inkLight;
-    final sidePad = compact ? 16.0 : (wide ? 92.0 : 24.0);
+    // The menu button brings its own padding, so phones need less at the edge.
+    final sidePad = compact ? 8.0 : (wide ? 92.0 : 24.0);
 
     return Container(
       decoration: BoxDecoration(
@@ -67,8 +72,32 @@ class HomeAppBar extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: sidePad, vertical: 12),
               child: Row(
                 children: [
+                  if (onMenu != null) ...[
+                    // On phones the bell lives in the menu, so the menu button
+                    // carries the unread count.
+                    Consumer<NotificationService?>(
+                      builder: (context, inbox, child) => IconButton(
+                        tooltip: 'Menu',
+                        visualDensity: compact ? VisualDensity.compact : null,
+                        padding: compact ? const EdgeInsets.all(6) : null,
+                        constraints: compact
+                            ? const BoxConstraints.tightFor(
+                                width: 36,
+                                height: 40,
+                              )
+                            : null,
+                        icon: Badge(
+                          isLabelVisible: compact && (inbox?.unread ?? 0) > 0,
+                          label: Text('${inbox?.unread ?? 0}'),
+                          child: Icon(Icons.menu, color: ink),
+                        ),
+                        onPressed: onMenu,
+                      ),
+                    ),
+                    SizedBox(width: compact ? 2 : 8),
+                  ],
                   HomeBrand(ink: ink, compact: compact),
-                  SizedBox(width: compact ? 10 : 16),
+                  SizedBox(width: compact ? 6 : 16),
                   Expanded(
                     child: _SearchField(
                       isDark: isDark,
@@ -79,7 +108,7 @@ class HomeAppBar extends StatelessWidget {
                       suggestionPool: suggestionPool,
                     ),
                   ),
-                  SizedBox(width: compact ? 10 : 16),
+                  SizedBox(width: compact ? 6 : 16),
                   ..._actions(context, isDark, ink, compact),
                 ],
               ),
@@ -96,12 +125,13 @@ class HomeAppBar extends StatelessWidget {
     Color ink,
     bool compact,
   ) {
-    final gap = SizedBox(width: compact ? 8 : 12);
+    final gap = SizedBox(width: compact ? 6 : 12);
     return [
       _CreateButton(isDark: isDark, isMini: compact),
       gap,
       Consumer2<AuthService, NotificationService>(
-        builder: (context, auth, inbox, _) => auth.isSignedIn && auth.isRemote
+        builder: (context, auth, inbox, _) =>
+            !compact && auth.isSignedIn && auth.isRemote
             ? Padding(
                 padding: EdgeInsets.only(right: compact ? 8 : 12),
                 child: _IconActionBtn(
@@ -548,7 +578,9 @@ class _SearchFieldState extends State<_SearchField> {
                     cursorColor: AppColors.marigold,
                     onSubmitted: (_) => widget.onSearch(),
                     decoration: InputDecoration(
-                      hintText: 'Search designs, creators...',
+                      hintText: widget.compact
+                          ? 'Search designs, creators...'
+                          : 'Search designs, creators...   Ctrl K',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13,
                         height: 1.2,
