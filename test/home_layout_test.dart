@@ -81,7 +81,9 @@ void main() {
 
       expect(find.text('Create'), findsOneWidget);
       expect(find.byTooltip('Filter search'), findsOneWidget);
-      expect(find.byIcon(Icons.shopping_bag_outlined), findsOneWidget);
+      // Cart and notifications are in the profile menu, not the header.
+      expect(find.byIcon(Icons.shopping_bag_outlined), findsNothing);
+      expect(find.byIcon(Icons.notifications_none), findsNothing);
     },
   );
 
@@ -172,14 +174,6 @@ void alignmentTests() {
               .first,
         );
         final field = tester.getRect(find.byType(TextField).first);
-        final cart = tester.getRect(
-          find
-              .ancestor(
-                of: find.byIcon(Icons.shopping_bag_outlined),
-                matching: find.byType(Container),
-              )
-              .first,
-        );
         final profile = tester.getRect(
           find
               .ancestor(
@@ -190,7 +184,6 @@ void alignmentTests() {
         );
         final searchIcon = tester.getRect(find.byIcon(Icons.search).first);
 
-        // Profile and cart are the same 40x40 rounded square.
         // The text field fills the whole bar and centres its text, so the
         // placeholder shares the icons' centre line in the browser too.
         expect(
@@ -199,9 +192,8 @@ void alignmentTests() {
           reason: 'the bar minus its 1px border',
         );
         expect(profile.size, const Size(40, 40));
-        expect(cart.size, const Size(40, 40));
         // Everything sits on the bar's centre line.
-        for (final r in [field, cart, profile, searchIcon]) {
+        for (final r in [field, profile, searchIcon]) {
           expect((r.center.dy - bar.center.dy).abs(), lessThan(1.0));
         }
       },

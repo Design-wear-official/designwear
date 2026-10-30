@@ -4,11 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:designwear/presentation/styles/styles.dart';
-import 'package:designwear/screens/notifications/notifications_screen.dart';
 import 'package:designwear/services/auth/auth_service.dart';
 import 'package:designwear/services/notifications/notification_service.dart';
 import 'package:designwear/services/shop/cart_service.dart';
-import 'package:designwear/screens/cart/cart_screen.dart';
 import 'package:designwear/screens/home/profile_menu.dart';
 import 'package:designwear/screens/studio/editor/design_studio_screen.dart';
 
@@ -96,49 +94,35 @@ class HomeAppBar extends StatelessWidget {
     bool compact,
   ) {
     final gap = SizedBox(width: compact ? 8 : 12);
+    // Notifications and the cart are in the profile menu. A signed-in person
+    // finds New design there too, so the + goes; signed-out visitors keep it
+    // as the way in.
     return [
-      _CreateButton(isDark: isDark, isMini: compact),
-      gap,
-      Consumer2<AuthService, NotificationService>(
-        builder: (context, auth, inbox, _) => auth.isSignedIn && auth.isRemote
-            ? Padding(
-                padding: EdgeInsets.only(right: compact ? 8 : 12),
-                child: _IconActionBtn(
-                  icon: Icons.notifications_none,
-                  badge: inbox.unread > 0 ? '${inbox.unread}' : null,
-                  isDark: isDark,
-                  ink: ink,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const NotificationsScreen(),
-                      settings: const RouteSettings(name: '/notifications'),
-                    ),
-                  ),
-                ),
-              )
-            : const SizedBox.shrink(),
+      Consumer<AuthService>(
+        builder: (context, auth, _) => auth.isSignedIn
+            ? const SizedBox.shrink()
+            : Padding(
+                padding: EdgeInsets.only(right: gap.width!),
+                child: _CreateButton(isDark: isDark, isMini: compact),
+              ),
       ),
-      // Hover (or tap) the profile icon for the menu.
+      // Hover (or tap) the profile icon for the menu. Its badge counts unread
+      // notifications and items in the cart.
       Consumer<AuthService>(
         builder: (context, auth, _) => HomeProfileMenu(
           onSearch: onSearch,
-          builder: (context, toggle) =>
-              _AvatarButton(auth: auth, isDark: isDark, onTap: toggle),
-        ),
-      ),
-      gap,
-      Consumer<CartService>(
-        builder: (context, cart, _) => _IconActionBtn(
-          icon: Icons.shopping_bag_outlined,
-          badge: cart.count > 0 ? '${cart.count}' : null,
-          isDark: isDark,
-          ink: ink,
-          onTap: () => Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => const CartScreen(),
-              settings: const RouteSettings(name: '/cart'),
-            ),
-          ),
+          builder: (context, toggle) {
+            final cart = context.watch<CartService>().count;
+            final unread = auth.isSignedIn && auth.isRemote
+                ? context.watch<NotificationService?>()?.unread ?? 0
+                : 0;
+            final total = cart + unread;
+            return Badge(
+              isLabelVisible: total > 0,
+              label: Text('$total'),
+              child: _AvatarButton(auth: auth, isDark: isDark, onTap: toggle),
+            );
+          },
         ),
       ),
     ];
@@ -314,69 +298,6 @@ class _AvatarButton extends StatelessWidget {
       color: Colors.white,
     ),
   );
-}
-
-// ── Icon action button ────────────────────────────────────────────────────────
-
-class _IconActionBtn extends StatelessWidget {
-  final IconData icon;
-  final String? badge;
-  final bool isDark;
-  final Color ink;
-  final VoidCallback onTap;
-
-  const _IconActionBtn({
-    required this.icon,
-    required this.isDark,
-    required this.ink,
-    required this.onTap,
-    this.badge,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final hair = isDark ? const Color(0xFF383842) : AppColors.hairLight;
-    final card = isDark ? AppColors.cardDark : AppColors.cardLight;
-
-    return GestureDetector(
-      onTap: onTap,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: card,
-              border: Border.all(color: hair, width: 1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, size: 18, color: ink),
-          ),
-          if (badge != null)
-            Positioned(
-              right: -3,
-              top: -3,
-              child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  gradient: AppColors.goldGradient,
-                  shape: BoxShape.circle,
-                ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 8,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 // ── Demo-style search bar ─────────────────────────────────────────────────────

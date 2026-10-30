@@ -5,12 +5,15 @@ import 'package:designwear/cms/cms_service.dart';
 import 'package:designwear/data/product_repository.dart';
 import 'package:designwear/screens/catalog/search_screen.dart';
 import 'package:designwear/screens/home/home_screen.dart';
+import 'package:designwear/services/auth/auth_service.dart';
+import 'package:designwear/services/shop/cart_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'test_app.dart';
 
@@ -100,6 +103,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SearchScreen), findsOneWidget);
+  });
+
+  testWidgets('the header has no cart or bell', (tester) async {
+    final cart = CartService();
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      testApp(HomeScreen(repository: _repo()), cart: cart),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byIcon(Icons.shopping_bag_outlined), findsNothing);
+    expect(find.byIcon(Icons.notifications_none), findsNothing);
+    expect(find.text('Create'), findsOneWidget); // signed out: the way in
+  });
+
+  testWidgets('signed in: the + is gone from the header', (tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final auth = AuthService();
+    await auth.register('Ada Lovelace', 'ada@example.com', 'password123');
+    tester.view.physicalSize = const Size(1200, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(
+      testApp(HomeScreen(repository: _repo()), auth: auth),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Create'), findsNothing);
+    expect(find.byTooltip('Create a design'), findsNothing);
+    expect(find.text('AL'), findsOneWidget); // the profile icon stays
   });
 
   testWidgets('Ctrl+K focuses the search field', (tester) async {
