@@ -63,6 +63,12 @@ class ProfileScreen extends StatelessWidget {
                     subtitle: maybeAiUsage(context)!.summary,
                     onTap: null,
                   ),
+                  const SettingsRow(
+                    icon: Icons.workspace_premium_outlined,
+                    title: 'Pro and Ultra',
+                    subtitle: 'More AI creations a day. Coming soon.',
+                    onTap: null,
+                  ),
                 ],
               ),
             if (user != null && (maybeAiUsage(context)?.known ?? false))

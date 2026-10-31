@@ -190,5 +190,7 @@ void main() {
 
     expect(find.text('Pro plan'), findsOneWidget);
     expect(find.text('26 of 30 AI creations left today'), findsOneWidget);
+    expect(find.text('Pro and Ultra'), findsOneWidget);
+    expect(find.textContaining('Coming soon'), findsOneWidget);
   });
 }
