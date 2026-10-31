@@ -1,4 +1,5 @@
 import 'package:designwear/api/api_client.dart';
+import 'package:designwear/services/ai/ai_usage_service.dart';
 import 'package:designwear/services/auth/auth_service.dart';
 import 'package:designwear/services/shop/cart_service.dart';
 import 'package:designwear/services/community/community_service.dart';
@@ -18,6 +19,7 @@ Widget testApp(
   CartService? cart,
   AuthService? auth,
   NotificationService? inbox,
+  AiUsageService? aiUsage,
   Brightness brightness = Brightness.dark,
 }) => MultiProvider(
   providers: [
@@ -43,6 +45,7 @@ Widget testApp(
     ChangeNotifierProvider(create: (_) => PaymentMethodStore()),
     ChangeNotifierProvider(create: (_) => OrderStore()),
     ChangeNotifierProvider.value(value: inbox ?? NotificationService()),
+    ChangeNotifierProvider.value(value: aiUsage ?? AiUsageService()),
   ],
   child: ScreenUtilInit(
     designSize: const Size(390, 844),

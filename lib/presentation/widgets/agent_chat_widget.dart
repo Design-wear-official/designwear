@@ -6,6 +6,8 @@ import 'package:designwear/models/models.dart';
 import 'package:designwear/services/services.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 
+import '../../services/ai/ai_usage_service.dart';
+import 'ai_allowance_chip.dart';
 import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
@@ -46,6 +48,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
   Future<void> _handleSubmitted(String text) async {
     if (text.trim().isEmpty && _selectedImages.isEmpty) return;
+    // Nothing left today: the chip says so; don't spend a request the server will refuse.
+    if (maybeAiUsage(context, listen: false)?.exhausted ?? false) return;
 
     final messageText = text.trim().isEmpty ? '[Image attachment]' : text;
     final hasImages = _selectedImages.isNotEmpty;
@@ -80,6 +84,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
         });
       });
       _scrollToBottom();
+      if (mounted) maybeAiUsage(context, listen: false)?.refresh();
 
       if (response.updatedDesign != null) {
         widget.onDesignUpdate(response.updatedDesign!);
@@ -303,6 +308,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        const AiAllowanceChip(),
                         // Image attachment widget
                         AIImageAttachmentWidget(
                           selectedImages: _selectedImages,
@@ -326,6 +332,9 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                 decoration: InputDecoration(
                                   hintText: _selectedImages.isNotEmpty
                                       ? 'Add a message or send images...'
+                                      : (maybeAiUsage(context)?.exhausted ??
+                                            false)
+                                      ? 'Daily AI limit reached'
                                       : 'Type a message...',
                                   hintStyle: TextStyle(
                                     fontSize: 13,

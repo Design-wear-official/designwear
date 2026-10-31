@@ -20,6 +20,7 @@ import 'services/auth/auth_service.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/notifications/push_service.dart';
 import 'services/ai/ai_service.dart';
+import 'services/ai/ai_usage_service.dart';
 import 'services/shop/cart_service.dart';
 import 'services/community/community_service.dart';
 import 'services/ai/remote_ai_service.dart';
@@ -97,6 +98,7 @@ Future<void> main() async {
   final payments = PaymentMethodStore();
   final orders = OrderStore(api: api);
   final inbox = NotificationService(api: api);
+  final aiUsage = AiUsageService(api: api);
   final community = api == null ? null : CommunityService(api);
   await Future.wait([
     auth.load(),
@@ -119,6 +121,7 @@ Future<void> main() async {
         ChangeNotifierProvider.value(value: payments),
         ChangeNotifierProvider.value(value: orders),
         ChangeNotifierProvider.value(value: inbox),
+        ChangeNotifierProvider.value(value: aiUsage),
       ],
       child: const DesignWearApp(),
     ),
@@ -150,6 +153,7 @@ Future<void> main() async {
       await cart.syncFromServer();
       await orders.refresh();
       await inbox.refresh();
+      await aiUsage.refresh();
       unawaited(push.start());
     }
 
@@ -162,6 +166,7 @@ Future<void> main() async {
         cart.clearLocal();
         orders.setAll(const []);
         inbox.clear();
+        aiUsage.clear();
       }
       wasSignedIn = now;
     });

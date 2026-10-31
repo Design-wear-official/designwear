@@ -5,6 +5,7 @@ import '../../models/commerce.dart';
 import '../../presentation/widgets/content_width.dart';
 import '../../presentation/widgets/settings_group.dart';
 import '../../screens/notifications/notifications_screen.dart';
+import '../../services/ai/ai_usage_service.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/notifications/notification_service.dart';
 import '../../services/shop/stores.dart';
@@ -52,6 +53,20 @@ class ProfileScreen extends StatelessWidget {
             else
               _ProfileHeader(user: user, onEdit: () => _edit(context, auth)),
             const SizedBox(height: 20),
+            if (user != null && (maybeAiUsage(context)?.known ?? false))
+              SettingsGroup(
+                title: 'Plan',
+                children: [
+                  SettingsRow(
+                    icon: Icons.auto_awesome,
+                    title: '${maybeAiUsage(context)!.planLabel} plan',
+                    subtitle: maybeAiUsage(context)!.summary,
+                    onTap: null,
+                  ),
+                ],
+              ),
+            if (user != null && (maybeAiUsage(context)?.known ?? false))
+              const SizedBox(height: 20),
             if (user != null)
               SettingsGroup(
                 title: 'Shopping',

@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../models/product.dart';
+import '../../presentation/widgets/ai_allowance_chip.dart';
 import '../../services/ai/ai_service.dart';
+import '../../services/ai/ai_usage_service.dart';
 import '../catalog/product_image.dart';
 
 class VirtualTryOnScreen extends StatefulWidget {
@@ -69,7 +71,10 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
     } catch (_) {
       _message = 'Try-on failed. Please try again.';
     }
-    if (mounted) setState(() => _busy = false);
+    if (mounted) {
+      setState(() => _busy = false);
+      maybeAiUsage(context, listen: false)?.refresh();
+    }
   }
 
   @override
@@ -127,8 +132,14 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
           ],
         ),
         const SizedBox(height: 12),
+        const Center(child: AiAllowanceChip()),
         FilledButton(
-          onPressed: _photo == null || _busy ? null : _run,
+          onPressed:
+              _photo == null ||
+                  _busy ||
+                  (maybeAiUsage(context)?.exhausted ?? false)
+              ? null
+              : _run,
           child: Text(_busy ? 'Working…' : 'Try it on'),
         ),
         if (_message != null)
