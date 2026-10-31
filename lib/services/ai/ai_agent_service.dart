@@ -43,18 +43,17 @@ class AIAgentService {
           AppLog.instance.warning('ai', 'Could not read an attachment', e);
         }
       }
-      // The reply and the graphic are independent, so fetch them together.
-      final replyFuture = ai.designAgent(
+      final reply = await ai.designAgent(
         message: userMessage,
         design: currentDesign.toJson(),
         history: _history,
         images: images,
       );
-      final imageFuture = ai.tryOnEnabled
-          ? generateDesignImage(userMessage)
-          : Future<String?>.value();
-      final reply = await replyFuture;
-      final imageBase64 = await imageFuture;
+      // A graphic only when the assistant actually changed the design; the pass the
+      // reply carries makes it part of the same creation.
+      final imageBase64 = reply.design != null && ai.tryOnEnabled
+          ? await generateDesignImage(userMessage)
+          : null;
 
       _history
         ..add((fromUser: true, text: userMessage))
