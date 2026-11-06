@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../config/staff_links.dart';
 import '../../models/commerce.dart';
 import '../../presentation/widgets/content_width.dart';
 import '../../presentation/widgets/settings_group.dart';
@@ -23,6 +26,17 @@ class ProfileScreen extends StatelessWidget {
 
   void _open(BuildContext context, Widget page) =>
       Navigator.of(context).push(MaterialPageRoute(builder: (_) => page));
+
+  Future<void> _openLink(BuildContext context, String url) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    ).catchError((_) => false);
+    if (!opened) {
+      messenger.showSnackBar(SnackBar(content: Text('Could not open $url')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -102,6 +116,28 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+            if (user != null && user.isStaff) ...[
+              SettingsGroup(
+                title:
+                    'Staff · ${StaffLinks.roleLabels[user.staffRole] ?? user.staffRole}',
+                children: [
+                  SettingsRow(
+                    icon: Icons.work_outline,
+                    title: 'DesignWear Staff app',
+                    subtitle: StaffLinks.describe(user.staffRole!),
+                    onTap: () => _openLink(context, StaffLinks.staffApp),
+                  ),
+                  if (user.staffRole == 'owner' || user.staffRole == 'desk')
+                    SettingsRow(
+                      icon: Icons.dashboard_customize_outlined,
+                      title: 'SethuCMS admin',
+                      subtitle: 'Products, teams and content',
+                      onTap: () => _openLink(context, StaffLinks.cmsAdmin),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
             SettingsGroup(
               title: 'Designs',
               children: [

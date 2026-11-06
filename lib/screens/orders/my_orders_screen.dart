@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
+import '../../models/return_request.dart';
 import '../../presentation/widgets/content_width.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/payments/razorpay_checkout.dart';
@@ -215,6 +216,7 @@ class _OrderCard extends StatelessWidget {
                 child: const Text('Email receipt'),
               ),
             ),
+          _ReturnSection(order: order),
           if (order.status == OrderStatus.placed ||
               order.status == OrderStatus.awaitingPayment)
             Align(
@@ -233,6 +235,126 @@ class _OrderCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// For a delivered order: the status of a return asked for, or the button to ask for one.
+class _ReturnSection extends StatelessWidget {
+  const _ReturnSection({required this.order});
+  final Order order;
+
+  @override
+  Widget build(BuildContext context) {
+    final store = context.watch<OrderStore>();
+    if (!store.isRemote || order.status != OrderStatus.delivered) {
+      return const SizedBox.shrink();
+    }
+    final request = store.returnFor(order.id);
+    if (request != null && request.isOpen) {
+      return ListTile(
+        dense: true,
+        key: const Key('return-status'),
+        leading: const Icon(Icons.assignment_return_outlined),
+        title: Text(request.label),
+        subtitle: Text(request.reason),
+        trailing: request.status == ReturnStatus.refunded
+            ? Text(formatPrice(request.amount))
+            : null,
+      );
+    }
+    final declined = request != null && request.status == ReturnStatus.rejected;
+    return Column(
+      children: [
+        if (declined)
+          ListTile(
+            dense: true,
+            key: const Key('return-declined'),
+            leading: Icon(
+              Icons.assignment_return_outlined,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: const Text('Your return was declined'),
+            subtitle: request.note == null ? null : Text(request.note!),
+          ),
+        if (order.canReturn(DateTime.now()))
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              key: const Key('return-button'),
+              icon: const Icon(Icons.assignment_return_outlined),
+              label: Text(declined ? 'Ask again' : 'Return this order'),
+              onPressed: () => _ask(context),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Future<void> _ask(BuildContext context) async {
+    final store = context.read<OrderStore>();
+    final messenger = ScaffoldMessenger.of(context);
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (_) => const _ReturnDialog(),
+    );
+    if (reason == null) return;
+    try {
+      await store.requestReturn(order, reason);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Return requested. We will get back to you.'),
+        ),
+      );
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
+  }
+}
+
+class _ReturnDialog extends StatefulWidget {
+  const _ReturnDialog();
+  @override
+  State<_ReturnDialog> createState() => _ReturnDialogState();
+}
+
+class _ReturnDialogState extends State<_ReturnDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ok = _controller.text.trim().length >= 3;
+    return AlertDialog(
+      title: const Text('Return this order'),
+      content: TextField(
+        key: const Key('return-reason'),
+        controller: _controller,
+        autofocus: true,
+        maxLength: 500,
+        maxLines: 3,
+        decoration: const InputDecoration(
+          labelText: 'What went wrong?',
+          helperText: 'Returns are for the whole order.',
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          key: const Key('return-send'),
+          onPressed: ok ? () => Navigator.pop(context, _controller.text) : null,
+          child: const Text('Request return'),
+        ),
+      ],
     );
   }
 }
