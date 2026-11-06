@@ -20,6 +20,7 @@ Widget testApp(
   AuthService? auth,
   NotificationService? inbox,
   AiUsageService? aiUsage,
+  OrderStore? orders,
   Brightness brightness = Brightness.dark,
 }) => MultiProvider(
   providers: [
@@ -43,7 +44,7 @@ Widget testApp(
     ChangeNotifierProvider(create: (_) => ThemeService()),
     ChangeNotifierProvider(create: (_) => AddressStore()),
     ChangeNotifierProvider(create: (_) => PaymentMethodStore()),
-    ChangeNotifierProvider(create: (_) => OrderStore()),
+    ChangeNotifierProvider.value(value: orders ?? OrderStore()),
     ChangeNotifierProvider.value(value: inbox ?? NotificationService()),
     ChangeNotifierProvider.value(value: aiUsage ?? AiUsageService()),
   ],

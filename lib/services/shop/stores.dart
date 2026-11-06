@@ -1,5 +1,6 @@
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
+import '../../models/return_request.dart';
 import '../app/persisted_list.dart';
 import '../payments/razorpay_checkout.dart';
 
@@ -45,7 +46,7 @@ class OrderStore extends PersistedList<Order> {
   final ApiClient? api;
   bool get isRemote => api != null;
 
-  /// Server mode: reload this user's orders. Errors leave the list unchanged.
+  /// Server mode: reload this user's orders and returns. Errors leave the lists unchanged.
   Future<void> refresh() async {
     if (api == null || !api!.hasToken) return;
     try {
@@ -54,6 +55,42 @@ class OrderStore extends PersistedList<Order> {
         for (final o in (j['orders'] as List)) Order.fromApi((o as Map).cast()),
       ]);
     } on ApiException catch (_) {}
+    await refreshReturns();
+  }
+
+  final Map<String, ReturnRequest> _returns = {};
+
+  /// The return asked for on [orderId] that still counts (a declined one is ignored), if any.
+  ReturnRequest? returnFor(String orderId) => _returns[orderId];
+
+  Future<void> refreshReturns() async {
+    if (api == null || !api!.hasToken) return;
+    try {
+      final j = await api!.get('/v1/returns');
+      _returns.clear();
+      // Newest first from the server; keep the newest that is not declined,
+      // else the newest declined one (so the person sees why).
+      for (final r in (j['returns'] as List? ?? const []).reversed) {
+        final req = ReturnRequest.fromApi((r as Map).cast());
+        final have = _returns[req.orderId];
+        if (have == null || req.isOpen || !have.isOpen) {
+          _returns[req.orderId] = req;
+        }
+      }
+      notifyListeners();
+    } on ApiException catch (_) {}
+  }
+
+  /// Asks to return a delivered order. Throws [ApiException] with the server's reason when refused.
+  Future<ReturnRequest> requestReturn(Order order, String reason) async {
+    final j = await api!.post(
+      '/v1/orders/${Uri.encodeComponent(order.id)}/return',
+      {'reason': reason.trim()},
+    );
+    final req = ReturnRequest.fromApi((j['return'] as Map).cast());
+    _returns[order.id] = req;
+    notifyListeners();
+    return req;
   }
 
   /// Whether a local team delivers to [pin]. Unknown (offline, errors) counts as

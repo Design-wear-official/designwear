@@ -1,26 +1,38 @@
 import 'dart:convert';
 
 class UserProfile {
-  const UserProfile({required this.name, required this.email, this.phone = ''});
+  const UserProfile({
+    required this.name,
+    required this.email,
+    this.phone = '',
+    this.staffRole,
+  });
   final String name;
   final String email;
   final String phone;
+
+  /// vendor, desk, delivery or owner when the owner made this account staff; otherwise null.
+  final String? staffRole;
+  bool get isStaff => staffRole != null;
 
   UserProfile copyWith({String? name, String? phone}) => UserProfile(
     name: name ?? this.name,
     email: email,
     phone: phone ?? this.phone,
+    staffRole: staffRole,
   );
 
   Map<String, Object?> toJson() => {
     'name': name,
     'email': email,
     'phone': phone,
+    if (staffRole != null) 'staff': {'role': staffRole},
   };
   factory UserProfile.fromJson(Map<String, Object?> j) => UserProfile(
     name: '${j['name'] ?? ''}',
     email: '${j['email'] ?? ''}',
     phone: '${j['phone'] ?? ''}',
+    staffRole: (j['staff'] as Map?)?['role'] as String?,
   );
 }
 
@@ -150,6 +162,9 @@ class OrderEvent {
   final String? note;
 }
 
+/// Days after delivery a customer may ask to return an order (RETURN_WINDOW_DAYS on the server).
+const returnWindowDays = 7;
+
 class Order {
   const Order({
     required this.id,
@@ -181,6 +196,23 @@ class Order {
   /// Each step the order has been through, oldest first (server orders).
   final List<OrderEvent> history;
   final String? trackingId, carrier;
+
+  /// When the order was delivered (server orders), or null.
+  DateTime? get deliveredAt {
+    for (final e in history.reversed) {
+      if (e.status == 'delivered') return e.at;
+    }
+    return null;
+  }
+
+  /// Whether a return can still be asked for. The server decides; this only
+  /// decides whether to show the button.
+  bool canReturn(DateTime now, {int windowDays = returnWindowDays}) {
+    final at = deliveredAt;
+    return status == OrderStatus.delivered &&
+        at != null &&
+        now.difference(at) <= Duration(days: windowDays);
+  }
 
   Order copyWith({OrderStatus? status}) => Order(
     id: id,
