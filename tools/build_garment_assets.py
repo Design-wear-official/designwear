@@ -26,6 +26,11 @@ FIT = 960  # garment fits inside FIT x FIT, centred
 # "foo.png" is named "foo-removebg-preview.png" and may live in any of these.
 GUIDE_DIRS = [Path.home() / "Downloads", SRC / "guides"]
 
+# Finished transparent cut-outs (e.g. made by hand in an editor), named like the
+# source photo (<source>.png). When one has real transparency it is used as is,
+# skipping the automatic cut-out.
+READY_DIRS = [Path.home() / "Downloads", SRC / "cutouts"]
+
 # output name -> (source file, optional list of (x0,y0,x1,y1) patches to
 # inpaint away in the *source* image, e.g. to derive a plain tee from a
 # pocket tee).
@@ -138,10 +143,26 @@ def guide_alpha(src, shape):
     return None
 
 
+def ready_cutout(src):
+    """A finished RGBA cut-out for source file [src] (real transparency), or None."""
+    for d in READY_DIRS:
+        f = d / Path(src).name
+        if not f.exists():
+            continue
+        im = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
+        if im is not None and im.ndim == 3 and im.shape[2] == 4 and (im[:, :, 3] < 10).mean() > 0.2:
+            return im
+    return None
+
+
 def build(name, src, patches):
     # Backdrop wedges between arms and torso: crew/polo backs, and every later style.
     slivers = (name.endswith('_back') and name.split('_')[0] in ('crew', 'polo')) or name in WEDGES
-    img = cv2.imread(str(SRC / src), cv2.IMREAD_COLOR)
+    ready = ready_cutout(src)
+    if ready is not None:
+        img = np.ascontiguousarray(ready[:, :, :3])
+    else:
+        img = cv2.imread(str(SRC / src), cv2.IMREAD_COLOR)
     if img is None:
         raise SystemExit(f"missing source image: {SRC / src}")
     h, w = img.shape[:2]
@@ -156,8 +177,8 @@ def build(name, src, patches):
         pm = np.full(patch.shape[:2], 255, np.uint8)
         pm[:6, :] = pm[-6:, :] = pm[:, :6] = pm[:, -6:] = 0
         img = cv2.seamlessClone(patch, img, pm, ((x0 + x1) // 2, (y0 + y1) // 2), cv2.NORMAL_CLONE)
-    alpha = cutout(img, slivers, name not in KEEP_HOLES, 0.4 if name in KEEP_HOLES else None, name.endswith(('_left', '_right')))
-    guide = None if patches else guide_alpha(src, alpha.shape)
+    alpha = ready[:, :, 3] if ready is not None else cutout(img, slivers, name not in KEEP_HOLES, 0.4 if name in KEEP_HOLES else None, name.endswith(('_left', '_right')))
+    guide = None if (patches or ready is not None) else guide_alpha(src, alpha.shape)
     if guide is not None:
         alpha = (alpha * guide).astype(np.uint8)
         print('  guided by a reference cut-out')

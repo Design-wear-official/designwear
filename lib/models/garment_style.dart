@@ -631,20 +631,22 @@ final _capFront = <String, ZonePath>{
   'brim': ZonePath(
     polygons: [
       [
-        _o(80, 660),
-        _o(512, 672),
-        _o(985, 660),
-        _o(990, 740),
-        _o(900, 830),
-        _o(780, 875),
-        _o(512, 895),
-        _o(300, 880),
-        _o(180, 820),
-        _o(85, 740),
+        _o(64, 690),
+        _o(280, 665),
+        _o(512, 656),
+        _o(740, 665),
+        _o(992, 690),
+        _o(960, 860),
+        _o(944, 935),
+        _o(780, 895),
+        _o(512, 860),
+        _o(244, 895),
+        _o(80, 935),
+        _o(64, 860),
       ],
     ],
   ),
-  'button': ZonePath(ellipses: [(_o(512, 92), 32, 24)]),
+  'button': ZonePath(ellipses: [(_o(512, 86), 30, 22)]),
 };
 final _capBack = <String, ZonePath>{
   'strap': ZonePath(
@@ -652,7 +654,7 @@ final _capBack = <String, ZonePath>{
       [_o(280, 660), _o(780, 665), _o(800, 700), _o(790, 745), _o(280, 740)],
     ],
   ),
-  'button': ZonePath(ellipses: [(_o(512, 92), 32, 24)]),
+  'button': ZonePath(ellipses: [(_o(512, 86), 30, 22)]),
 };
 
 final _toteHandles = ZonePath(
