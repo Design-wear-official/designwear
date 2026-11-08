@@ -4,7 +4,9 @@ import 'package:designwear/api/api_client.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/screens/studio/editor/canvas/design_canvas.dart';
 import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
+import 'package:designwear/presentation/widgets/agent_chat_widget.dart';
 import 'package:designwear/screens/studio/editor/panels/color_panel.dart';
+import 'package:designwear/screens/studio/editor/widgets/dialogs/size_sheet.dart';
 import 'package:designwear/screens/studio/editor/widgets/dialogs/layers_sheet.dart';
 import 'package:designwear/services/ai/ai_agent_service.dart';
 import 'package:designwear/services/ai/ai_service.dart';
@@ -63,7 +65,16 @@ Map<String, Object?> _job({List<Map<String, Object?>>? layers}) => {
 };
 
 class _Ai extends UnconfiguredAiService {
-  _Ai({this.job, this.unsupported = false, this.refuse});
+  _Ai({
+    this.job,
+    this.unsupported = false,
+    this.refuse,
+    this.designJson = const {'elements': []},
+    this.text = 'Here you go.',
+  });
+  final Map<String, Object?> designJson;
+  final String text;
+  final messages = <String>[];
   final Map<String, Object?>? job;
   final bool unsupported;
   final String? refuse;
@@ -72,6 +83,7 @@ class _Ai extends UnconfiguredAiService {
   String? garment;
   String? color;
   List<String>? sides;
+  String? size;
 
   @override
   bool get agentEnabled => true;
@@ -85,11 +97,10 @@ class _Ai extends UnconfiguredAiService {
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
     bool trends = false,
-  }) async => const DesignAgentReply(
-    text: 'Here you go.',
-    art: 'a storm',
-    design: {'elements': []},
-  );
+  }) async {
+    messages.add(message);
+    return DesignAgentReply(text: text, art: 'a storm', design: designJson);
+  }
 
   @override
   Future<LayerJob> designLayers(
@@ -98,12 +109,14 @@ class _Ai extends UnconfiguredAiService {
     String? garment,
     String? color,
     String? name,
+    String? size,
     List<String> sides = const ['front', 'back', 'left', 'right'],
   }) async {
     prompts.add(prompt);
     this.garment = garment;
     this.color = color;
     this.sides = sides;
+    this.size = size;
     if (refuse != null) throw AiFailure(refuse!);
     if (unsupported) throw const LayersUnsupported();
     return LayerJob.fromJson(job!);
@@ -339,7 +352,10 @@ void main() {
     test(
       'each layer becomes an image on its side, and the job comes with it',
       () async {
-        final fake = _Ai(job: _job());
+        final fake = _Ai(
+          job: _job(),
+          designJson: {'elements': [], 'baseColor': '0xFF112233'},
+        );
         AiService.instance = fake;
         final r = await AIAgentService().sendMessage(
           'make it better',
@@ -622,5 +638,160 @@ void main() {
       final front = r.updatedDesign!.elementsForSide(DesignSide.front).single;
       expect(front.y, greaterThan(0));
     });
+  });
+
+  group('sizes', () {
+    test(
+      'size and fit from the reply are applied; wrong values are ignored',
+      () async {
+        AiService.instance = _Ai(
+          job: _job(),
+          designJson: {'elements': [], 'size': 'M', 'fit': 'regular'},
+        );
+        final r = await AIAgentService().sendMessage('x', CustomDesign());
+        expect(r.updatedDesign!.size, 'M');
+        expect(r.updatedDesign!.fit, 'regular');
+        final bad = CustomDesign.fromJson({'size': 'HUGE', 'fit': 'tight'});
+        expect(bad.size, isNull);
+        expect(bad.fit, isNull);
+      },
+    );
+
+    test('a reply without a size keeps the one already chosen, and the size reaches the mock-up request', () async {
+      final fake = _Ai(job: _job());
+      AiService.instance = fake;
+      final r = await AIAgentService().sendMessage(
+        'x',
+        CustomDesign(size: 'L', fit: 'relaxed'),
+      );
+      expect(r.updatedDesign!.size, 'L');
+      expect(r.updatedDesign!.fit, 'relaxed');
+      expect(fake.size, 'L');
+      final fake2 = _Ai(
+        job: _job(),
+        designJson: {'elements': [], 'size': 'XL'},
+      );
+      AiService.instance = fake2;
+      await AIAgentService().sendMessage('x', CustomDesign(size: 'S'));
+      expect(fake2.size, 'XL', reason: 'the bot\'s answer wins');
+    });
+
+    test('the design carries size and fit through JSON; none means nothing is sent', () {
+      final d = CustomDesign(size: 'XS', fit: 'oversized');
+      final back = CustomDesign.fromJson(d.toJson());
+      expect(back.size, 'XS');
+      expect(back.fit, 'oversized');
+      expect(CustomDesign().toJson().containsKey('size'), isFalse);
+    });
+
+    test('a garment keeps its size chart', () {
+      final g = Garment.fromJson({
+        'id': 't',
+        'label': 'T',
+        'sizes': [
+          {'size': 'M', 'chestCm': 52, 'lengthCm': 71.5, 'sleeveCm': 20},
+          {'nope': 1},
+        ],
+      });
+      expect(g.sizes.single.size, 'M');
+      expect(g.sizes.single.lengthCm, 71.5);
+    });
+
+    testWidgets('the picker shows the chart and tapping a size sets it', (
+      tester,
+    ) async {
+      String? chosen;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizeSheet(
+              garment: Garment.fromJson({
+                'id': 't',
+                'label': 'T',
+                'sizes': [
+                  {
+                    'size': 'M',
+                    'chestCm': 52,
+                    'lengthCm': 71.5,
+                    'sleeveCm': 20,
+                  },
+                  {'size': 'L', 'chestCm': 55, 'lengthCm': 73, 'sleeveCm': 21},
+                ],
+              }),
+              selected: 'M',
+              onSelected: (s) => chosen = s,
+            ),
+          ),
+        ),
+      );
+      expect(find.text('71.5'), findsOneWidget);
+      expect(find.byKey(const ValueKey('size-XS')), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('size-L')));
+      expect(chosen, 'L');
+    });
+
+    testWidgets('without a chart the standard sizes are still offered', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SizeSheet(
+              garment: const Garment(id: 't', label: 'T'),
+              selected: null,
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+      for (final s in CustomDesign.sizes) {
+        expect(find.byKey(ValueKey('size-$s')), findsOneWidget);
+      }
+    });
+
+    testWidgets(
+      'the chat shows a size chip, and quick replies when the bot asks about size',
+      (tester) async {
+        tester.view.physicalSize = const Size(1000, 1600);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        final fake = _Ai(
+          job: _job(),
+          text: 'Done! Which size would you like?',
+          designJson: {'elements': [], 'size': 'M', 'fit': 'regular'},
+        );
+        AiService.instance = fake;
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: Stack(
+                children: [
+                  AgentChatWidget(
+                    currentDesign: CustomDesign(),
+                    onDesignUpdate: (_) {},
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+        await tester.tap(find.byIcon(Icons.auto_awesome));
+        await tester.pumpAndSettle();
+        expect(find.byKey(const ValueKey('quick-size-M')), findsNothing);
+        await tester.enterText(find.byType(TextField), 'a storm tee');
+        await tester.tap(find.byIcon(Icons.send));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        await tester.drag(find.byType(ListView).last, const Offset(0, -600));
+        await tester.pump();
+        expect(find.text('Size M, regular fit'), findsOneWidget);
+        expect(find.byKey(const ValueKey('quick-size-XL')), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('quick-size-XL')));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(fake.messages.last, 'Size XL');
+        await tester.pump(const Duration(seconds: 5));
+      },
+    );
   });
 }
