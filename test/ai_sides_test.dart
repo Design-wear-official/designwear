@@ -9,7 +9,8 @@ import 'package:designwear/services/ai/ai_agent_service.dart';
 import 'package:designwear/services/ai/ai_service.dart';
 import 'package:designwear/services/ai/remote_ai_service.dart';
 import 'package:designwear/presentation/widgets/agent_chat_widget.dart';
-import 'package:flutter/material.dart' show Icons, MaterialApp, Scaffold, Stack, TextField, ValueKey, Size;
+import 'package:flutter/material.dart'
+    show Icons, MaterialApp, Scaffold, Stack, TextField, ValueKey, Size;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -38,20 +39,22 @@ class _SidesAgent extends UnconfiguredAiService {
   }) async => DesignAgentReply(
     text: 'Here is your design.',
     art: art,
-    design: pictureOnly ? null : <String, Object?>{
-      'baseColor': '0xFF000000',
-      'elements': [
-        {
-          'id': 't1',
-          'type': 'text',
-          'content': 'DOOMSDAY',
-          'x': 0,
-          'y': 90,
-          'size': 40,
-          'color': '0xFFFFFFFF',
-        },
-      ],
-    },
+    design: pictureOnly
+        ? null
+        : <String, Object?>{
+            'baseColor': '0xFF000000',
+            'elements': [
+              {
+                'id': 't1',
+                'type': 'text',
+                'content': 'DOOMSDAY',
+                'x': 0,
+                'y': 90,
+                'size': 40,
+                'color': '0xFFFFFFFF',
+              },
+            ],
+          },
   );
 
   @override
@@ -162,15 +165,15 @@ void main() {
           ),
         ],
       );
-      final r = await AIAgentService().sendMessage('generate a dragon', current);
+      final r = await AIAgentService().sendMessage(
+        'generate a dragon',
+        current,
+      );
       expect(fake.prompts.single, 'a dragon');
       final els = r.updatedDesign!.elements;
       expect(els.length, 5);
       expect(els.last.content, 'KEEP');
-      expect(
-        els.where((e) => e.type == DesignElementType.image).length,
-        4,
-      );
+      expect(els.where((e) => e.type == DesignElementType.image).length, 4);
       expect(r.previewBase64, _png);
     });
 

@@ -1,3 +1,5 @@
+import 'layers.dart';
+
 /// AI features need a server that holds the model keys; the app never ships
 /// one. There is exactly one chat bot: the Design Studio assistant
 /// ([designAgent]), which edits the design from what the user asks. Virtual
@@ -44,6 +46,22 @@ abstract class AiService {
     String prompt, {
     List<List<int>> images = const [],
   }) async => throw const AiUnavailable();
+
+  /// One transparent layer per print area of [garment] (front, back and sleeves by default), plus the
+  /// mock-up views and contact sheet made from them. Throws [LayersUnsupported] when the server has no
+  /// such route yet, and [AiFailure] with a user-ready message when refused (e.g. a protected name).
+  Future<LayerJob> designLayers(
+    String prompt, {
+    List<List<int>> images = const [],
+    String? garment,
+    String? color,
+    String? name,
+    List<String> sides = const ['front', 'back', 'left', 'right'],
+  }) async => throw const AiUnavailable();
+
+  /// The bytes of a picture at a signed link from a [LayerJob].
+  Future<List<int>> fetchLayerImage(String url) async =>
+      throw const AiUnavailable();
 }
 
 class UnconfiguredAiService implements AiService {
@@ -87,6 +105,20 @@ class UnconfiguredAiService implements AiService {
     String prompt, {
     List<List<int>> images = const [],
   }) async => throw const AiUnavailable();
+
+  @override
+  Future<LayerJob> designLayers(
+    String prompt, {
+    List<List<int>> images = const [],
+    String? garment,
+    String? color,
+    String? name,
+    List<String> sides = const ['front', 'back', 'left', 'right'],
+  }) async => throw const LayersUnsupported();
+
+  @override
+  Future<List<int>> fetchLayerImage(String url) async =>
+      throw const AiUnavailable();
 }
 
 /// The pictures for each face of the garment, as base64 PNG, and the faces that could not be drawn.
@@ -129,6 +161,11 @@ class AiFailure implements Exception {
   final String message;
   @override
   String toString() => message;
+}
+
+/// The server has no print-layers route (an older API): callers fall back to one picture per face.
+class LayersUnsupported implements Exception {
+  const LayersUnsupported();
 }
 
 class AiUnavailable implements Exception {

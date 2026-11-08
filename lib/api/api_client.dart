@@ -152,6 +152,32 @@ class ApiClient {
       request('PATCH', path, body: body);
   Future<Map<String, Object?>> delete(String path) => request('DELETE', path);
 
+  /// A picture or file from a signed link (no sign-in header), e.g. a layer image.
+  Future<List<int>> getBytes(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        !(uri.scheme == 'https' ||
+            uri.host == 'localhost' ||
+            uri.host == '127.0.0.1')) {
+      throw ApiException(0, 'bad_url', 'That link cannot be opened.');
+    }
+    try {
+      final r = await _http.get(uri).timeout(const Duration(seconds: 60));
+      if (r.statusCode != 200) {
+        throw ApiException(
+          r.statusCode,
+          'download',
+          "Couldn't download the picture.",
+        );
+      }
+      return r.bodyBytes;
+    } on ApiException {
+      rethrow;
+    } catch (_) {
+      throw ApiException(0, 'network', "Couldn't download the picture.");
+    }
+  }
+
   /// What the server has switched on (chat, try-on, online payments).
   Future<ServerFeatures> features() async {
     try {
