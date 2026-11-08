@@ -42,7 +42,7 @@ void main() {
         'https://cdn.sanity.io.evil.com/images/jh7llku7/production/$_hash-1080x1440.jpg',
         'https://cdn.sanity.io/files/jh7llku7/production/$_hash-1080x1440.jpg',
         'https://cdn.sanity.io/images/jh7llku7/production/not-a-hash.jpg',
-        'assets/images/tshirt_white.png',
+        'assets/images/garments/crew_front.png',
       ]) {
         expect(ImageProxy.resolve(other), other, reason: other);
       }

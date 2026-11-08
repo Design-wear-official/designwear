@@ -82,7 +82,7 @@ class SnapGuidePainter extends CustomPainter {
 }
 
 /// Draws collar, pocket, sleeve-cuff and fabric-finish overlays on the t-shirt.
-/// Coordinates calibrated for tshirt_white.png at 300px in a 332×407 canvas.
+/// Coordinates calibrated for the retired tshirt_white.png photo (now unused: styles draw from assets/images/garments).
 class GarmentOverlayPainter extends CustomPainter {
   final Color tshirtColor;
   final String collarStyle; // 'crew' | 'vneck' | 'polo'
