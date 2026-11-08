@@ -787,3 +787,44 @@ class VectorGarmentPainter extends CustomPainter {
       old.base != base ||
       !mapEquals(old.zoneColors, zoneColors);
 }
+
+/// Dashed print-area box, [area] given in the 1024-unit space of a style photo.
+class PrintGuidePainter extends CustomPainter {
+  final Rect area;
+  const PrintGuidePainter(this.area);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final k = size.width / 1024;
+    final r = Rect.fromLTRB(
+      area.left * k,
+      area.top * k,
+      area.right * k,
+      area.bottom * k,
+    );
+    final paint = Paint()
+      ..color = Colors.black.withValues(alpha: 0.30)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    const dash = 6.0;
+    void edge(Offset a, Offset b) {
+      final total = (b - a).distance;
+      final dir = (b - a) / total;
+      for (double d = 0; d < total; d += dash * 2) {
+        canvas.drawLine(
+          a + dir * d,
+          a + dir * (d + dash).clamp(0, total).toDouble(),
+          paint,
+        );
+      }
+    }
+
+    edge(r.topLeft, r.topRight);
+    edge(r.topRight, r.bottomRight);
+    edge(r.bottomRight, r.bottomLeft);
+    edge(r.bottomLeft, r.topLeft);
+  }
+
+  @override
+  bool shouldRepaint(PrintGuidePainter old) => old.area != area;
+}

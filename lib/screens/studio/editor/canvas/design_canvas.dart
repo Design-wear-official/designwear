@@ -136,12 +136,21 @@ class DesignCanvas extends StatelessWidget {
                 clipper: _ZoneClipper(entry.value.toPath(scale)),
                 child: tinted(_zoneColor(entry.key)!),
               ),
-          if (design.fabricFinish != 'solid')
+          if (design.fabricFinish != 'solid' && !side.isSleeve)
             IgnorePointer(
               child: CustomPaint(
                 painter: FabricFinishPainter(
                   garmentColor: _baseColor,
                   finish: design.fabricFinish,
+                ),
+              ),
+            ),
+          // Print-area guide on the sleeve photo (dashed box, editor only).
+          if (side.isSleeve && !bare)
+            IgnorePointer(
+              child: CustomPaint(
+                painter: PrintGuidePainter(
+                  const Rect.fromLTWH(485, 215, 125, 170),
                 ),
               ),
             ),

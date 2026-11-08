@@ -124,9 +124,6 @@ const _strap = ColorZone('strap', 'Strap', trim: false);
 const _handles = ColorZone('handles', 'Handles', trim: false);
 const _hem = ColorZone('hem', 'Top hem');
 
-StyleView _vFront(String id) => StyleView.vector(VectorGarments.front(id)!);
-StyleView _vBack(String id) => StyleView.vector(VectorGarments.back(id)!);
-
 final _crewFront = <String, ZonePath>{
   'sleeves': ZonePath(
     polygons: [
@@ -696,6 +693,120 @@ final _toteZones = <String, ZonePath>{
 
 const _dir = 'assets/images/garments';
 
+// ── Raglan back, ringer front, side views ───────────────────────────────────
+
+final _raglanBack = <String, ZonePath>{
+  'sleeves': _pair(_raglanL, 1024),
+  'cuffs': _pair(_raglanCuffL, 1024),
+  'collar': ZonePath(
+    polygons: [
+      [_o(376, 30), _o(632, 30), _o(640, 58), _o(512, 70), _o(372, 58)],
+    ],
+  ),
+};
+
+final _ringerSleeveFrontL = [
+  _o(215, 110),
+  _o(190, 140),
+  _o(83, 400),
+  _o(100, 425),
+  _o(256, 468),
+  _o(262, 380),
+  _o(255, 260),
+  _o(240, 170),
+];
+final _ringerCuffFrontL = [
+  _o(80, 385),
+  _o(258, 440),
+  _o(256, 478),
+  _o(98, 420),
+];
+final _ringerFront = <String, ZonePath>{
+  'sleeves': _pair(_ringerSleeveFrontL, 1027),
+  'cuffs': _pair(_ringerCuffFrontL, 1027),
+  'collar': ZonePath(ellipses: [(_o(508, 92), 130, 58)]),
+};
+
+// Side views: the visible sleeve and its hem, as seen from the wearer's left
+// (photos face left) and right (mirrored geometry).
+final _crewSleeveL = [
+  _o(455, 140),
+  _o(520, 115),
+  _o(600, 130),
+  _o(650, 185),
+  _o(645, 300),
+  _o(640, 405),
+  _o(600, 450),
+  _o(533, 462),
+  _o(470, 450),
+  _o(437, 420),
+  _o(430, 300),
+  _o(440, 200),
+];
+final _crewSideCuffL = [
+  _o(437, 415),
+  _o(470, 395),
+  _o(533, 388),
+  _o(600, 395),
+  _o(640, 405),
+  _o(640, 440),
+  _o(600, 458),
+  _o(533, 462),
+  _o(470, 455),
+  _o(437, 440),
+];
+final _poloSleeveL = [
+  _o(490, 160),
+  _o(545, 130),
+  _o(610, 150),
+  _o(625, 300),
+  _o(622, 420),
+  _o(560, 470),
+  _o(500, 480),
+  _o(462, 440),
+  _o(465, 300),
+];
+final _poloSideCuffL = [
+  _o(462, 410),
+  _o(560, 395),
+  _o(622, 415),
+  _o(622, 470),
+  _o(560, 485),
+  _o(500, 480),
+  _o(460, 450),
+];
+
+Map<String, ZonePath> _side(
+  List<Offset> sleeve,
+  List<Offset> cuff, {
+  bool mirror = false,
+  double sum = 1045,
+}) => {
+  'sleeves': ZonePath(polygons: [mirror ? _m(sleeve, sum) : sleeve]),
+  'cuffs': ZonePath(polygons: [mirror ? _m(cuff, sum) : cuff]),
+};
+
+Map<DesignSide, StyleView> _crewSides() => {
+  DesignSide.left: StyleView(
+    '$_dir/crew_left.png',
+    _side(_crewSleeveL, _crewSideCuffL),
+  ),
+  DesignSide.right: StyleView(
+    '$_dir/crew_right.png',
+    _side(_crewSleeveL, _crewSideCuffL, mirror: true),
+  ),
+};
+Map<DesignSide, StyleView> _poloSides() => {
+  DesignSide.left: StyleView(
+    '$_dir/polo_left.png',
+    _side(_poloSleeveL, _poloSideCuffL),
+  ),
+  DesignSide.right: StyleView(
+    '$_dir/polo_right.png',
+    _side(_poloSleeveL, _poloSideCuffL, mirror: true, sum: 1066),
+  ),
+};
+
 StyleView _crewBackView() => StyleView('$_dir/crew_back.png', _crewBack);
 
 Map<String, ZonePath> _withPockets(List<List<Offset>> pockets) => {
@@ -718,6 +829,7 @@ class GarmentStyles {
       views: {
         DesignSide.front: StyleView('$_dir/crew_front.png', _crewFront),
         DesignSide.back: _crewBackView(),
+        ..._crewSides(),
       },
     ),
     GarmentStyle(
@@ -731,6 +843,7 @@ class GarmentStyles {
           _withPockets([_pocketViewerRight]),
         ),
         DesignSide.back: _crewBackView(),
+        ..._crewSides(),
       },
     ),
     GarmentStyle(
@@ -744,6 +857,7 @@ class GarmentStyles {
           _withPockets([_pocketViewerLeft]),
         ),
         DesignSide.back: _crewBackView(),
+        ..._crewSides(),
       },
     ),
     GarmentStyle(
@@ -757,6 +871,7 @@ class GarmentStyles {
           _withPockets([_pocketViewerLeft, _pocketViewerRight]),
         ),
         DesignSide.back: _crewBackView(),
+        ..._crewSides(),
       },
     ),
     GarmentStyle(
@@ -768,6 +883,7 @@ class GarmentStyles {
         DesignSide.front: StyleView('$_dir/henley_front.png', _henleyFront),
         // No separate henley back photo: it is a plain crew back.
         DesignSide.back: _crewBackView(),
+        ..._crewSides(),
       },
     ),
     GarmentStyle(
@@ -778,6 +894,7 @@ class GarmentStyles {
       views: {
         DesignSide.front: StyleView('$_dir/polo_front.png', _poloFront),
         DesignSide.back: StyleView('$_dir/polo_back.png', _poloBack),
+        ..._poloSides(),
       },
     ),
     GarmentStyle(
@@ -788,6 +905,7 @@ class GarmentStyles {
       views: {
         DesignSide.front: StyleView('$_dir/vneck_front.png', _vneckFront),
         DesignSide.back: StyleView('$_dir/vneck_back.png', _vneckBack),
+        ..._crewSides(),
       },
     ),
     GarmentStyle(
@@ -808,7 +926,7 @@ class GarmentStyles {
       zones: const [_sleeves, _cuffs, _collar],
       views: {
         DesignSide.front: StyleView('$_dir/raglan_front.png', _raglanFront),
-        DesignSide.back: _vBack('raglan'),
+        DesignSide.back: StyleView('$_dir/raglan_back.png', _raglanBack),
       },
     ),
     GarmentStyle(
@@ -818,7 +936,7 @@ class GarmentStyles {
       defaultParts: const {'collar': '0xFF1A1F3C', 'cuffs': '0xFF1A1F3C'},
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: _vFront('ringer'),
+        DesignSide.front: StyleView('$_dir/ringer_front.png', _ringerFront),
         DesignSide.back: StyleView('$_dir/ringer_back.png', _ringerBack),
       },
     ),

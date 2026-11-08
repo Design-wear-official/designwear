@@ -20,6 +20,12 @@ OUT = Path(__file__).resolve().parent.parent / "assets" / "images" / "garments"
 CANVAS = 1024
 FIT = 960  # garment fits inside FIT x FIT, centred
 
+# Optional hand-checked cut-outs (e.g. from remove.bg) used as a guide: the
+# script keeps its own full-resolution edges but removes anything the guide
+# calls background (backdrop wedges between arms and torso). A guide for
+# "foo.png" is named "foo-removebg-preview.png" and may live in any of these.
+GUIDE_DIRS = [Path.home() / "Downloads", SRC / "guides"]
+
 # output name -> (source file, optional list of (x0,y0,x1,y1) patches to
 # inpaint away in the *source* image, e.g. to derive a plain tee from a
 # pocket tee).
@@ -40,6 +46,7 @@ for _name in (
     "raglan_front", "raglan_back", "ringer_front", "ringer_back",
     "tank_front", "tank_back", "hoodie_front", "hoodie_back",
     "cap_front", "cap_back", "tote_front", "tote_back",
+    "crew_left", "crew_right", "polo_left", "polo_right",
 ):
     if (SRC / f"{_name}.png").exists():
         JOBS[_name] = (f"{_name}.png", [])
@@ -50,7 +57,7 @@ WEDGES = {'longsleeve_front', 'longsleeve_back', 'raglan_front', 'hoodie_front',
 KEEP_HOLES = {"tote_front", "tote_back"}
 
 
-def drop_backdrop_slivers(work, fg, tol=6, band=48, anywhere_top=None):
+def drop_backdrop_slivers(work, fg, tol=4, band=48, anywhere_top=None):
     """GrabCut keeps wedges of backdrop between the arms and the torso.
     Fit the smooth backdrop brightness from clearly-outside pixels and drop any
     pixels of the mask that match it and are reachable from outside."""
@@ -82,15 +89,17 @@ def drop_backdrop_slivers(work, fg, tol=6, band=48, anywhere_top=None):
     return (fg & ~bgpix.astype(np.uint8)).astype(np.uint8)
 
 
-def cutout(img_bgr, slivers=False, fill_holes=True, top=None):
+def cutout(img_bgr, slivers=False, fill_holes=True, top=None, narrow=False):
     h, w = img_bgr.shape[:2]
     # The renders have a soft grey backdrop; the shirt sits in the middle.
     mask = np.full((h, w), cv2.GC_PR_BGD, np.uint8)
     m = int(min(h, w) * 0.03)
     mask[:m, :] = mask[-m:, :] = cv2.GC_BGD
     mask[:, :m] = mask[:, -m:] = cv2.GC_BGD
-    mask[int(h * .10):int(h * .95), int(w * .20):int(w * .80)] = cv2.GC_PR_FGD
-    mask[int(h * .30):int(h * .80), int(w * .38):int(w * .62)] = cv2.GC_FGD
+    # Side views are a narrow profile: keep the "probably shirt" box tight.
+    lo, hi = (.34, .66) if narrow else (.20, .80)
+    mask[int(h * .10):int(h * .95), int(w * lo):int(w * hi)] = cv2.GC_PR_FGD
+    mask[int(h * .30):int(h * .80), int(w * (.44 if narrow else .38)):int(w * (.56 if narrow else .62))] = cv2.GC_FGD
     bgd = np.zeros((1, 65)); fgd = np.zeros((1, 65))
     small = 1024 / max(h, w)
     work = cv2.resize(img_bgr, None, fx=small, fy=small, interpolation=cv2.INTER_AREA)
@@ -113,6 +122,22 @@ def cutout(img_bgr, slivers=False, fill_holes=True, top=None):
     return cv2.resize(alpha, (w, h), interpolation=cv2.INTER_LINEAR)
 
 
+def guide_alpha(src, shape):
+    """Alpha of the guide cut-out for source file [src], scaled to [shape], or None."""
+    h, w = shape
+    for d in GUIDE_DIRS:
+        f = d / f"{Path(src).stem}-removebg-preview.png"
+        if f.exists():
+            g = cv2.imread(str(f), cv2.IMREAD_UNCHANGED)
+            if g is None or g.ndim < 3 or g.shape[2] < 4:
+                continue
+            a = cv2.resize(g[:, :, 3], (w, h), interpolation=cv2.INTER_CUBIC)
+            # Trust "background" only a couple of guide pixels away from the edge.
+            k = max(3, int(round(w / g.shape[1] * 2)) | 1)
+            return cv2.dilate((a > 40).astype(np.uint8), np.ones((k, k), np.uint8))
+    return None
+
+
 def build(name, src, patches):
     # Backdrop wedges between arms and torso: crew/polo backs, and every later style.
     slivers = (name.endswith('_back') and name.split('_')[0] in ('crew', 'polo')) or name in WEDGES
@@ -131,7 +156,11 @@ def build(name, src, patches):
         pm = np.full(patch.shape[:2], 255, np.uint8)
         pm[:6, :] = pm[-6:, :] = pm[:, :6] = pm[:, -6:] = 0
         img = cv2.seamlessClone(patch, img, pm, ((x0 + x1) // 2, (y0 + y1) // 2), cv2.NORMAL_CLONE)
-    alpha = cutout(img, slivers, name not in KEEP_HOLES, 0.4 if name in KEEP_HOLES else None)
+    alpha = cutout(img, slivers, name not in KEEP_HOLES, 0.4 if name in KEEP_HOLES else None, name.endswith(('_left', '_right')))
+    guide = None if patches else guide_alpha(src, alpha.shape)
+    if guide is not None:
+        alpha = (alpha * guide).astype(np.uint8)
+        print('  guided by remove.bg cut-out')
     ys, xs = np.where(alpha > 20)
     x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     crop = img[y0:y1, x0:x1]
