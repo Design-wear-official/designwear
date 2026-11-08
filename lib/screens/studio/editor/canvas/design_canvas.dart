@@ -39,6 +39,10 @@ class DesignCanvas extends StatelessWidget {
   /// Opens the "Layers & sheet" view; the button is shown only when this is set.
   final VoidCallback? onOpenLayers;
 
+  /// The Front/Back/Left/Right (and pocket) buttons drawn on the canvas; the
+  /// studio shows them in a bar above the canvas instead.
+  final bool showSideToggle;
+
   const DesignCanvas({
     super.key,
     required this.design,
@@ -57,6 +61,7 @@ class DesignCanvas extends StatelessWidget {
     this.bare = false,
     this.mockupUrl,
     this.onOpenLayers,
+    this.showSideToggle = true,
   });
 
   bool get _showBack => side == DesignSide.back;
@@ -376,7 +381,7 @@ class DesignCanvas extends StatelessWidget {
                 Positioned(
                   left: 14,
                   // Below the two-row view toggle, which spans most of the top edge.
-                  top: 80,
+                  top: showSideToggle ? 80 : 14,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -459,7 +464,7 @@ class DesignCanvas extends StatelessWidget {
 
               // Front / Back toggle pill (top-right) — dark translucent
               // segmented control, same chrome style in both themes.
-              if (!bare)
+              if (!bare && showSideToggle)
                 Positioned(
                   top: 14,
                   right: 14,

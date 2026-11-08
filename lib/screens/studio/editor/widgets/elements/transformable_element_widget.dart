@@ -1,6 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+
+import 'canvas_scale.dart';
+
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/screens/studio/editor/support/design_studio_constants.dart';
@@ -186,8 +189,11 @@ class _TransformableElementWidgetState
               _moving = true;
               _moveDelta = Offset.zero;
             }),
-            onPanUpdate: (d) =>
-                setState(() => _moveDelta = _applySnap(_moveDelta + d.delta)),
+            onPanUpdate: (d) => setState(
+              () => _moveDelta = _applySnap(
+                _moveDelta + d.delta / CanvasScale.of(context),
+              ),
+            ),
             onPanEnd: (_) => _commitMove(),
             onPanCancel: () {
               widget.onSnapChanged?.call(false, false);
@@ -242,7 +248,8 @@ class _TransformableElementWidgetState
               right: -12,
               bottom: -12,
               child: GestureDetector(
-                onPanUpdate: (d) => _resizeBy(d.delta),
+                onPanUpdate: (d) =>
+                    _resizeBy(d.delta / CanvasScale.of(context)),
                 onPanEnd: (_) => widget.onCommit(),
                 child: const _Handle(icon: Icons.open_in_full),
               ),
