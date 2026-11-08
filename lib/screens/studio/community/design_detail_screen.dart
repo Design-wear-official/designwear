@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../models/commerce.dart';
 import '../../../models/design.dart';
+import '../../../models/custom_design.dart' show CustomDesign;
 import '../../../services/shop/cart_service.dart';
 import '../../../services/community/community_service.dart';
 import '../../account/auth_screens.dart';
@@ -20,6 +21,7 @@ class DesignDetailScreen extends StatefulWidget {
 class _DesignDetailScreenState extends State<DesignDetailScreen> {
   late CommunityDesign _design = widget.design;
   bool _back = false;
+
   /// The size the creator chose in the studio, if any, else M.
   late String _size = () {
     final s = widget.design.designJson?['size'];

@@ -62,6 +62,7 @@ class DesignCanvas extends StatelessWidget {
   bool get _showBack => side == DesignSide.back;
   bool get _isSleeve => side.isSleeve;
   Garment get _garment => GarmentRegistry.byId(garmentType);
+
   /// The print area of the side being shown, from the garment's own list when it has one.
   String get _printLabel {
     final p = _garment.placementFor(side);
@@ -136,9 +137,8 @@ class DesignCanvas extends StatelessWidget {
               // Garment artwork for the active face, or a placeholder
               else if (_hasFaceAsset)
                 ColorFiltered(
-                  colorFilter: ColorFilter.mode(
+                  colorFilter: DesignStudioUtils.shirtTint(
                     DesignStudioUtils.parseColorFromHex(design.baseColor),
-                    BlendMode.modulate,
                   ),
                   child: _isNetworkImage
                       ? Image.network(
