@@ -81,7 +81,8 @@ jobs:
       - run: flutter pub get
 
       # Both flavours must keep building; internal has its own applicationId.
+      # Retried: Gradle downloads its distribution from GitHub releases, which sometimes answers 504.
       - name: Build external flavour
-        run: flutter build apk --debug --flavor external --dart-define=FLAVOR=external
+        run: .github/scripts/retry.sh 4 flutter build apk --debug --flavor external --dart-define=FLAVOR=external
       - name: Build internal flavour
-        run: flutter build apk --debug --flavor internal --dart-define=FLAVOR=internal
+        run: .github/scripts/retry.sh 4 flutter build apk --debug --flavor internal --dart-define=FLAVOR=internal

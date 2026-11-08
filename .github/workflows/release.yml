@@ -106,7 +106,7 @@ jobs:
       - run: flutter test
 
       - name: Build Android release APK
-        run: flutter build apk --release --flavor external --dart-define=FLAVOR=external
+        run: .github/scripts/retry.sh 4 flutter build apk --release --flavor external --dart-define=FLAVOR=external
 
       - name: Build web
         run: |
