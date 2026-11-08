@@ -8,13 +8,16 @@ import 'package:designwear/screens/studio/editor/support/design_studio_utils.dar
 import 'package:designwear/services/ai/ai_agent_service.dart';
 import 'package:designwear/services/ai/ai_service.dart';
 import 'package:designwear/services/ai/remote_ai_service.dart';
+import 'package:designwear/presentation/widgets/agent_chat_widget.dart';
+import 'package:flutter/material.dart' show Icons, MaterialApp, Scaffold, Stack, TextField, ValueKey, Size;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 /// A stand-in assistant: it edits the design (a text line) and "draws" the faces it is told to.
 class _SidesAgent extends UnconfiguredAiService {
-  _SidesAgent({this.failed = const [], this.art});
+  _SidesAgent({this.failed = const [], this.art, this.pictureOnly = false});
+  final bool pictureOnly;
   final String? art;
   final prompts = <String>[];
   final List<String> failed;
@@ -35,7 +38,7 @@ class _SidesAgent extends UnconfiguredAiService {
   }) async => DesignAgentReply(
     text: 'Here is your design.',
     art: art,
-    design: <String, Object?>{
+    design: pictureOnly ? null : <String, Object?>{
       'baseColor': '0xFF000000',
       'elements': [
         {
@@ -61,12 +64,16 @@ class _SidesAgent extends UnconfiguredAiService {
     return DesignSides(
       images: {
         for (final s in ['front', 'back', 'left', 'right'])
-          if (!failed.contains(s)) s: base64Encode([1, 2, 3, s.length]),
+          if (!failed.contains(s)) s: _png,
       },
       failed: failed,
     );
   }
 }
+
+// A 1x1 transparent PNG.
+const _png =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
 http.Response _json(Object body, [int status = 200]) => http.Response(
   jsonEncode(body),
@@ -139,6 +146,72 @@ void main() {
       AiService.instance = fake;
       await AIAgentService().sendMessage('make it better', CustomDesign());
       expect(fake.prompts.single, 'a green storm cloud over a dark city');
+    });
+
+    test('a picture-only reply adds the pictures to the current design and keeps what is there', () async {
+      final fake = _SidesAgent(art: 'a dragon', pictureOnly: true);
+      AiService.instance = fake;
+      final current = CustomDesign(
+        elements: [
+          DesignElement(
+            id: 'mine',
+            type: DesignElementType.text,
+            content: 'KEEP',
+            x: 0,
+            y: 0,
+          ),
+        ],
+      );
+      final r = await AIAgentService().sendMessage('generate a dragon', current);
+      expect(fake.prompts.single, 'a dragon');
+      final els = r.updatedDesign!.elements;
+      expect(els.length, 5);
+      expect(els.last.content, 'KEEP');
+      expect(
+        els.where((e) => e.type == DesignElementType.image).length,
+        4,
+      );
+      expect(r.previewBase64, _png);
+    });
+
+    test('a reply with neither a design nor a brief draws nothing', () async {
+      final fake = _SidesAgent(pictureOnly: true);
+      AiService.instance = fake;
+      final r = await AIAgentService().sendMessage('hi', CustomDesign());
+      expect(r.updatedDesign, isNull);
+      expect(r.previewBase64, isNull);
+      expect(fake.prompts, isEmpty);
+    });
+
+    testWidgets('the picture shows as a thumbnail in the chat bubble', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1000, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      AiService.instance = _SidesAgent(art: 'a dragon', pictureOnly: true);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Stack(
+              children: [
+                AgentChatWidget(
+                  currentDesign: CustomDesign(),
+                  onDesignUpdate: (_) {},
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.byIcon(Icons.auto_awesome));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'generate a dragon');
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(find.byKey(const ValueKey('agent-preview')), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     test('without a brief the customer\'s message is the fallback', () async {
