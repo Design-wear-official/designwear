@@ -2,6 +2,7 @@ import 'package:designwear/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  vectorStyleTests();
   test('pocket sides parse and are small print areas', () {
     expect(DesignSide.fromString('leftPocket'), DesignSide.leftPocket);
     expect(DesignSide.fromString('rightPocket'), DesignSide.rightPocket);
@@ -53,5 +54,30 @@ void main() {
         }
       }
     }
+  });
+}
+
+void vectorStyleTests() {
+  test('vector styles draw every colour zone they declare', () {
+    // Each zone must appear on at least one side (a cap strap is back-only).
+    for (final st in GarmentStyles.all) {
+      final front = st.viewFor(DesignSide.front)!.vector;
+      final back = st.viewFor(DesignSide.back)!.vector;
+      if (front == null || back == null) continue;
+      final drawn = {
+        for (final p in [...front, ...back]) p.zone,
+      };
+      for (final z in st.zones) {
+        expect(drawn, contains(z.id), reason: '${st.id}/${z.id}');
+      }
+    }
+  });
+
+  test('each garment resolves to a style; others fall back', () {
+    for (final g in ['tshirt', 'hoodie', 'cap', 'totebag']) {
+      expect(GarmentStyles.resolve(g, 'nope'), isNotNull, reason: g);
+    }
+    expect(GarmentStyles.resolve('hoodie', 'crew')!.id, 'hoodie');
+    expect(GarmentStyles.resolve('mug', 'crew'), isNull);
   });
 }

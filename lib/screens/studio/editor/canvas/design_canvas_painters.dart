@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:flutter/material.dart';
+import 'package:designwear/models/models.dart' show VectorPart, VectorGarments;
 
 class CanvasGridPainter extends CustomPainter {
   final Color color;
@@ -677,4 +679,111 @@ class FabricFinishPainter extends CustomPainter {
   @override
   bool shouldRepaint(FabricFinishPainter old) =>
       old.finish != finish || old.garmentColor != garmentColor;
+}
+
+/// Draws a vector garment (styles without a photo): each part filled in the
+/// garment colour or its own zone colour, trims clipped to the silhouette,
+/// and a soft light-to-shade gradient so it reads as cloth, not flat shapes.
+class VectorGarmentPainter extends CustomPainter {
+  final List<VectorPart> parts;
+  final Color base;
+
+  /// Colour per zone id; zones not listed take the garment colour.
+  final Map<String, Color> zoneColors;
+
+  const VectorGarmentPainter({
+    required this.parts,
+    required this.base,
+    required this.zoneColors,
+  });
+
+  static final Expando<Path> _silhouettes = Expando<Path>();
+
+  Path get _silhouette =>
+      _silhouettes[parts] ??= VectorGarments.silhouette(parts);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 1024);
+    final outline = Paint()
+      ..color = Colors.black.withValues(alpha: 0.22)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeJoin = StrokeJoin.round;
+
+    for (final part in parts) {
+      final color = part.zone == 'body'
+          ? base
+          : part.zone == 'detail'
+          ? Colors.black.withValues(alpha: part.shade)
+          : (zoneColors[part.zone] ?? base);
+      if (part.stroke == null) {
+        canvas.drawPath(part.path, Paint()..color = color);
+        if (part.zone != 'detail') canvas.drawPath(part.path, outline);
+        continue;
+      }
+      final clipped =
+          part.zone == 'collar' ||
+          part.zone == 'cuffs' ||
+          part.zone == 'detail';
+      canvas.save();
+      if (clipped) canvas.clipPath(_silhouette);
+      final stroke = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round;
+      if (part.zone != 'detail' && !clipped) {
+        canvas.drawPath(
+          part.path,
+          stroke
+            ..strokeWidth = part.stroke! + 5
+            ..color = Colors.black.withValues(alpha: 0.22),
+        );
+      }
+      canvas.drawPath(
+        part.path,
+        stroke
+          ..strokeWidth = part.stroke!
+          ..color = color,
+      );
+      canvas.restore();
+    }
+
+    // Cloth shading over the whole silhouette.
+    canvas.save();
+    canvas.clipPath(_silhouette);
+    final box = const Rect.fromLTWH(0, 0, 1024, 1024);
+    canvas.drawRect(
+      box,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.10),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.14),
+          ],
+        ).createShader(box),
+    );
+    canvas.drawRect(
+      box,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.transparent, Colors.black.withValues(alpha: 0.08)],
+          stops: const [0.55, 1.0],
+        ).createShader(box),
+    );
+    canvas.restore();
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(VectorGarmentPainter old) =>
+      !identical(old.parts, parts) ||
+      old.base != base ||
+      !mapEquals(old.zoneColors, zoneColors);
 }

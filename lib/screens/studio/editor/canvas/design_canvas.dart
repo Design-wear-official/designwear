@@ -59,7 +59,7 @@ class DesignCanvas extends StatelessWidget {
 
   /// The style (crew, pocket tee, henley, polo) for T-shirt designs.
   GarmentStyle? get _style =>
-      garmentType == 'tshirt' ? GarmentStyles.byId(design.styleId) : null;
+      GarmentStyles.resolve(garmentType, design.styleId);
   StyleView? get _styleView => _style?.viewFor(side);
 
   Color? _zoneColor(String zoneId) {
@@ -88,6 +88,39 @@ class DesignCanvas extends StatelessWidget {
     const frameH = DesignStudioConstants.canvasWidth * 1.25 + 32;
     // Positioned (not a sized box): the square photo is wider than the frame
     // and must keep its true size, centred, so zone shapes line up.
+    final vector = view.vector;
+    if (vector != null) {
+      return Positioned(
+        left: (frameW - box) / 2,
+        top: (frameH - box) / 2,
+        width: box,
+        height: box,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CustomPaint(
+              painter: VectorGarmentPainter(
+                parts: vector,
+                base: _baseColor,
+                zoneColors: {
+                  for (final z in _style!.zones)
+                    if (_zoneColor(z.id) != null) z.id: _zoneColor(z.id)!,
+                },
+              ),
+            ),
+            if (design.fabricFinish != 'solid')
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: FabricFinishPainter(
+                    garmentColor: _baseColor,
+                    finish: design.fabricFinish,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
     return Positioned(
       left: (frameW - box) / 2,
       top: (frameH - box) / 2,

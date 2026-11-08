@@ -828,7 +828,11 @@ extension _LayoutMethods on _DesignStudioScreenState {
             ),
           ),
           const SizedBox(height: 12),
-          GarmentOptions(design: _design, onDesignUpdate: _updateDesign),
+          GarmentOptions(
+            design: _design,
+            onDesignUpdate: _updateDesign,
+            garmentType: _selectedGarmentType,
+          ),
 
           const SizedBox(height: 20),
           Container(height: 1, color: hair),
@@ -928,7 +932,20 @@ extension _LayoutMethods on _DesignStudioScreenState {
           final type = _garmentTypes[index];
           final isSelected = _selectedGarmentType == type['id'];
           return GestureDetector(
-            onTap: () => setState(() => _selectedGarmentType = type['id']!),
+            onTap: () {
+              final id = type['id']!;
+              setState(() => _selectedGarmentType = id);
+              // Switch to a style that exists for the chosen garment.
+              final style = GarmentStyles.resolve(id, _design.styleId);
+              if (style != null && style.id != _design.styleId) {
+                _updateDesign(
+                  _design.copyWith(
+                    styleId: style.id,
+                    partColors: style.defaultParts,
+                  ),
+                );
+              }
+            },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               curve: Curves.easeOut,

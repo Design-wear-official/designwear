@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'custom_design.dart';
+import 'vector_garments.dart';
 
 /// Geometry of one colourable zone, in the 1024×1024 space of the garment
 /// photos in assets/images/garments (see tools/build_garment_assets.py).
@@ -47,7 +48,14 @@ class ColorZone {
 class StyleView {
   final String asset;
   final Map<String, ZonePath> zones;
-  const StyleView(this.asset, this.zones);
+
+  /// Drawn (vector) garment instead of a photo, for styles without photos.
+  final List<VectorPart>? vector;
+
+  const StyleView(this.asset, this.zones) : vector = null;
+  const StyleView.vector(List<VectorPart> this.vector)
+    : asset = '',
+      zones = const {};
 }
 
 /// A garment style (crew tee, pocket tee, henley, polo...): its views and the
@@ -59,12 +67,20 @@ class GarmentStyle {
   final List<ColorZone> zones;
   final Map<DesignSide, StyleView> views;
 
+  /// Garment category this style belongs to ('tshirt', 'hoodie', 'cap', 'totebag').
+  final String garment;
+
+  /// Part colours applied when the style is picked (contrast sleeves, ringer trim...).
+  final Map<String, String> defaultParts;
+
   const GarmentStyle({
     required this.id,
     required this.label,
     required this.description,
     required this.zones,
     required this.views,
+    this.garment = 'tshirt',
+    this.defaultParts = const {},
   });
 
   StyleView? viewFor(DesignSide side) => views[side];
@@ -87,6 +103,37 @@ const _collar = ColorZone('collar', 'Collar');
 const _pockets = ColorZone('pockets', 'Pockets');
 const _placket = ColorZone('placket', 'Placket');
 const _buttons = ColorZone('buttons', 'Buttons');
+const _neckTrim = ColorZone('collar', 'Neck trim');
+const _armholes = ColorZone('cuffs', 'Armhole trim');
+const _hood = ColorZone('hood', 'Hood', trim: false);
+const _waistband = ColorZone('waistband', 'Waistband');
+const _hoodiePocket = ColorZone('pockets', 'Pocket', trim: false);
+const _drawstrings = ColorZone('drawstrings', 'Drawstrings');
+const _brim = ColorZone('brim', 'Brim', trim: false);
+const _capButton = ColorZone('button', 'Button');
+const _strap = ColorZone('strap', 'Strap', trim: false);
+const _handles = ColorZone('handles', 'Handles', trim: false);
+const _hem = ColorZone('hem', 'Top hem');
+
+StyleView _vFront(String id) => StyleView.vector(VectorGarments.front(id)!);
+StyleView _vBack(String id) => StyleView.vector(VectorGarments.back(id)!);
+
+GarmentStyle _vector({
+  required String id,
+  required String label,
+  required String description,
+  required List<ColorZone> zones,
+  String garment = 'tshirt',
+  Map<String, String> defaults = const {},
+}) => GarmentStyle(
+  id: id,
+  label: label,
+  description: description,
+  zones: zones,
+  garment: garment,
+  defaultParts: defaults,
+  views: {DesignSide.front: _vFront(id), DesignSide.back: _vBack(id)},
+);
 
 final _crewFront = <String, ZonePath>{
   'sleeves': ZonePath(
@@ -411,7 +458,79 @@ class GarmentStyles {
         DesignSide.back: StyleView('$_dir/polo_back.png', _poloBack),
       },
     ),
+    _vector(
+      id: 'vneck',
+      label: 'V-neck',
+      description: 'V-shaped neckline',
+      zones: const [_sleeves, _cuffs, _collar],
+    ),
+    _vector(
+      id: 'longsleeve',
+      label: 'Long sleeve',
+      description: 'Full-length sleeves with cuffs',
+      zones: const [_sleeves, _cuffs, _collar],
+    ),
+    _vector(
+      id: 'raglan',
+      label: 'Raglan',
+      description: '3/4 baseball sleeves, contrast by default',
+      zones: const [_sleeves, _cuffs, _collar],
+      defaults: const {'sleeves': '0xFF2B2E33'},
+    ),
+    _vector(
+      id: 'ringer',
+      label: 'Ringer',
+      description: 'Contrast collar and cuffs',
+      zones: const [_sleeves, _cuffs, _collar],
+      defaults: const {'collar': '0xFF1A1F3C', 'cuffs': '0xFF1A1F3C'},
+    ),
+    _vector(
+      id: 'tank',
+      label: 'Tank top',
+      description: 'Sleeveless with bound edges',
+      zones: const [_armholes, _neckTrim],
+    ),
+    _vector(
+      id: 'hoodie',
+      label: 'Hoodie',
+      description: 'Pullover with hood and pocket',
+      garment: 'hoodie',
+      zones: const [
+        _hood,
+        _sleeves,
+        _cuffs,
+        _waistband,
+        _hoodiePocket,
+        _drawstrings,
+      ],
+    ),
+    _vector(
+      id: 'cap',
+      label: 'Cap',
+      description: 'Baseball cap',
+      garment: 'cap',
+      zones: const [_brim, _capButton, _strap],
+    ),
+    _vector(
+      id: 'tote',
+      label: 'Tote bag',
+      description: 'Canvas tote with handles',
+      garment: 'totebag',
+      zones: const [_handles, _hem],
+    ),
   ];
+
+  /// Styles offered for a garment category ('tshirt', 'hoodie', ...).
+  static List<GarmentStyle> forGarment(String garment) =>
+      all.where((s) => s.garment == garment).toList();
+
+  /// The style to draw for [garment]: [styleId] if it belongs there, else the
+  /// garment's first style; null when the garment has none.
+  static GarmentStyle? resolve(String garment, String? styleId) {
+    final list = forGarment(garment);
+    if (list.isEmpty) return null;
+    return list.firstWhere((s) => s.id == styleId, orElse: () => list.first);
+  }
 
   static GarmentStyle byId(String? id) =>
       all.firstWhere((s) => s.id == id, orElse: () => all.first);

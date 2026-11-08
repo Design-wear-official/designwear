@@ -80,6 +80,9 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   // returns, the live category list replaces this.
   final List<Map<String, String>> _garmentTypes = [
     {'id': 'tshirt', 'label': 'T-Shirt'},
+    {'id': 'hoodie', 'label': 'Hoodie'},
+    {'id': 'cap', 'label': 'Cap'},
+    {'id': 'totebag', 'label': 'Tote Bag'},
   ];
 
   late DateTime _lastAutoSave = DateTime.now();
