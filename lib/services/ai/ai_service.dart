@@ -72,6 +72,12 @@ class UnconfiguredAiService implements AiService {
   @override
   Future<List<int>> designImage(String prompt) async =>
       throw const AiUnavailable();
+
+  @override
+  Future<DesignSides> designSides(
+    String prompt, {
+    List<List<int>> images = const [],
+  }) async => throw const AiUnavailable();
 }
 
 /// The pictures for each face of the garment, as base64 PNG, and the faces that could not be drawn.

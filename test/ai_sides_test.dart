@@ -24,14 +24,14 @@ class _SidesAgent extends UnconfiguredAiService {
   bool get tryOnEnabled => true;
 
   @override
-  Future<DesignAgentReply> designAgent({
+  Future<({String text, Map<String, Object?>? design})> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
-  }) async => DesignAgentReply(
+  }) async => (
     text: 'Here is your design.',
-    design: {
+    design: <String, Object?>{
       'baseColor': '0xFF000000',
       'elements': [
         {
@@ -162,12 +162,13 @@ void main() {
         'https://api.example.com',
         httpClient: MockClient((req) async {
           final body = jsonDecode(req.body) as Map<String, Object?>;
-          if (req.url.path.endsWith('design-agent'))
+          if (req.url.path.endsWith('design-agent')) {
             return _json({
               'text': 'ok',
               'design': {'elements': []},
               'imagePass': 'pass-1',
             });
+          }
           sent.add(body);
           return _json({
             'images': {'front': 'AAA', 'back': 'BBB', 'left': ''},
