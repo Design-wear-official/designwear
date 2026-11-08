@@ -322,6 +322,10 @@ extension _LayoutMethods on _DesignStudioScreenState {
                             onElementEdit: _editElement,
                             onSideChanged: (s) => setState(() => _side = s),
                             snapGuides: _snapGuides,
+                            mockupUrl: _mockupUrl,
+                            onOpenLayers: _layerJob == null
+                                ? null
+                                : _openLayers,
                           ),
                           // Off-screen front and back canvases, captured for the published previews.
 
@@ -427,6 +431,8 @@ extension _LayoutMethods on _DesignStudioScreenState {
                       onElementEdit: _editElement,
                       onSideChanged: (s) => setState(() => _side = s),
                       snapGuides: _snapGuides,
+                      mockupUrl: _mockupUrl,
+                      onOpenLayers: _layerJob == null ? null : _openLayers,
                     ),
                     // Off-screen front and back canvases, captured for the published previews.
 

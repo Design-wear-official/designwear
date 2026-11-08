@@ -1,4 +1,5 @@
 import 'package:designwear/models/models.dart';
+import 'package:designwear/services/ai/layers.dart';
 import 'package:flutter/foundation.dart';
 
 /// Descriptor for a garment the studio can render.
@@ -20,6 +21,9 @@ class Garment {
   /// Starting price from the business's garment list, when it set one.
   final double? basePrice;
 
+  /// The print areas of this garment (size in px at a dpi), when the business's list has them.
+  final List<PrintPlacement> placements;
+
   const Garment({
     required this.id,
     required this.label,
@@ -29,6 +33,7 @@ class Garment {
     this.backUrl,
     this.supportsCollarPocketOverlay = false,
     this.basePrice,
+    this.placements = const [],
   });
 
   /// Returns the network URL for [side] if available, otherwise the local asset path.
@@ -55,6 +60,7 @@ class Garment {
     backUrl: backUrl ?? this.backUrl,
     supportsCollarPocketOverlay: supportsCollarPocketOverlay,
     basePrice: basePrice,
+    placements: placements,
   );
 
   factory Garment.fromJson(Map<String, dynamic> json) => Garment(
@@ -64,7 +70,30 @@ class Garment {
     backUrl: json['backImageUrl'] as String?,
     supportsCollarPocketOverlay: json['supportsCollarPocket'] as bool? ?? false,
     basePrice: (json['basePrice'] as num?)?.toDouble(),
+    placements: [
+      for (final p in (json['placements'] as List? ?? const []))
+        if (p is Map) ?_placement(p.cast<String, dynamic>()),
+    ],
   );
+
+  static PrintPlacement? _placement(Map<String, dynamic> p) {
+    try {
+      return PrintPlacement.fromJson(p);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The print area for a studio side ('front'…), if known.
+  PrintPlacement? placementFor(DesignSide side) {
+    final key = switch (side) {
+      DesignSide.front => 'front',
+      DesignSide.back => 'back',
+      DesignSide.left => 'sleeve_left',
+      DesignSide.right => 'sleeve_right',
+    };
+    return placements.where((p) => p.key == key).firstOrNull;
+  }
 }
 
 class GarmentRegistry {
@@ -104,6 +133,7 @@ class GarmentRegistry {
           backUrl: bg.backUrl,
           supportsCollarPocketOverlay: bg.supportsCollarPocketOverlay,
           basePrice: bg.basePrice,
+          placements: bg.placements,
         ),
       );
     }

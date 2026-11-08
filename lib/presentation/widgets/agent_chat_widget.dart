@@ -10,12 +10,19 @@ import 'package:designwear/presentation/styles/styles.dart';
 
 import '../../services/ai/ai_service.dart' show AiService, TrendsInfo;
 import '../../services/ai/ai_usage_service.dart';
+import '../../services/ai/layers.dart' show LayerJob;
 import 'ai_allowance_chip.dart';
 import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
   final CustomDesign currentDesign;
   final Function(CustomDesign) onDesignUpdate;
+
+  /// The garment being designed (its id), so the artwork is made for its print areas.
+  final String? garmentType;
+
+  /// Called after [onDesignUpdate] when the pictures came from a print-layers job.
+  final void Function(LayerJob job)? onLayerJob;
 
   /// Distance from the bottom of the screen for the floating launcher/chat.
   /// Raised on mobile so the button clears the bottom tools row / open panel
@@ -26,6 +33,8 @@ class AgentChatWidget extends StatefulWidget {
     super.key,
     required this.currentDesign,
     required this.onDesignUpdate,
+    this.garmentType,
+    this.onLayerJob,
     this.bottomOffset = 20,
   });
 
@@ -80,6 +89,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
         widget.currentDesign,
         imageAttachments: imagesToSend.isNotEmpty ? imagesToSend : null,
         trends: trends,
+        garment: widget.garmentType,
       );
 
       setState(() {
@@ -97,6 +107,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
       if (response.updatedDesign != null) {
         widget.onDesignUpdate(response.updatedDesign!);
+        final job = response.layerJob;
+        if (job != null) widget.onLayerJob?.call(job);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Design updated by AI! ✨')),

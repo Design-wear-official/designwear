@@ -314,6 +314,23 @@ extension _ActionMethods on _DesignStudioScreenState {
     _autoSaveDesign();
   }
 
+  void _onLayerJob(LayerJob job) {
+    setState(() {
+      _layerJob = job;
+      _layerJobSignature = _designSignature();
+    });
+  }
+
+  void _openLayers() {
+    final job = _layerJob;
+    if (job == null) return;
+    showLayersSheet(
+      context,
+      job: job,
+      garment: GarmentRegistry.byId(_selectedGarmentType),
+    );
+  }
+
   void _onAiDesignUpdate(CustomDesign incoming) {
     final img = incoming.designImageBase64;
     if (img != null && img.isNotEmpty) {

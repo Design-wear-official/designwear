@@ -71,14 +71,17 @@ void main() {
       expect(GarmentRegistry.byId('bare').hasAsset(DesignSide.front), isFalse);
     });
 
-    test('the chooser offers exactly the business\'s list once it arrives', () async {
-      await GarmentService.loadGarments(_api(_list));
-      expect(GarmentRegistry.selectable.map((g) => g.id), [
-        'tshirt',
-        'longsleeve',
-        'bare',
-      ]);
-    });
+    test(
+      'the chooser offers exactly the business\'s list once it arrives',
+      () async {
+        await GarmentService.loadGarments(_api(_list));
+        expect(GarmentRegistry.selectable.map((g) => g.id), [
+          'tshirt',
+          'longsleeve',
+          'bare',
+        ]);
+      },
+    );
 
     test('a failure keeps the bundled defaults and never throws', () async {
       await GarmentService.loadGarments(_api({'error': 'x'}, status: 500));
@@ -141,22 +144,24 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
     }
 
-    testWidgets('an added garment with a photo that cannot load does not crash', (
-      tester,
-    ) async {
-      await GarmentService.loadGarments(_api(_list));
-      await show(tester, 'longsleeve');
-      expect(tester.takeException(), isNull);
-      expect(find.byType(DesignCanvas), findsOneWidget);
-    });
+    testWidgets(
+      'an added garment with a photo that cannot load does not crash',
+      (tester) async {
+        await GarmentService.loadGarments(_api(_list));
+        await show(tester, 'longsleeve');
+        expect(tester.takeException(), isNull);
+        expect(find.byType(DesignCanvas), findsOneWidget);
+      },
+    );
 
-    testWidgets('an added garment with no photo shows the coming-soon placeholder', (
-      tester,
-    ) async {
-      await GarmentService.loadGarments(_api(_list));
-      await show(tester, 'bare');
-      expect(tester.takeException(), isNull);
-      expect(find.byType(Image), findsNothing);
-    });
+    testWidgets(
+      'an added garment with no photo shows the coming-soon placeholder',
+      (tester) async {
+        await GarmentService.loadGarments(_api(_list));
+        await show(tester, 'bare');
+        expect(tester.takeException(), isNull);
+        expect(find.byType(Image), findsNothing);
+      },
+    );
   });
 }

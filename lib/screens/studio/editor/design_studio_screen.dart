@@ -22,6 +22,8 @@ import 'package:designwear/presentation/widgets/widgets.dart';
 import 'package:designwear/screens/studio/editor/design_studio.dart';
 import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
 import 'package:designwear/screens/studio/editor/widgets/widgets.dart';
+import 'package:designwear/screens/studio/editor/widgets/dialogs/layers_sheet.dart';
+import 'package:designwear/services/ai/layers.dart';
 import 'package:designwear/screens/ai/virtual_tryon_screen.dart';
 
 part 'screen/design_studio_screen_layout.dart';
@@ -70,6 +72,21 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   String? _selectedElementId;
   bool _showTemplates = false;
   String _selectedGarmentType = 'tshirt';
+
+  // The print-layers job the current artwork came from, and the design as it was when it was made:
+  // while the design is unchanged the realistic mock-up views are shown instead of the live canvas.
+  LayerJob? _layerJob;
+  String? _layerJobSignature;
+
+  String _designSignature() => jsonEncode(_design.toJson());
+
+  /// The mock-up for the side being shown, only while the design is exactly what the job made.
+  String? get _mockupUrl {
+    final job = _layerJob;
+    if (job == null || _layerJobSignature != _designSignature()) return null;
+    return job.viewFor(_side.value);
+  }
+
   DesignSide _side = DesignSide.front;
 
   String _activeTool = 'layers';
@@ -190,6 +207,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           AgentChatWidget(
             currentDesign: _design,
             onDesignUpdate: _onAiDesignUpdate,
+            garmentType: _selectedGarmentType,
+            onLayerJob: _onLayerJob,
             bottomOffset: aiBottomOffset,
           ),
           if (_showTemplates)
