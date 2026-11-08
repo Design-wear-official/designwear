@@ -20,6 +20,7 @@ import 'package:designwear/services/services.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/presentation/widgets/widgets.dart';
 import 'package:designwear/screens/studio/editor/design_studio.dart';
+import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
 import 'package:designwear/screens/studio/editor/widgets/widgets.dart';
 import 'package:designwear/screens/ai/virtual_tryon_screen.dart';
 
@@ -78,8 +79,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   // only T-Shirts, so this lists T-Shirt only — hoodie/polo/cap/tote stay
   // hidden from users until they're a real category. Once _loadCategories()
   // returns, the live category list replaces this.
-  final List<Map<String, String>> _garmentTypes = [
-    {'id': 'tshirt', 'label': 'T-Shirt'},
+  List<Map<String, String>> get _garmentTypes => [
+    for (final g in GarmentRegistry.selectable) {'id': g.id, 'label': g.label},
   ];
 
   late DateTime _lastAutoSave = DateTime.now();
@@ -118,8 +119,6 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     super.initState();
     _loadAutoSavedDesign();
     _historyService.addToHistory(_design);
-    // Ensure garment images are loaded from the backend before the first frame.
-    GarmentService.loadGarments();
   }
 
   @override

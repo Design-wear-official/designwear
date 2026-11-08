@@ -574,7 +574,9 @@ extension _ActionMethods on _DesignStudioScreenState {
                 title: _design.name.isNotEmpty
                     ? _design.name
                     : _baseProduct.title,
-                price: _baseProduct.price,
+                price:
+                    GarmentRegistry.byId(_selectedGarmentType).basePrice ??
+                    _baseProduct.price,
               ),
               customClothingBytes: bytes,
             ),
