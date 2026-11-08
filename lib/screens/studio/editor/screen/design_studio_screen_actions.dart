@@ -88,8 +88,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       color: '0xFF15182B',
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   void _addStickerElement(String emoji) {
@@ -102,8 +103,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       size: 48,
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   /// Places an uploaded custom image sticker on the canvas. The bytes are
@@ -120,8 +122,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       height: DesignStudioConstants.defaultImageSize,
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   void _addShapeElement(String shape) {
@@ -136,8 +139,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       color: '0xFF15182B',
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   void _duplicateElement(String elementId) {
@@ -187,6 +191,158 @@ extension _ActionMethods on _DesignStudioScreenState {
       _design.updateElement(
         el.id,
         el.copyWith(x: nx.toDouble(), y: ny.toDouble()),
+      ),
+    );
+  }
+
+  /// Rendered size of an element, for centring. Image and shape layers carry
+  /// their box; text and stickers are measured.
+  Size _elementSize(DesignElement el) {
+    if (el.type == DesignElementType.image ||
+        el.type == DesignElementType.shape) {
+      return Size(
+        el.width ?? DesignStudioConstants.defaultImageSize,
+        el.height ?? DesignStudioConstants.defaultImageSize,
+      );
+    }
+    final props = el.properties;
+    final style = el.type == DesignElementType.text
+        ? DesignStudioUtils.getTextStyle(
+            el.size,
+            el.color,
+            props['fontFamily'] ?? 'Outfit',
+            props['bold'] ?? false,
+            props['italic'] ?? false,
+            props['shadow'] ?? false,
+            props['shadowColor'],
+            props['shadowOffset'],
+          )
+        : TextStyle(fontSize: el.size);
+    final tp = TextPainter(
+      text: TextSpan(text: el.content, style: style),
+      textDirection: TextDirection.ltr,
+    )..layout();
+    return tp.size;
+  }
+
+  /// [el] moved so it sits in the middle of the canvas, whatever its size.
+  /// New text, stickers, images and shapes start here instead of the corner.
+  DesignElement _centredOnCanvas(DesignElement el) {
+    final size = _elementSize(el);
+    const cx = (DesignStudioConstants.canvasWidth + 32) / 2;
+    const cy = (DesignStudioConstants.canvasWidth * 1.25 + 32) / 2;
+    return el.copyWith(
+      x: cx - DesignStudioConstants.elementCanvasOffsetX - size.width / 2,
+      y: cy - DesignStudioConstants.elementCanvasOffsetY - size.height / 2,
+    );
+  }
+
+  /// Centres the selected element on the canvas axis (horizontally and/or
+  /// vertically). Matches the drag snap, which centres on the canvas middle.
+  void _centreSelected({bool horizontal = false, bool vertical = false}) {
+    final el = _selectedElement;
+    if (el == null) return;
+    final size = _elementSize(el);
+    const cx = (DesignStudioConstants.canvasWidth + 32) / 2;
+    const cy = (DesignStudioConstants.canvasWidth * 1.25 + 32) / 2;
+    final nx = horizontal
+        ? cx - DesignStudioConstants.elementCanvasOffsetX - size.width / 2
+        : el.x;
+    final ny = vertical
+        ? cy - DesignStudioConstants.elementCanvasOffsetY - size.height / 2
+        : el.y;
+    _updateDesign(_design.updateElement(el.id, el.copyWith(x: nx, y: ny)));
+  }
+
+  /// Shows every garment area (front, back, sleeves, pockets) side by side.
+  void _showAllViews() {
+    const areas = [
+      ('Front', DesignSide.front),
+      ('Back', DesignSide.back),
+      ('Left sleeve', DesignSide.left),
+      ('Right sleeve', DesignSide.right),
+      ('Left pocket', DesignSide.leftPocket),
+      ('Right pocket', DesignSide.rightPocket),
+    ];
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 860, maxHeight: 700),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'All areas',
+                      style: GoogleFonts.outfit(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: MediaQuery.sizeOf(ctx).width > 700 ? 3 : 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.82,
+                    children: [
+                      for (final (label, side) in areas)
+                        InkWell(
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            setState(() {
+                              _side = side;
+                              _selectedElementId = null;
+                            });
+                          },
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: IgnorePointer(
+                                  child: FittedBox(
+                                    fit: BoxFit.contain,
+                                    child: DesignCanvas(
+                                      design: _design,
+                                      selectedElementId: null,
+                                      garmentType: _selectedGarmentType,
+                                      side: side,
+                                      bare: true,
+                                      onElementSelected: (_) {},
+                                      onElementPreview: (_) {},
+                                      onElementCommit: () {},
+                                      onElementDelete: (_) {},
+                                      onSideChanged: (_) {},
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$label (${_design.elementsForSide(side).length})',
+                                style: GoogleFonts.outfit(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -31,7 +31,7 @@ class AIAgentService {
     DesignSide side, {
     String style = 'crew',
   }) {
-    if (side.isSleeve) return (x: -40, y: -25, w: 90, h: 90);
+    if (side.isSmallArea) return (x: -40, y: -25, w: 90, h: 90);
     // Polo and henley fronts have a placket: the print area starts below it.
     if (side == DesignSide.front && (style == 'polo' || style == 'henley')) {
       return (x: -90, y: -20, w: 180, h: 200);
@@ -218,9 +218,25 @@ class AIAgentService {
       final edit = reply.design;
       if (edit != null) {
         // A reply that doesn't mention size or fit keeps the ones already chosen.
+        final edit = reply.design!;
+        // The assistant only knows body colour and layers: keep the garment
+        // style and per-part colours the customer already chose, unless the
+        // reply names them itself.
         var design = edited!.copyWith(
           size: edited.size ?? currentDesign.size,
           fit: edited.fit ?? currentDesign.fit,
+          styleId: edit.containsKey('styleId')
+              ? edited.styleId
+              : currentDesign.styleId,
+          partColors: edit.containsKey('partColors')
+              ? edited.partColors
+              : currentDesign.partColors,
+          trimColor: edit.containsKey('trimColor')
+              ? edited.trimColor
+              : currentDesign.trimColor,
+          fabricFinish: edit.containsKey('fabricFinish')
+              ? edited.fabricFinish
+              : currentDesign.fabricFinish,
         );
         // The pictures go underneath the assistant's own text and stickers.
         if (art.layers.isNotEmpty) {

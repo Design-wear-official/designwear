@@ -1,3 +1,5 @@
+import 'garment_style.dart';
+
 enum DesignElementType {
   text,
   sticker,
@@ -24,14 +26,26 @@ enum DesignSide {
   left,
 
   /// The right sleeve (the wearer's right arm).
-  right;
+  right,
+
+  /// The wearer's left chest pocket area.
+  leftPocket,
+
+  /// The wearer's right chest pocket area.
+  rightPocket;
 
   String get value => name;
   bool get isSleeve => this == left || this == right;
+  bool get isPocket => this == leftPocket || this == rightPocket;
+
+  /// A small print zone (sleeve or pocket) rather than a full front/back face.
+  bool get isSmallArea => isSleeve || isPocket;
   static DesignSide fromString(String? v) => switch (v) {
     'back' => DesignSide.back,
     'left' => DesignSide.left,
     'right' => DesignSide.right,
+    'leftPocket' => DesignSide.leftPocket,
+    'rightPocket' => DesignSide.rightPocket,
     _ => DesignSide.front,
   };
 }
@@ -171,6 +185,16 @@ class CustomDesign {
   final String collarStyle; // 'crew' | 'vneck' | 'polo'
   final String pocketStyle; // 'none' | 'left' | 'right' | 'both'
   final String trimColor; // 'auto' or hex '0xFF...' — collar/pocket/cuff accent
+  /// Garment style id (see GarmentStyles): crew, pocket tees, henley, polo.
+  final String styleId;
+
+  /// Colour per garment zone id ('sleeves', 'collar', 'cuffs', 'pockets',
+  /// 'placket', 'buttons'): hex, or absent / 'auto' to inherit.
+  final Map<String, String> partColors;
+  // Per-area colour overrides: 'auto' (use [trimColor]) or hex '0xFF...'.
+  final String collarColor;
+  final String pocketColor;
+  final String cuffColor;
   final String sleeveCuff; // 'none' | 'banded' | 'rolled'
   final String fabricFinish; // 'solid' | 'heather' | 'vintage'
   /// The size the customer wants ('XS'..'XXL') and how it should fit ('regular' | 'relaxed' | 'oversized'),
@@ -205,6 +229,11 @@ class CustomDesign {
     this.collarStyle = 'crew',
     this.pocketStyle = 'none',
     this.trimColor = 'auto',
+    this.styleId = 'crew',
+    this.partColors = const {},
+    this.collarColor = 'auto',
+    this.pocketColor = 'auto',
+    this.cuffColor = 'auto',
     this.size,
     this.fit,
     this.sleeveCuff = 'none',
@@ -234,6 +263,11 @@ class CustomDesign {
     String? collarStyle,
     String? pocketStyle,
     String? trimColor,
+    String? styleId,
+    Map<String, String>? partColors,
+    String? collarColor,
+    String? pocketColor,
+    String? cuffColor,
     String? sleeveCuff,
     String? fabricFinish,
     String? size,
@@ -262,6 +296,11 @@ class CustomDesign {
       collarStyle: collarStyle ?? this.collarStyle,
       pocketStyle: pocketStyle ?? this.pocketStyle,
       trimColor: trimColor ?? this.trimColor,
+      styleId: styleId ?? this.styleId,
+      partColors: partColors ?? this.partColors,
+      collarColor: collarColor ?? this.collarColor,
+      pocketColor: pocketColor ?? this.pocketColor,
+      cuffColor: cuffColor ?? this.cuffColor,
       sleeveCuff: sleeveCuff ?? this.sleeveCuff,
       fabricFinish: fabricFinish ?? this.fabricFinish,
       size: size ?? this.size,
@@ -297,6 +336,11 @@ class CustomDesign {
       'collarStyle': collarStyle,
       'pocketStyle': pocketStyle,
       'trimColor': trimColor,
+      'styleId': styleId,
+      'partColors': partColors,
+      'collarColor': collarColor,
+      'pocketColor': pocketColor,
+      'cuffColor': cuffColor,
       'sleeveCuff': sleeveCuff,
       'fabricFinish': fabricFinish,
       // Persisted so saved/published designs keep their AI graphic (was dropped before).
@@ -337,12 +381,43 @@ class CustomDesign {
       collarStyle: json['collarStyle'] ?? 'crew',
       pocketStyle: json['pocketStyle'] ?? 'none',
       trimColor: json['trimColor'] ?? 'auto',
+      styleId:
+          json['styleId'] as String? ??
+          GarmentStyles.fromLegacy(
+            collar: json['collarStyle'] as String?,
+            pocket: json['pocketStyle'] as String?,
+          ),
+      partColors: {
+        for (final e in ((json['partColors'] as Map?) ?? const {}).entries)
+          '${e.key}': '${e.value}',
+      },
+      collarColor: json['collarColor'] ?? 'auto',
+      pocketColor: json['pocketColor'] ?? 'auto',
+      cuffColor: json['cuffColor'] ?? 'auto',
       sleeveCuff: json['sleeveCuff'] ?? 'none',
       fabricFinish: json['fabricFinish'] ?? 'solid',
       designImageBase64: json['designImageBase64'] as String?,
       size: sizes.contains(json['size']) ? json['size'] as String : null,
       fit: fits.contains(json['fit']) ? json['fit'] as String : null,
     );
+  }
+
+  /// Hex colour for a garment zone: its own colour, else the legacy per-area
+  /// colour, else (for trim zones) the shared trim colour. Null means the
+  /// zone just takes the garment colour.
+  String? zoneHex(String zoneId) {
+    String? pick(String? v) => (v == null || v == 'auto') ? null : v;
+    final own = pick(partColors[zoneId]);
+    if (own != null) return own;
+    final legacy = switch (zoneId) {
+      'collar' => pick(collarColor),
+      'pockets' => pick(pocketColor),
+      'cuffs' => pick(cuffColor),
+      _ => null,
+    };
+    if (legacy != null) return legacy;
+    final zone = GarmentStyles.byId(styleId).zoneById(zoneId);
+    return (zone?.trim ?? false) ? pick(trimColor) : null;
   }
 
   // Helper methods for design history and templates

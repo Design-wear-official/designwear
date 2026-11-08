@@ -61,6 +61,112 @@ class DesignCanvas extends StatelessWidget {
 
   bool get _showBack => side == DesignSide.back;
   bool get _isSleeve => side.isSleeve;
+  bool get _isPocket => side.isPocket;
+
+  Color get _baseColor => DesignStudioUtils.parseColorFromHex(design.baseColor);
+
+  /// The style (crew, pocket tee, henley, polo) for T-shirt designs.
+  GarmentStyle? get _style =>
+      GarmentStyles.resolve(garmentType, design.styleId);
+  StyleView? get _styleView => _style?.viewFor(side);
+
+  Color? _zoneColor(String zoneId) {
+    final hex = design.zoneHex(zoneId);
+    return hex == null ? null : DesignStudioUtils.parseColorFromHex(hex);
+  }
+
+  /// Garment photo drawn once per tinted zone: the whole shirt in the garment
+  /// colour, then each recoloured zone clipped over it in its own colour.
+  Widget _buildStyleLayers(StyleView view) {
+    final box = DesignStudioConstants.canvasWidth * 1.25;
+    final scale = box / 1024;
+    Widget tinted(Color c) => ColorFiltered(
+      colorFilter: DesignStudioUtils.shirtTint(c),
+      child: Image.asset(
+        view.asset,
+        width: box,
+        height: box,
+        fit: BoxFit.fill,
+        filterQuality: FilterQuality.high,
+        isAntiAlias: true,
+        gaplessPlayback: true,
+      ),
+    );
+    const frameW = DesignStudioConstants.canvasWidth + 32;
+    const frameH = DesignStudioConstants.canvasWidth * 1.25 + 32;
+    // Positioned (not a sized box): the square photo is wider than the frame
+    // and must keep its true size, centred, so zone shapes line up.
+    final vector = view.vector;
+    if (vector != null) {
+      return Positioned(
+        left: (frameW - box) / 2,
+        top: (frameH - box) / 2,
+        width: box,
+        height: box,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            CustomPaint(
+              painter: VectorGarmentPainter(
+                parts: vector,
+                base: _baseColor,
+                zoneColors: {
+                  for (final z in _style!.zones)
+                    if (_zoneColor(z.id) != null) z.id: _zoneColor(z.id)!,
+                },
+              ),
+            ),
+            if (design.fabricFinish != 'solid')
+              IgnorePointer(
+                child: CustomPaint(
+                  painter: FabricFinishPainter(
+                    garmentColor: _baseColor,
+                    finish: design.fabricFinish,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+    return Positioned(
+      left: (frameW - box) / 2,
+      top: (frameH - box) / 2,
+      width: box,
+      height: box,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          tinted(_baseColor),
+          for (final entry in view.zones.entries)
+            if (_zoneColor(entry.key) != null)
+              ClipPath(
+                clipper: _ZoneClipper(entry.value.toPath(scale)),
+                child: tinted(_zoneColor(entry.key)!),
+              ),
+          if (design.fabricFinish != 'solid' && !side.isSleeve)
+            IgnorePointer(
+              child: CustomPaint(
+                painter: FabricFinishPainter(
+                  garmentColor: _baseColor,
+                  finish: design.fabricFinish,
+                ),
+              ),
+            ),
+          // Print-area guide on the sleeve photo (dashed box, editor only).
+          if (side.isSleeve && !bare)
+            IgnorePointer(
+              child: CustomPaint(
+                painter: PrintGuidePainter(
+                  const Rect.fromLTWH(485, 215, 125, 170),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Garment get _garment => GarmentRegistry.byId(garmentType);
 
   /// The print area of the side being shown, from the garment's own list when it has one.
@@ -71,6 +177,7 @@ class DesignCanvas extends StatelessWidget {
           v == v.roundToDouble() ? '${v.round()}' : v.toStringAsFixed(1);
       return 'PRINT ${n(p.widthInches)} × ${n(p.heightInches)} in';
     }
+    if (_isPocket) return 'PRINT 8 × 8 cm';
     return _isSleeve ? 'PRINT 8 × 10 cm' : 'PRINT 30 × 40 cm';
   }
 
@@ -119,22 +226,36 @@ class DesignCanvas extends StatelessWidget {
                   ),
                 ),
 
+              // Pocket close-ups are drawn too (no photo of a bare pocket).
+              if (_isPocket)
+                SizedBox(
+                  width: DesignStudioConstants.canvasWidth,
+                  height: DesignStudioConstants.canvasWidth * 1.25,
+                  child: CustomPaint(
+                    painter: PocketAreaPainter(
+                      color: _baseColor,
+                      pocketColor: _zoneColor('pockets'),
+                      showGuide: !bare,
+                    ),
+                  ),
+                )
+              // Front / back: the style photo with each zone tinted separately.
+              else if (_styleView != null)
+                _buildStyleLayers(_styleView!)
               // Sleeve views are drawn (there are no sleeve photos).
-              if (_isSleeve)
+              else if (_isSleeve)
                 SizedBox(
                   width: DesignStudioConstants.canvasWidth,
                   height: DesignStudioConstants.canvasWidth * 1.25,
                   child: CustomPaint(
                     painter: SleevePainter(
-                      color: DesignStudioUtils.parseColorFromHex(
-                        design.baseColor,
-                      ),
+                      color: _zoneColor('sleeves') ?? _baseColor,
                       mirrored: side == DesignSide.right,
                       showGuide: !bare,
                     ),
                   ),
                 )
-              // Garment artwork for the active face, or a placeholder
+              // Other garments: one photo tinted with the garment colour.
               else if (_hasFaceAsset)
                 ColorFiltered(
                   colorFilter: DesignStudioUtils.shirtTint(
@@ -165,7 +286,7 @@ class DesignCanvas extends StatelessWidget {
                                 (side == DesignSide.back
                                     ? _garment.backAsset
                                     : _garment.frontAsset) ??
-                                'assets/images/tshirt_cutout.png';
+                                'assets/images/garments/crew_front.png';
                             return Image.asset(
                               fallback,
                               width: DesignStudioConstants.canvasWidth,
@@ -177,33 +298,11 @@ class DesignCanvas extends StatelessWidget {
                           _garment.imageUrl(side)!,
                           width: DesignStudioConstants.canvasWidth,
                           fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
                         ),
                 )
               else
                 _buildPlaceholder(context),
-
-              // Collar & pocket overlays (t-shirt front only)
-              if (_hasFaceAsset &&
-                  side == DesignSide.front &&
-                  _garment.supportsCollarPocketOverlay)
-                Positioned.fill(
-                  child: CustomPaint(
-                    painter: GarmentOverlayPainter(
-                      tshirtColor: DesignStudioUtils.parseColorFromHex(
-                        design.baseColor,
-                      ),
-                      collarStyle: design.collarStyle,
-                      pocketStyle: design.pocketStyle,
-                      trimColor: design.trimColor == 'auto'
-                          ? null
-                          : DesignStudioUtils.parseColorFromHex(
-                              design.trimColor,
-                            ),
-                      sleeveCuff: design.sleeveCuff,
-                      fabricFinish: design.fabricFinish,
-                    ),
-                  ),
-                ),
 
               // Legacy AI graphic (only when there is no editable image layer)
               if (side == DesignSide.front &&
@@ -219,6 +318,7 @@ class DesignCanvas extends StatelessWidget {
                     child: Image.memory(
                       base64Decode(design.designImageBase64!),
                       fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                     ),
                   ),
                 ),
@@ -275,8 +375,8 @@ class DesignCanvas extends StatelessWidget {
               if (!bare && provenanceLabel != null)
                 Positioned(
                   left: 14,
-                  // Below the four-way view toggle, which spans most of the top edge.
-                  top: 52,
+                  // Below the two-row view toggle, which spans most of the top edge.
+                  top: 80,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -369,20 +469,36 @@ class DesignCanvas extends StatelessWidget {
                       color: AppColors.dsFrameChrome,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Row(
+                    child: Column(
                       mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        for (final (label, target) in [
-                          ('Front', DesignSide.front),
-                          ('Back', DesignSide.back),
-                          if (_garment.hasSleeves) ('Left', DesignSide.left),
-                          if (_garment.hasSleeves) ('Right', DesignSide.right),
+                        for (final row in [
+                          [
+                            ('Front', DesignSide.front),
+                            ('Back', DesignSide.back),
+                            if (_garment.hasSleeves) ('Left', DesignSide.left),
+                            if (_garment.hasSleeves)
+                              ('Right', DesignSide.right),
+                          ],
+                          if (_garment.hasSleeves &&
+                              _style?.garment == 'tshirt')
+                            [
+                              ('L Pocket', DesignSide.leftPocket),
+                              ('R Pocket', DesignSide.rightPocket),
+                            ],
                         ])
-                          _buildSideToggleButton(
-                            context,
-                            label: label,
-                            isActive: side == target,
-                            onTap: () => onSideChanged(target),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              for (final (label, target) in row)
+                                _buildSideToggleButton(
+                                  context,
+                                  label: label,
+                                  isActive: side == target,
+                                  onTap: () => onSideChanged(target),
+                                ),
+                            ],
                           ),
                       ],
                     ),
@@ -488,4 +604,15 @@ class DesignCanvas extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ZoneClipper extends CustomClipper<Path> {
+  final Path path;
+  _ZoneClipper(this.path);
+
+  @override
+  Path getClip(Size size) => path;
+
+  @override
+  bool shouldReclip(_ZoneClipper old) => old.path != path;
 }

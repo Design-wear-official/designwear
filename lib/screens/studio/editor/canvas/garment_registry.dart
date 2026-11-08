@@ -31,9 +31,13 @@ class Garment {
   final String label;
   final String? frontAsset;
   final String? backAsset;
+  final String? leftAsset;
+  final String? rightAsset;
   // Network URLs fetched from the backend CMS; override bundled assets when set.
   final String? frontUrl;
   final String? backUrl;
+  final String? leftUrl;
+  final String? rightUrl;
   final bool supportsCollarPocketOverlay;
 
   /// Starting price from the business's garment list, when it set one.
@@ -59,8 +63,12 @@ class Garment {
     required this.label,
     this.frontAsset,
     this.backAsset,
+    this.leftAsset,
+    this.rightAsset,
     this.frontUrl,
     this.backUrl,
+    this.leftUrl,
+    this.rightUrl,
     this.supportsCollarPocketOverlay = false,
     this.basePrice,
     this.placements = const [],
@@ -70,27 +78,40 @@ class Garment {
   });
 
   /// Returns the network URL for [side] if available, otherwise the local asset path.
-  String? imageUrl(DesignSide side) {
-    if (side == DesignSide.back) return backUrl ?? backAsset;
-    return frontUrl ?? frontAsset;
-  }
+  String? imageUrl(DesignSide side) => switch (side) {
+    DesignSide.back => backUrl ?? backAsset,
+    DesignSide.left => leftUrl ?? leftAsset,
+    DesignSide.right => rightUrl ?? rightAsset,
+    _ => frontUrl ?? frontAsset,
+  };
 
   /// Whether to load [side] from the network (vs. a bundled asset).
-  bool isNetworkImage(DesignSide side) {
-    if (side == DesignSide.back) return backUrl != null;
-    return frontUrl != null;
-  }
+  bool isNetworkImage(DesignSide side) => switch (side) {
+    DesignSide.back => backUrl != null,
+    DesignSide.left => leftUrl != null,
+    DesignSide.right => rightUrl != null,
+    _ => frontUrl != null,
+  };
 
   /// Backwards-compat helper — true when any image source is available.
   bool hasAsset(DesignSide side) => imageUrl(side) != null;
 
-  Garment withUrls({String? frontUrl, String? backUrl}) => Garment(
+  Garment withUrls({
+    String? frontUrl,
+    String? backUrl,
+    String? leftUrl,
+    String? rightUrl,
+  }) => Garment(
     id: id,
     label: label,
     frontAsset: frontAsset,
     backAsset: backAsset,
+    leftAsset: leftAsset,
+    rightAsset: rightAsset,
     frontUrl: frontUrl ?? this.frontUrl,
     backUrl: backUrl ?? this.backUrl,
+    leftUrl: leftUrl ?? this.leftUrl,
+    rightUrl: rightUrl ?? this.rightUrl,
     supportsCollarPocketOverlay: supportsCollarPocketOverlay,
     basePrice: basePrice,
     placements: placements,
@@ -104,6 +125,8 @@ class Garment {
     label: json['label'] as String,
     frontUrl: json['frontImageUrl'] as String?,
     backUrl: json['backImageUrl'] as String?,
+    leftUrl: json['leftImageUrl'] as String?,
+    rightUrl: json['rightImageUrl'] as String?,
     supportsCollarPocketOverlay: json['supportsCollarPocket'] as bool? ?? false,
     basePrice: (json['basePrice'] as num?)?.toDouble(),
     placements: [
@@ -136,6 +159,8 @@ class Garment {
       DesignSide.back => 'back',
       DesignSide.left => 'sleeve_left',
       DesignSide.right => 'sleeve_right',
+      DesignSide.leftPocket => 'pocket_left',
+      DesignSide.rightPocket => 'pocket_right',
     };
     return placements.where((p) => p.key == key).firstOrNull;
   }
@@ -149,14 +174,13 @@ class GarmentRegistry {
     Garment(
       id: 'tshirt',
       label: 'T-Shirt',
-      frontAsset: 'assets/images/tshirt_cutout.png',
-      backAsset: 'assets/images/tshirt_back_cutout.png',
-      supportsCollarPocketOverlay: true,
+      frontAsset: 'assets/images/garments/crew_front.png',
+      backAsset: 'assets/images/garments/crew_back.png',
     ),
-    Garment(id: 'hoodie', label: 'Hoodie'),
-    Garment(id: 'polo', label: 'Polo Shirt'),
-    Garment(id: 'cap', label: 'Cap'),
-    Garment(id: 'totebag', label: 'Tote Bag'),
+    Garment(id: 'hoodie', label: 'Hoodie', style: 'hoodie'),
+    Garment(id: 'polo', label: 'Polo Shirt', style: 'polo'),
+    Garment(id: 'cap', label: 'Cap', style: 'cap'),
+    Garment(id: 'totebag', label: 'Tote Bag', style: 'tote'),
   ];
 
   static List<Garment> _live = List.from(_defaults);
@@ -174,8 +198,12 @@ class GarmentRegistry {
           label: bg.label,
           frontAsset: def?.frontAsset,
           backAsset: def?.backAsset,
+          leftAsset: def?.leftAsset,
+          rightAsset: def?.rightAsset,
           frontUrl: bg.frontUrl,
           backUrl: bg.backUrl,
+          leftUrl: bg.leftUrl,
+          rightUrl: bg.rightUrl,
           supportsCollarPocketOverlay: bg.supportsCollarPocketOverlay,
           basePrice: bg.basePrice,
           placements: bg.placements,

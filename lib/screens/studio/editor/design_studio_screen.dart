@@ -91,6 +91,13 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         _side = DesignSide.front;
       }
     });
+    // A style that exists for the chosen garment (hoodie, cap, tote have their own).
+    final style = GarmentStyles.resolve(id, _design.styleId);
+    if (style != null && style.id != _design.styleId) {
+      _updateDesign(
+        _design.copyWith(styleId: style.id, partColors: style.defaultParts),
+      );
+    }
   }
 
   String _designSignature() => jsonEncode(_design.toJson());

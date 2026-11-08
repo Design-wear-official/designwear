@@ -213,7 +213,8 @@ void main() {
 
   group('the shirt picture', () {
     test('the bundled shirt has a transparent background, so a dark shirt is not a dark box', () async {
-      final bytes = File('assets/images/tshirt_cutout.png').readAsBytesSync();
+      final bytes = File('assets/images/garments/crew_front.png')
+          .readAsBytesSync();
       final codec = await ui.instantiateImageCodec(bytes);
       final img = (await codec.getNextFrame()).image;
       final data = (await img.toByteData())!;
@@ -226,7 +227,7 @@ void main() {
       );
       expect(
         GarmentRegistry.byId('tshirt').frontAsset,
-        'assets/images/tshirt_cutout.png',
+        'assets/images/garments/crew_front.png',
       );
       expect(
         File(GarmentRegistry.byId('tshirt').frontAsset!).existsSync(),
@@ -240,7 +241,7 @@ void main() {
       );
       expect(
         g.imageUrl(DesignSide.back),
-        'assets/images/tshirt_back_cutout.png',
+        'assets/images/garments/crew_back.png',
       );
       expect(
         File(g.backAsset!).readAsBytesSync(),
