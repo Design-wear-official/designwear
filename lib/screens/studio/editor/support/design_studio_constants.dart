@@ -111,6 +111,23 @@ class DesignStudioConstants {
   static const double printAreaMinY = -100;
   static const double printAreaMaxY = 200;
 
+  /// Keeps a whole element (not just its top-left corner) inside the print area: its left/top edge no
+  /// further than the minimum, its right/bottom edge no further than the maximum. An element bigger than
+  /// the area is pinned to the minimum edge.
+  static ({double x, double y}) clampBox(
+    double x,
+    double y,
+    double width,
+    double height,
+  ) {
+    final maxX = printAreaMaxX - width;
+    final maxY = printAreaMaxY - height;
+    return (
+      x: x.clamp(printAreaMinX, maxX < printAreaMinX ? printAreaMinX : maxX),
+      y: y.clamp(printAreaMinY, maxY < printAreaMinY ? printAreaMinY : maxY),
+    );
+  }
+
   // ── Element transform limits ──────────────────────────────────────────────
   static const double minElementSize = 12;
   static const double maxElementSize = 220;
