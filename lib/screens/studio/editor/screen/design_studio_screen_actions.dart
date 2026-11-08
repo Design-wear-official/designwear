@@ -397,6 +397,21 @@ extension _ActionMethods on _DesignStudioScreenState {
       );
       return;
     }
+    // Someone else's trademark or character is not published (the API checks AI prompts the same way).
+    final protected = protectedNameInDesign(_design.name, [
+      _design.text,
+      for (final e in _design.elements)
+        if (e.type != DesignElementType.image) e.content,
+    ]);
+    if (protected != null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(protectedNameMessage),
+          duration: Duration(seconds: 6),
+        ),
+      );
+      return;
+    }
     if (!await requireSignIn(context) || !mounted) return;
 
     final handle = (context.read<AuthService>().user?.name ?? 'user')

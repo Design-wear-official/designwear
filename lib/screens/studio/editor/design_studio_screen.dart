@@ -24,6 +24,7 @@ import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
 import 'package:designwear/screens/studio/editor/widgets/widgets.dart';
 import 'package:designwear/screens/studio/editor/widgets/dialogs/layers_sheet.dart';
 import 'package:designwear/screens/studio/editor/widgets/dialogs/size_sheet.dart';
+import 'package:designwear/screens/studio/editor/support/protected_names.dart';
 import 'package:designwear/services/ai/layers.dart';
 import 'package:designwear/screens/ai/virtual_tryon_screen.dart';
 
