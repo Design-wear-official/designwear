@@ -88,8 +88,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       color: '0xFF15182B',
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   void _addStickerElement(String emoji) {
@@ -102,8 +103,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       size: 48,
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   /// Places an uploaded custom image sticker on the canvas. The bytes are
@@ -120,8 +122,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       height: DesignStudioConstants.defaultImageSize,
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   void _addShapeElement(String shape) {
@@ -136,8 +139,9 @@ extension _ActionMethods on _DesignStudioScreenState {
       color: '0xFF15182B',
       side: _side,
     );
-    _updateDesign(_design.addElement(element));
-    setState(() => _selectedElementId = element.id);
+    final placed = _centredOnCanvas(element);
+    _updateDesign(_design.addElement(placed));
+    setState(() => _selectedElementId = placed.id);
   }
 
   void _duplicateElement(String elementId) {
@@ -219,6 +223,18 @@ extension _ActionMethods on _DesignStudioScreenState {
       textDirection: TextDirection.ltr,
     )..layout();
     return tp.size;
+  }
+
+  /// [el] moved so it sits in the middle of the canvas, whatever its size.
+  /// New text, stickers, images and shapes start here instead of the corner.
+  DesignElement _centredOnCanvas(DesignElement el) {
+    final size = _elementSize(el);
+    const cx = (DesignStudioConstants.canvasWidth + 32) / 2;
+    const cy = (DesignStudioConstants.canvasWidth * 1.25 + 32) / 2;
+    return el.copyWith(
+      x: cx - DesignStudioConstants.elementCanvasOffsetX - size.width / 2,
+      y: cy - DesignStudioConstants.elementCanvasOffsetY - size.height / 2,
+    );
   }
 
   /// Centres the selected element on the canvas axis (horizontally and/or
