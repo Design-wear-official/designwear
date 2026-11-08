@@ -34,9 +34,9 @@ class AIAgentService {
     if (side.isSleeve) return (x: -40, y: -25, w: 90, h: 90);
     // Polo and henley fronts have a placket: the print area starts below it.
     if (side == DesignSide.front && (style == 'polo' || style == 'henley')) {
-      return (x: -90, y: 15, w: 180, h: 200);
+      return (x: -90, y: -20, w: 180, h: 200);
     }
-    return (x: -100, y: -20, w: 200, h: 240);
+    return (x: -100, y: -60, w: 200, h: 240);
   }
 
   /// Pictures for the front, back and sleeves, as editable image layers (empty when nothing could be

@@ -636,7 +636,7 @@ void main() {
       );
       expect(fake.sides, ['front', 'back', 'left', 'right']);
       final front = r.updatedDesign!.elementsForSide(DesignSide.front).single;
-      expect(front.y, greaterThan(0));
+      expect(front.y, greaterThan(-60), reason: 'lower than a crew front');
     });
   });
 

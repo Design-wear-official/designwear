@@ -3,6 +3,33 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
 
 class DesignStudioUtils {
+  /// Colours the (white) shirt photo so the folds and collar stay visible on any colour. A plain
+  /// multiply sends black and navy to a flat black; this scales the photo's own brightness by the shirt
+  /// colour plus a small lift that grows as the colour gets darker, so shading survives.
+  static ColorFilter shirtTint(Color c) {
+    final g = shirtGain(c);
+    // Each output channel = gain * (the photo's luminance).
+    List<double> row(double k) => [k * 0.299, k * 0.587, k * 0.114, 0, 0];
+    return ColorFilter.matrix([
+      ...row(g.r),
+      ...row(g.g),
+      ...row(g.b),
+      0,
+      0,
+      0,
+      1,
+      0,
+    ]);
+  }
+
+  /// How much of the photo's brightness each channel keeps for shirt colour [c].
+  static ({double r, double g, double b}) shirtGain(Color c) {
+    final lum = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+    final lift = 0.2 * (1 - lum) * (1 - lum);
+    double gain(double ch) => (ch + lift).clamp(0.0, 1.0);
+    return (r: gain(c.r), g: gain(c.g), b: gain(c.b));
+  }
+
   static TextStyle getTextStyle(
     double fontSize,
     String colorHex,

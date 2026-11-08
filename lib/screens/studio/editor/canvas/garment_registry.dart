@@ -149,8 +149,8 @@ class GarmentRegistry {
     Garment(
       id: 'tshirt',
       label: 'T-Shirt',
-      frontAsset: 'assets/images/tshirt_white.png',
-      backAsset: 'assets/images/tshirt_white.png',
+      frontAsset: 'assets/images/tshirt_cutout.png',
+      backAsset: 'assets/images/tshirt_back_cutout.png',
       supportsCollarPocketOverlay: true,
     ),
     Garment(id: 'hoodie', label: 'Hoodie'),
