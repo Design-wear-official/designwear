@@ -175,14 +175,14 @@ extension _ActionMethods on _DesignStudioScreenState {
   void _nudgeSelected(double dx, double dy) {
     final el = _selectedElement;
     if (el == null) return;
-    final nx = (el.x + dx).clamp(
-      DesignStudioConstants.printAreaMinX,
-      DesignStudioConstants.printAreaMaxX,
+    final box = DesignStudioConstants.clampBox(
+      el.x + dx,
+      el.y + dy,
+      el.width ?? 0,
+      el.height ?? 0,
     );
-    final ny = (el.y + dy).clamp(
-      DesignStudioConstants.printAreaMinY,
-      DesignStudioConstants.printAreaMaxY,
-    );
+    final nx = box.x;
+    final ny = box.y;
     _updateDesign(
       _design.updateElement(
         el.id,

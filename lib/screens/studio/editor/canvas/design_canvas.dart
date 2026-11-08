@@ -62,6 +62,17 @@ class DesignCanvas extends StatelessWidget {
   bool get _showBack => side == DesignSide.back;
   bool get _isSleeve => side.isSleeve;
   Garment get _garment => GarmentRegistry.byId(garmentType);
+  /// The print area of the side being shown, from the garment's own list when it has one.
+  String get _printLabel {
+    final p = _garment.placementFor(side);
+    if (p != null) {
+      String n(double v) =>
+          v == v.roundToDouble() ? '${v.round()}' : v.toStringAsFixed(1);
+      return 'PRINT ${n(p.widthInches)} × ${n(p.heightInches)} in';
+    }
+    return _isSleeve ? 'PRINT 8 × 10 cm' : 'PRINT 30 × 40 cm';
+  }
+
   bool get _hasFaceAsset => _garment.hasAsset(side);
   bool get _isNetworkImage => _garment.isNetworkImage(side);
 
@@ -393,7 +404,7 @@ class DesignCanvas extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      _isSleeve ? 'PRINT 8 × 10 cm' : 'PRINT 30 × 40 cm',
+                      _printLabel,
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.w700,
                         fontSize: 10,
