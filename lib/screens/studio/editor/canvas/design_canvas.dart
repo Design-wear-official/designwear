@@ -33,6 +33,12 @@ class DesignCanvas extends StatelessWidget {
   /// readout or handles) — used to capture a clean texture for 3D preview.
   final bool bare;
 
+  /// A realistic mock-up of this side (from a print-layers job). Shown over the live canvas while set.
+  final String? mockupUrl;
+
+  /// Opens the "Layers & sheet" view; the button is shown only when this is set.
+  final VoidCallback? onOpenLayers;
+
   const DesignCanvas({
     super.key,
     required this.design,
@@ -49,6 +55,8 @@ class DesignCanvas extends StatelessWidget {
     this.canvasKey,
     this.snapGuides,
     this.bare = false,
+    this.mockupUrl,
+    this.onOpenLayers,
   });
 
   bool get _showBack => side == DesignSide.back;
@@ -289,6 +297,55 @@ class DesignCanvas extends StatelessWidget {
                   ),
                 ),
 
+              // The realistic mock-up of this side, while the design is what the job made. If it cannot
+              // load, the live canvas underneath stays visible.
+              if (!bare && mockupUrl != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Image.network(
+                      mockupUrl!,
+                      key: const ValueKey('mockup-view'),
+                      fit: BoxFit.contain,
+                      frameBuilder: (ctx, child, frame, _) => frame == null
+                          ? const SizedBox.shrink()
+                          : ColoredBox(
+                              color: AppColors.dsCanvasFrame,
+                              child: child,
+                            ),
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+
+              // Opens the layers and contact sheet of the artwork made by the assistant.
+              if (!bare && onOpenLayers != null)
+                Positioned(
+                  bottom: 14,
+                  left: 14,
+                  child: GestureDetector(
+                    key: const ValueKey('open-layers'),
+                    onTap: onOpenLayers,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.dsFrameChrome,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        'Layers & sheet',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: const Color(0xFFC9C6BC),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
               // Front / Back toggle pill (top-right) — dark translucent
               // segmented control, same chrome style in both themes.
               if (!bare)
@@ -304,11 +361,11 @@ class DesignCanvas extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        for (final (label, target) in const [
+                        for (final (label, target) in [
                           ('Front', DesignSide.front),
                           ('Back', DesignSide.back),
-                          ('Left', DesignSide.left),
-                          ('Right', DesignSide.right),
+                          if (_garment.hasSleeves) ('Left', DesignSide.left),
+                          if (_garment.hasSleeves) ('Right', DesignSide.right),
                         ])
                           _buildSideToggleButton(
                             context,
