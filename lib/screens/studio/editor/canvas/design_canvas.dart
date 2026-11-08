@@ -165,7 +165,7 @@ class DesignCanvas extends StatelessWidget {
                                 (side == DesignSide.back
                                     ? _garment.backAsset
                                     : _garment.frontAsset) ??
-                                'assets/images/tshirt_white.png';
+                                'assets/images/tshirt_cutout.png';
                             return Image.asset(
                               fallback,
                               width: DesignStudioConstants.canvasWidth,

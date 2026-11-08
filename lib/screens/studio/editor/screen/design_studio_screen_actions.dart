@@ -364,6 +364,26 @@ extension _ActionMethods on _DesignStudioScreenState {
 
   // ── Canvas capture ──────────────────────────────────────────────────────────
 
+  /// The job's mock-up for [side] as base64 PNG, only while the design, garment and size are unchanged
+  /// since the job; null otherwise. The API caps previews (~330 KB); a larger one is skipped.
+  Future<String?> _mockupPreview(DesignSide side) async {
+    final job = _layerJob;
+    if (job == null ||
+        _layerJobGarment != _selectedGarmentType ||
+        _layerJobSignature != _designSignature()) {
+      return null;
+    }
+    final url = job.viewFor(side.value);
+    if (url == null) return null;
+    try {
+      final bytes = await AiService.instance.fetchLayerImage(url);
+      final encoded = base64Encode(bytes);
+      return encoded.length > 440000 ? null : encoded;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<String?> _captureCanvasPng([GlobalKey? key]) async {
     try {
       final boundary =
@@ -424,8 +444,14 @@ extension _ActionMethods on _DesignStudioScreenState {
         : 'Remix by @$handle';
 
     setState(() => _isPublishing = true);
-    final previewImage = await _captureCanvasPng(_frontCaptureKey);
-    final backPreviewImage = await _captureCanvasPng(_backCaptureKey);
+    // The realistic mock-up of each side when the design is exactly what the assistant's layers job drew;
+    // otherwise (or if it can't be fetched or is too big) the studio's own capture.
+    final previewImage =
+        await _mockupPreview(DesignSide.front) ??
+        await _captureCanvasPng(_frontCaptureKey);
+    final backPreviewImage =
+        await _mockupPreview(DesignSide.back) ??
+        await _captureCanvasPng(_backCaptureKey);
     try {
       final saved = await community.publishStudio(
         name: designName,

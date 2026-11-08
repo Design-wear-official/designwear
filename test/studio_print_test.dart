@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:designwear/models/design.dart' show CommunityDesign;
 import 'package:designwear/models/models.dart';
@@ -205,6 +207,44 @@ void main() {
             .widget<DropdownButton<String>>(find.byType(DropdownButton<String>))
             .value,
         'XL',
+      );
+    });
+  });
+
+  group('the shirt picture', () {
+    test('the bundled shirt has a transparent background, so a dark shirt is not a dark box', () async {
+      final bytes = File('assets/images/tshirt_cutout.png').readAsBytesSync();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final img = (await codec.getNextFrame()).image;
+      final data = (await img.toByteData())!;
+      int alphaAt(int x, int y) => data.getUint8((y * img.width + x) * 4 + 3);
+      expect(alphaAt(5, 5), 0, reason: 'corner is background');
+      expect(
+        alphaAt(img.width ~/ 2, img.height ~/ 2),
+        255,
+        reason: 'chest is cloth',
+      );
+      expect(
+        GarmentRegistry.byId('tshirt').frontAsset,
+        'assets/images/tshirt_cutout.png',
+      );
+      expect(
+        File(GarmentRegistry.byId('tshirt').frontAsset!).existsSync(),
+        isTrue,
+      );
+      final g = GarmentRegistry.byId('tshirt');
+      expect(
+        g.backAsset,
+        isNot(g.frontAsset),
+        reason: 'the back is its own picture',
+      );
+      expect(
+        g.imageUrl(DesignSide.back),
+        'assets/images/tshirt_back_cutout.png',
+      );
+      expect(
+        File(g.backAsset!).readAsBytesSync(),
+        isNot(File(g.frontAsset!).readAsBytesSync()),
       );
     });
   });
