@@ -35,6 +35,15 @@ abstract class AiService {
 
   /// A PNG graphic for [prompt], or throws.
   Future<List<int>> designImage(String prompt);
+
+  /// Artwork for every face of the garment (front, back and both sleeves) for [prompt]: the front is
+  /// drawn first and the others in its style. A face that could not be drawn is in [DesignSides.failed];
+  /// throws only when nothing could be drawn. The customer's own [images] (pictures they attached) are
+  /// references for every face.
+  Future<DesignSides> designSides(
+    String prompt, {
+    List<List<int>> images = const [],
+  }) async => throw const AiUnavailable();
 }
 
 class UnconfiguredAiService implements AiService {
@@ -72,13 +81,36 @@ class UnconfiguredAiService implements AiService {
   @override
   Future<List<int>> designImage(String prompt) async =>
       throw const AiUnavailable();
+
+  @override
+  Future<DesignSides> designSides(
+    String prompt, {
+    List<List<int>> images = const [],
+  }) async => throw const AiUnavailable();
+}
+
+/// The pictures for each face of the garment, as base64 PNG, and the faces that could not be drawn.
+class DesignSides {
+  const DesignSides({required this.images, this.failed = const []});
+  final Map<String, String>
+  images; // 'front' | 'back' | 'left' | 'right' -> base64 PNG
+  final List<String> failed;
 }
 
 /// What the assistant answered: text, and when the model made one, a design to apply.
 class DesignAgentReply {
-  const DesignAgentReply({required this.text, this.design, this.trends});
+  const DesignAgentReply({
+    required this.text,
+    this.design,
+    this.trends,
+    this.art,
+  });
   final String text;
   final Map<String, Object?>? design;
+
+  /// A self-contained description of the artwork, written by the server from the whole conversation;
+  /// null when the reply did not edit the design. The pictures for each face are drawn from this.
+  final String? art;
 
   /// Set when the answer drew on the server's web search for trends.
   final TrendsInfo? trends;
