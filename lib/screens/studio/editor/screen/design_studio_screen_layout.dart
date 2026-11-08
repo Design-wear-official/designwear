@@ -297,6 +297,188 @@ extension _LayoutMethods on _DesignStudioScreenState {
 
   // ── Desktop / Tablet 3-pane ─────────────────────────────────────────────────
 
+  /// The canvas with the off-screen front/back capture copies and the busy overlay.
+  Widget _canvasStack() {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        DesignCanvas(
+          canvasKey: _canvasKey,
+          design: _design,
+          selectedElementId: _selectedElementId,
+          garmentType: _selectedGarmentType,
+          side: _side,
+          provenanceLabel: _provenanceLabel,
+          onElementSelected: (id) => setState(() => _selectedElementId = id),
+          onElementPreview: _previewElement,
+          onElementCommit: _commitElementChange,
+          onElementDelete: _deleteElement,
+          onElementEdit: _editElement,
+          onSideChanged: (s) => setState(() => _side = s),
+          showSideToggle: false,
+          snapGuides: _snapGuides,
+          mockupUrl: _mockupUrl,
+          onOpenLayers: _layerJob == null ? null : _openLayers,
+        ),
+        // Off-screen front and back canvases, captured for the published previews.
+
+        Offstage(
+          child: DesignCanvas(
+            canvasKey: _frontCaptureKey,
+
+            design: _design,
+
+            selectedElementId: null,
+
+            garmentType: _selectedGarmentType,
+
+            side: DesignSide.front,
+
+            onElementSelected: (_) {},
+
+            onElementPreview: (_) {},
+
+            onElementCommit: () {},
+
+            onElementDelete: (_) {},
+
+            onSideChanged: (_) {},
+          ),
+        ),
+
+        Offstage(
+          child: DesignCanvas(
+            canvasKey: _backCaptureKey,
+
+            design: _design,
+
+            selectedElementId: null,
+
+            garmentType: _selectedGarmentType,
+
+            side: DesignSide.back,
+
+            onElementSelected: (_) {},
+
+            onElementPreview: (_) {},
+
+            onElementCommit: () {},
+
+            onElementDelete: (_) {},
+
+            onSideChanged: (_) {},
+          ),
+        ),
+        if (_isAutoGenerating) _buildGeneratingOverlay(),
+      ],
+    );
+  }
+
+  /// How much larger than its natural 332 px the canvas is drawn: as big as the free space allows on
+  /// desktop and tablet, filling the width on a phone.
+  double _canvasScale() {
+    final size = MediaQuery.sizeOf(context);
+    const w = DesignStudioConstants.canvasWidth + 32;
+    const h = DesignStudioConstants.canvasWidth * 1.25 + 32;
+    if (ResponsiveUtils.isMobile(context)) {
+      // Fit the whole shirt above the tools panel (when it is open) instead of cutting it off.
+      final panel = _isPanelCollapsedOnMobile ? 0 : 240;
+      final freeH =
+          size.height -
+          MediaQuery.paddingOf(context).vertical -
+          56 -
+          48 -
+          52 -
+          64 -
+          32 -
+          panel;
+      return math
+          .min(math.min((size.width - 24) / w, freeH / h), 1.25)
+          .clamp(0.7, 1.25)
+          .toDouble();
+    }
+    final freeW = size.width - 88 - 340 - 80;
+    final freeH = size.height - 64 - 48 - 56 - 72 - 120;
+    return math.min(freeW / w, freeH / h).clamp(1.0, 1.9).toDouble();
+  }
+
+  Widget _scaledCanvas(Widget canvas) {
+    const w = DesignStudioConstants.canvasWidth + 32;
+    const h = DesignStudioConstants.canvasWidth * 1.25 + 32;
+    final scale = _canvasScale();
+    return CanvasScale(
+      scale: scale,
+      child: SizedBox(
+        width: w * scale,
+        height: h * scale,
+        child: FittedBox(
+          fit: BoxFit.fill,
+          child: SizedBox(width: w, height: h, child: canvas),
+        ),
+      ),
+    );
+  }
+
+  /// Front / Back / sleeves / pockets as a bar above the canvas (not on top of the garment), with
+  /// large touch targets; it scrolls sideways on a phone.
+  Widget _buildSideBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final garment = GarmentRegistry.byId(_selectedGarmentType);
+    final style = GarmentStyles.resolve(_selectedGarmentType, _design.styleId);
+    final sides = <(String, DesignSide)>[
+      ('Front', DesignSide.front),
+      ('Back', DesignSide.back),
+      if (garment.hasSleeves) ('Left', DesignSide.left),
+      if (garment.hasSleeves) ('Right', DesignSide.right),
+      if (garment.hasSleeves && style?.garment == 'tshirt') ...[
+        ('L Pocket', DesignSide.leftPocket),
+        ('R Pocket', DesignSide.rightPocket),
+      ],
+    ];
+    return SizedBox(
+      height: 52,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        itemCount: sides.length,
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final (label, target) = sides[i];
+          final active = _side == target;
+          return GestureDetector(
+            onTap: () => setState(() {
+              _side = target;
+              _selectedElementId = null;
+            }),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: active ? Colors.white : AppColors.dsFrameChrome,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: active ? Colors.white : AppColors.dsBorder(isDark),
+                ),
+              ),
+              child: Text(
+                label.toUpperCase(),
+                style: GoogleFonts.outfit(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.6,
+                  color: active
+                      ? const Color(0xFF14161C)
+                      : const Color(0xFFC9C6BC),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildDesktopTabletBody() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final hair = AppColors.dsBorder(isDark);
@@ -318,6 +500,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
             child: Column(
               children: [
                 _buildGarmentTypeSelector(),
+                _buildSideBar(),
                 Expanded(
                   child: Center(
                     child: SingleChildScrollView(
@@ -325,81 +508,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
                         horizontal: 40,
                         vertical: 32,
                       ),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          DesignCanvas(
-                            canvasKey: _canvasKey,
-                            design: _design,
-                            selectedElementId: _selectedElementId,
-                            garmentType: _selectedGarmentType,
-                            side: _side,
-                            provenanceLabel: _provenanceLabel,
-                            onElementSelected: (id) =>
-                                setState(() => _selectedElementId = id),
-                            onElementPreview: _previewElement,
-                            onElementCommit: _commitElementChange,
-                            onElementDelete: _deleteElement,
-                            onElementEdit: _editElement,
-                            onSideChanged: (s) => setState(() => _side = s),
-                            snapGuides: _snapGuides,
-                            mockupUrl: _mockupUrl,
-                            onOpenLayers: _layerJob == null
-                                ? null
-                                : _openLayers,
-                          ),
-                          // Off-screen front and back canvases, captured for the published previews.
-
-                          Offstage(
-                            child: DesignCanvas(
-                              canvasKey: _frontCaptureKey,
-
-                              design: _design,
-
-                              selectedElementId: null,
-
-                              garmentType: _selectedGarmentType,
-
-                              side: DesignSide.front,
-
-                              onElementSelected: (_) {},
-
-                              onElementPreview: (_) {},
-
-                              onElementCommit: () {},
-
-                              onElementDelete: (_) {},
-
-                              onSideChanged: (_) {},
-                            ),
-                          ),
-
-                          Offstage(
-                            child: DesignCanvas(
-                              canvasKey: _backCaptureKey,
-
-                              design: _design,
-
-                              selectedElementId: null,
-
-                              garmentType: _selectedGarmentType,
-
-                              side: DesignSide.back,
-
-                              onElementSelected: (_) {},
-
-                              onElementPreview: (_) {},
-
-                              onElementCommit: () {},
-
-                              onElementDelete: (_) {},
-
-                              onSideChanged: (_) {},
-                            ),
-                          ),
-                          if (_isAutoGenerating) _buildGeneratingOverlay(),
-                        ],
-                      ),
+                      child: _scaledCanvas(_canvasStack()),
                     ),
                   ),
                 ),
@@ -428,85 +537,14 @@ extension _LayoutMethods on _DesignStudioScreenState {
     return Column(
       children: [
         _buildGarmentTypeSelector(),
+        _buildSideBar(),
         Expanded(
           child: Container(
             color: AppColors.dsPageBg(isDark),
             child: Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    DesignCanvas(
-                      canvasKey: _canvasKey,
-                      design: _design,
-                      selectedElementId: _selectedElementId,
-                      garmentType: _selectedGarmentType,
-                      side: _side,
-                      provenanceLabel: _provenanceLabel,
-                      onElementSelected: (id) =>
-                          setState(() => _selectedElementId = id),
-                      onElementPreview: _previewElement,
-                      onElementCommit: _commitElementChange,
-                      onElementDelete: _deleteElement,
-                      onElementEdit: _editElement,
-                      onSideChanged: (s) => setState(() => _side = s),
-                      snapGuides: _snapGuides,
-                      mockupUrl: _mockupUrl,
-                      onOpenLayers: _layerJob == null ? null : _openLayers,
-                    ),
-                    // Off-screen front and back canvases, captured for the published previews.
-
-                    Offstage(
-                      child: DesignCanvas(
-                        canvasKey: _frontCaptureKey,
-
-                        design: _design,
-
-                        selectedElementId: null,
-
-                        garmentType: _selectedGarmentType,
-
-                        side: DesignSide.front,
-
-                        onElementSelected: (_) {},
-
-                        onElementPreview: (_) {},
-
-                        onElementCommit: () {},
-
-                        onElementDelete: (_) {},
-
-                        onSideChanged: (_) {},
-                      ),
-                    ),
-
-                    Offstage(
-                      child: DesignCanvas(
-                        canvasKey: _backCaptureKey,
-
-                        design: _design,
-
-                        selectedElementId: null,
-
-                        garmentType: _selectedGarmentType,
-
-                        side: DesignSide.back,
-
-                        onElementSelected: (_) {},
-
-                        onElementPreview: (_) {},
-
-                        onElementCommit: () {},
-
-                        onElementDelete: (_) {},
-
-                        onSideChanged: (_) {},
-                      ),
-                    ),
-                    if (_isAutoGenerating) _buildGeneratingOverlay(),
-                  ],
-                ),
+                child: _scaledCanvas(_canvasStack()),
               ),
             ),
           ),
