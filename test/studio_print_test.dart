@@ -158,23 +158,25 @@ void main() {
   });
 
   group('protected names', () {
-    test(
-      'a trademark in the name or text is found, ordinary words are not',
-      () {
-        expect(protectedNameIn('AVENGERS DOOMSDAY'), 'avengers');
-        expect(protectedNameIn('sp1derman'), isNotNull);
-        expect(protectedNameIn('s p i d e r m a n'), isNotNull);
-        expect(protectedNameIn('Café Nike'), 'nike');
-        expect(protectedNameIn('storm over the city'), isNull);
-        expect(
-          protectedNameIn('the author'),
-          isNull,
-          reason: 'thor inside a word',
-        );
-        expect(protectedNameInDesign('My tee', ['hello', 'BATMAN']), 'batman');
-        expect(protectedNameInDesign('My tee', ['hello']), isNull);
-      },
-    );
+    test('a brand, club or celebrity in the name or text is found; entertainment titles and ordinary words are not', () {
+      // Entertainment (films, shows, comics) is allowed: fan art goes through.
+      expect(protectedNameIn('AVENGERS DOOMSDAY'), isNull);
+      expect(protectedNameIn('spiderman'), isNull);
+      // Brands stay blocked, however they are spelled.
+      expect(protectedNameIn('Café Nike'), 'nike');
+      expect(protectedNameIn('PUMA cat'), 'puma');
+      expect(protectedNameIn('n1ke'), isNotNull);
+      expect(protectedNameIn('p u m a'), isNotNull);
+      expect(protectedNameIn('storm over the city'), isNull);
+      expect(
+        protectedNameIn('the author'),
+        isNull,
+        reason: 'thor inside a word',
+      );
+      expect(protectedNameInDesign('My tee', ['hello', 'ADIDAS']), 'adidas');
+      expect(protectedNameInDesign('My tee', ['BATMAN']), isNull);
+      expect(protectedNameInDesign('My tee', ['hello']), isNull);
+    });
   });
 
   group('buying a published design', () {
