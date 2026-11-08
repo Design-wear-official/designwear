@@ -80,6 +80,10 @@ jobs:
       - run: printf '# CI placeholder\n' | tee .env .env.local >/dev/null
       - run: flutter pub get
 
+      # GitHub releases (where Gradle is hosted) sometimes 504 for minutes; seed the wrapper cache from a verified mirror.
+      - name: Seed Gradle distribution
+        run: .github/scripts/seed-gradle.sh
+
       # Both flavours must keep building; internal has its own applicationId.
       # Retried: Gradle downloads its distribution from GitHub releases, which sometimes answers 504.
       - name: Build external flavour
