@@ -58,6 +58,14 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
     },
   ];
 
+  /// The last message is the bot asking which size the customer wants.
+  bool get _asksForSize {
+    if (_messages.length < 2) return false; // not the greeting
+    final last = _messages.last;
+    return last['role'] == 'agent' &&
+        RegExp(r'\bsize\b', caseSensitive: false).hasMatch('${last['text']}');
+  }
+
   static const _trendingAsk =
       "What's trending in T-shirt design right now? Make me a design from it.";
 
@@ -100,6 +108,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           'hasImages': false,
           'trends': response.trends,
           'preview': response.previewBase64,
+          'size': response.updatedDesign?.size,
+          'fit': response.updatedDesign?.fit,
         });
       });
       _scrollToBottom();
@@ -316,6 +326,19 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                       ),
                                     ),
                                   ),
+                                if (msg['size'] is String)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Chip(
+                                      key: const ValueKey('size-chip'),
+                                      visualDensity: VisualDensity.compact,
+                                      label: Text(
+                                        msg['fit'] is String
+                                            ? 'Size ${msg['size']}, ${msg['fit']} fit'
+                                            : 'Size ${msg['size']}',
+                                      ),
+                                    ),
+                                  ),
                                 if (msg['trends'] is TrendsInfo)
                                   _TrendsSources(
                                     info: msg['trends'] as TrendsInfo,
@@ -327,6 +350,25 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                       },
                     ),
                   ),
+
+                  // When the bot's last message asks about size, the sizes are one tap away.
+                  if (!_isLoading && _asksForSize)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 0,
+                        children: [
+                          for (final s in CustomDesign.sizes)
+                            ActionChip(
+                              key: ValueKey('quick-size-$s'),
+                              visualDensity: VisualDensity.compact,
+                              label: Text(s),
+                              onPressed: () => _handleSubmitted('Size $s'),
+                            ),
+                        ],
+                      ),
+                    ),
 
                   // Loading Indicator
                   if (_isLoading)

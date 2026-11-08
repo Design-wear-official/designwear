@@ -1,3 +1,24 @@
+/// One row of a garment's size chart (flat measurements in cm).
+class SizeSpec {
+  const SizeSpec(this.size, {this.chestCm, this.lengthCm, this.sleeveCm});
+  final String size;
+  final double? chestCm;
+  final double? lengthCm;
+  final double? sleeveCm;
+
+  static SizeSpec? fromJson(Map<String, dynamic> j) {
+    final s = j['size'];
+    if (s is! String || s.isEmpty) return null;
+    double? n(Object? v) => v is num ? v.toDouble() : null;
+    return SizeSpec(
+      s,
+      chestCm: n(j['chestCm']),
+      lengthCm: n(j['lengthCm']),
+      sleeveCm: n(j['sleeveCm']),
+    );
+  }
+}
+
 /// A print area of a garment (front, back, a sleeve…): its size in pixels at [dpi].
 class PrintPlacement {
   const PrintPlacement({

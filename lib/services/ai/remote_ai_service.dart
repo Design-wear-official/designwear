@@ -127,6 +127,7 @@ class RemoteAiService implements AiService {
     String? garment,
     String? color,
     String? name,
+    String? size,
     List<String> sides = const ['front', 'back', 'left', 'right'],
   }) async {
     final pass = _imagePass;
@@ -141,6 +142,7 @@ class RemoteAiService implements AiService {
           'pass': ?pass,
           'garment': ?garment,
           'color': ?color,
+          'size': ?size,
           if (name != null && name.isNotEmpty) 'name': name,
           if (images.isNotEmpty)
             'images': [for (final i in images.take(3)) base64Encode(i)],
