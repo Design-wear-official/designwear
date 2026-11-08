@@ -34,8 +34,23 @@ JOBS = {
     "polo_back": ("Gemini_Generated_Image_qgvq3lqgvq3lqgvq.png", []),
 }
 
+# Styles generated later, named <style>_<view>.png in the source folder.
+for _name in (
+    "vneck_front", "vneck_back", "longsleeve_front", "longsleeve_back",
+    "raglan_front", "raglan_back", "ringer_front", "ringer_back",
+    "tank_front", "tank_back", "hoodie_front", "hoodie_back",
+    "cap_front", "cap_back", "tote_front", "tote_back",
+):
+    if (SRC / f"{_name}.png").exists():
+        JOBS[_name] = (f"{_name}.png", [])
 
-def drop_backdrop_slivers(work, fg, tol=6, band=48):
+# Garments with openings the cut-out must keep (the gap between tote handles).
+# Styles where backdrop shows between the arms and the torso.
+WEDGES = {'longsleeve_front', 'longsleeve_back', 'raglan_front', 'hoodie_front', 'hoodie_back', 'tote_front', 'tote_back'}
+KEEP_HOLES = {"tote_front", "tote_back"}
+
+
+def drop_backdrop_slivers(work, fg, tol=6, band=48, anywhere_top=None):
     """GrabCut keeps wedges of backdrop between the arms and the torso.
     Fit the smooth backdrop brightness from clearly-outside pixels and drop any
     pixels of the mask that match it and are reachable from outside."""
@@ -55,6 +70,11 @@ def drop_backdrop_slivers(work, fg, tol=6, band=48):
     cand = cv2.morphologyEx(cand, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
     # candidate pixels inside the mask, connected to the outside of it
     near = (cv2.erode(fg, np.ones((band, band), np.uint8)) == 0).astype(np.uint8)  # edge band only
+    if anywhere_top:  # enclosed gaps (tote handle loops): no outside connection
+        ys0 = np.where(fg.any(1))[0]
+        top = ys0.min() + int((ys0.max() - ys0.min()) * anywhere_top)
+        cand[top:, :] = cand[top:, :] & near[top:, :]
+        near = np.ones_like(near)
     reach = (cand & fg & near) | (1 - fg)
     n, lab = cv2.connectedComponents(reach.astype(np.uint8), connectivity=4)
     ids = np.unique(lab[fg == 0]); ids = ids[ids > 0]
@@ -62,7 +82,7 @@ def drop_backdrop_slivers(work, fg, tol=6, band=48):
     return (fg & ~bgpix.astype(np.uint8)).astype(np.uint8)
 
 
-def cutout(img_bgr, slivers=False):
+def cutout(img_bgr, slivers=False, fill_holes=True, top=None):
     h, w = img_bgr.shape[:2]
     # The renders have a soft grey backdrop; the shirt sits in the middle.
     mask = np.full((h, w), cv2.GC_PR_BGD, np.uint8)
@@ -81,10 +101,10 @@ def cutout(img_bgr, slivers=False):
     k = 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))  # drops the watermark
     fg = (lab == k).astype(np.uint8)
     if slivers:
-        fg = drop_backdrop_slivers(work, fg)
+        fg = drop_backdrop_slivers(work, fg, anywhere_top=top)
     inv = 1 - fg  # fill interior holes (e.g. neck opening shading)
     n, lab, st, _ = cv2.connectedComponentsWithStats(inv)
-    for i in range(1, n):
+    for i in range(1, n if fill_holes else 1):
         x, y, ww, hh, _a = st[i]
         if x > 0 and y > 0 and x + ww < fg.shape[1] and y + hh < fg.shape[0]:
             fg[lab == i] = 1
@@ -94,7 +114,8 @@ def cutout(img_bgr, slivers=False):
 
 
 def build(name, src, patches):
-    slivers = name.endswith('_back')
+    # Backdrop wedges between arms and torso: crew/polo backs, and every later style.
+    slivers = (name.endswith('_back') and name.split('_')[0] in ('crew', 'polo')) or name in WEDGES
     img = cv2.imread(str(SRC / src), cv2.IMREAD_COLOR)
     if img is None:
         raise SystemExit(f"missing source image: {SRC / src}")
@@ -110,7 +131,7 @@ def build(name, src, patches):
         pm = np.full(patch.shape[:2], 255, np.uint8)
         pm[:6, :] = pm[-6:, :] = pm[:, :6] = pm[:, -6:] = 0
         img = cv2.seamlessClone(patch, img, pm, ((x0 + x1) // 2, (y0 + y1) // 2), cv2.NORMAL_CLONE)
-    alpha = cutout(img, slivers)
+    alpha = cutout(img, slivers, name not in KEEP_HOLES, 0.4 if name in KEEP_HOLES else None)
     ys, xs = np.where(alpha > 20)
     x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     crop = img[y0:y1, x0:x1]

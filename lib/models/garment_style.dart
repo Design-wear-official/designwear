@@ -8,14 +8,23 @@ import 'vector_garments.dart';
 class ZonePath {
   final List<List<Offset>> polygons;
 
+  /// Fill with the even-odd rule so a polygon inside another cuts a hole
+  /// (rings: tote handles, neck binding).
+  final bool evenOdd;
+
   /// Ellipses as (centre, radiusX, radiusY); circles use rx == ry.
   final List<(Offset, double, double)> ellipses;
 
-  const ZonePath({this.polygons = const [], this.ellipses = const []});
+  const ZonePath({
+    this.polygons = const [],
+    this.ellipses = const [],
+    this.evenOdd = false,
+  });
 
   /// The zone outline scaled by [scale] (display size / 1024).
   Path toPath(double scale) {
     final path = Path();
+    if (evenOdd) path.fillType = PathFillType.evenOdd;
     for (final poly in polygons) {
       path.addPolygon([for (final p in poly) p * scale], true);
     }
@@ -117,23 +126,6 @@ const _hem = ColorZone('hem', 'Top hem');
 
 StyleView _vFront(String id) => StyleView.vector(VectorGarments.front(id)!);
 StyleView _vBack(String id) => StyleView.vector(VectorGarments.back(id)!);
-
-GarmentStyle _vector({
-  required String id,
-  required String label,
-  required String description,
-  required List<ColorZone> zones,
-  String garment = 'tshirt',
-  Map<String, String> defaults = const {},
-}) => GarmentStyle(
-  id: id,
-  label: label,
-  description: description,
-  zones: zones,
-  garment: garment,
-  defaultParts: defaults,
-  views: {DesignSide.front: _vFront(id), DesignSide.back: _vBack(id)},
-);
 
 final _crewFront = <String, ZonePath>{
   'sleeves': ZonePath(
@@ -372,6 +364,336 @@ final _poloBack = <String, ZonePath>{
   ),
 };
 
+// ── Zones for the later photo styles (1024-space, see tools/) ───────────────
+
+List<Offset> _m(List<Offset> p, double sum) => [
+  for (final o in p) Offset(sum - o.dx, o.dy),
+];
+
+/// Left sleeve/cuff polygons mirrored into a right-hand pair.
+ZonePath _pair(List<Offset> left, double sum) =>
+    ZonePath(polygons: [left, _m(left, sum)]);
+
+final _vneckSleeveL = [
+  _o(215, 100),
+  _o(150, 135),
+  _o(99, 385),
+  _o(112, 400),
+  _o(256, 430),
+  _o(258, 330),
+  _o(250, 230),
+  _o(235, 150),
+];
+final _vneckCuffL = [_o(96, 372), _o(256, 408), _o(256, 438), _o(104, 404)];
+
+final _vneckFront = <String, ZonePath>{
+  'sleeves': _pair(_vneckSleeveL, 1024),
+  'cuffs': _pair(_vneckCuffL, 1024),
+  'collar': ZonePath(
+    polygons: [
+      [
+        _o(380, 40),
+        _o(504, 240),
+        _o(660, 40),
+        _o(625, 40),
+        _o(504, 205),
+        _o(425, 40),
+      ],
+      [_o(385, 25), _o(645, 25), _o(655, 48), _o(380, 48)],
+    ],
+  ),
+};
+final _vneckBack = <String, ZonePath>{
+  'sleeves': _pair(_vneckSleeveL, 1024),
+  'cuffs': _pair(_vneckCuffL, 1024),
+  'collar': ZonePath(
+    polygons: [
+      [_o(392, 30), _o(640, 30), _o(645, 60), _o(512, 78), _o(395, 60)],
+    ],
+  ),
+};
+
+final _longSleeveL = [
+  _o(225, 115),
+  _o(190, 150),
+  _o(135, 330),
+  _o(96, 800),
+  _o(94, 935),
+  _o(205, 945),
+  _o(205, 860),
+  _o(240, 560),
+  _o(262, 420),
+  _o(262, 330),
+  _o(250, 200),
+];
+final _longCuffL = [_o(94, 915), _o(208, 925), _o(205, 980), _o(92, 972)];
+
+final _longFront = <String, ZonePath>{
+  'sleeves': _pair(_longSleeveL, 1030),
+  'cuffs': _pair(_longCuffL, 1030),
+  'collar': ZonePath(ellipses: [(_o(490, 82), 140, 52)]),
+};
+final _longBack = <String, ZonePath>{
+  'sleeves': _pair(_longSleeveL, 1030),
+  'cuffs': _pair(_longCuffL, 1030),
+  'collar': ZonePath(
+    polygons: [
+      [_o(392, 32), _o(664, 32), _o(668, 60), _o(530, 80), _o(390, 60)],
+    ],
+  ),
+};
+
+final _raglanL = [
+  _o(368, 45),
+  _o(260, 95),
+  _o(200, 140),
+  _o(130, 330),
+  _o(88, 690),
+  _o(96, 720),
+  _o(205, 715),
+  _o(215, 690),
+  _o(252, 500),
+  _o(272, 395),
+  _o(285, 360),
+  _o(300, 300),
+  _o(330, 190),
+  _o(360, 100),
+];
+final _raglanCuffL = [_o(84, 672), _o(212, 690), _o(206, 722), _o(96, 726)];
+final _raglanFront = <String, ZonePath>{
+  'sleeves': _pair(_raglanL, 1024),
+  'cuffs': _pair(_raglanCuffL, 1024),
+  'collar': ZonePath(ellipses: [(_o(504, 70), 128, 48)]),
+};
+
+final _ringerSleeveL = [
+  _o(215, 110),
+  _o(190, 140),
+  _o(96, 372),
+  _o(110, 396),
+  _o(264, 448),
+  _o(268, 380),
+  _o(262, 260),
+  _o(245, 170),
+];
+final _ringerCuffL = [_o(92, 365), _o(266, 414), _o(264, 450), _o(106, 400)];
+final _ringerBack = <String, ZonePath>{
+  'sleeves': _pair(_ringerSleeveL, 1024),
+  'cuffs': _pair(_ringerCuffL, 1024),
+  'collar': ZonePath(
+    polygons: [
+      [_o(350, 32), _o(620, 32), _o(630, 62), _o(485, 82), _o(345, 62)],
+    ],
+  ),
+};
+
+final _tankArmholeL = [
+  _o(285, 50),
+  _o(305, 50),
+  _o(300, 200),
+  _o(290, 300),
+  _o(300, 410),
+  _o(268, 415),
+  _o(274, 300),
+  _o(282, 200),
+];
+final _tankFront = <String, ZonePath>{
+  'cuffs': _pair(_tankArmholeL, 1020),
+  'collar': ZonePath(
+    ellipses: [(_o(525, 130), 148, 118), (_o(525, 125), 118, 92)],
+    evenOdd: true,
+  ),
+};
+final _tankBack = <String, ZonePath>{
+  'cuffs': _pair(_tankArmholeL, 1020),
+  'collar': ZonePath(
+    polygons: [
+      [
+        _o(384, 38),
+        _o(430, 70),
+        _o(512, 98),
+        _o(600, 70),
+        _o(645, 38),
+        _o(660, 45),
+        _o(615, 95),
+        _o(512, 118),
+        _o(410, 95),
+        _o(370, 45),
+      ],
+    ],
+  ),
+};
+
+final _hoodieSleeveL = [
+  _o(260, 240),
+  _o(205, 275),
+  _o(150, 420),
+  _o(120, 700),
+  _o(105, 880),
+  _o(190, 900),
+  _o(215, 750),
+  _o(255, 580),
+  _o(290, 480),
+  _o(300, 330),
+  _o(285, 260),
+];
+final _hoodieCuffL = [_o(120, 885), _o(232, 895), _o(228, 980), _o(130, 985)];
+final _hoodieFront = <String, ZonePath>{
+  'hood': ZonePath(
+    polygons: [
+      [
+        _o(330, 175),
+        _o(335, 100),
+        _o(400, 45),
+        _o(490, 32),
+        _o(580, 45),
+        _o(650, 95),
+        _o(680, 175),
+        _o(640, 200),
+        _o(590, 150),
+        _o(512, 118),
+        _o(430, 150),
+        _o(375, 205),
+      ],
+    ],
+  ),
+  'sleeves': _pair(_hoodieSleeveL, 1016),
+  'cuffs': _pair(_hoodieCuffL, 1016),
+  'waistband': ZonePath(
+    polygons: [
+      [_o(288, 875), _o(800, 875), _o(802, 955), _o(286, 955)],
+    ],
+  ),
+  'pockets': ZonePath(
+    polygons: [
+      [
+        _o(358, 650),
+        _o(662, 650),
+        _o(712, 790),
+        _o(700, 872),
+        _o(320, 872),
+        _o(310, 790),
+      ],
+    ],
+  ),
+  'drawstrings': ZonePath(
+    polygons: [
+      [_o(448, 200), _o(466, 200), _o(500, 430), _o(484, 430)],
+      [_o(530, 200), _o(548, 200), _o(560, 430), _o(544, 430)],
+    ],
+  ),
+};
+final _hoodieBackSleeveL = [
+  _o(225, 250),
+  _o(195, 290),
+  _o(150, 430),
+  _o(125, 700),
+  _o(110, 900),
+  _o(190, 910),
+  _o(212, 760),
+  _o(250, 600),
+  _o(285, 500),
+  _o(298, 380),
+  _o(285, 290),
+];
+final _hoodieBackCuffL = [
+  _o(125, 890),
+  _o(238, 900),
+  _o(232, 985),
+  _o(133, 988),
+];
+final _hoodieBack = <String, ZonePath>{
+  'hood': ZonePath(
+    polygons: [
+      [
+        _o(340, 200),
+        _o(350, 70),
+        _o(390, 40),
+        _o(470, 30),
+        _o(580, 35),
+        _o(640, 60),
+        _o(660, 130),
+        _o(650, 260),
+        _o(580, 300),
+        _o(512, 290),
+        _o(450, 300),
+        _o(380, 270),
+      ],
+    ],
+  ),
+  'sleeves': _pair(_hoodieBackSleeveL, 1020),
+  'cuffs': _pair(_hoodieBackCuffL, 1020),
+  'waistband': ZonePath(
+    polygons: [
+      [_o(300, 875), _o(820, 875), _o(826, 960), _o(298, 960)],
+    ],
+  ),
+};
+
+final _capFront = <String, ZonePath>{
+  'brim': ZonePath(
+    polygons: [
+      [
+        _o(80, 660),
+        _o(512, 672),
+        _o(985, 660),
+        _o(990, 740),
+        _o(900, 830),
+        _o(780, 875),
+        _o(512, 895),
+        _o(300, 880),
+        _o(180, 820),
+        _o(85, 740),
+      ],
+    ],
+  ),
+  'button': ZonePath(ellipses: [(_o(512, 92), 32, 24)]),
+};
+final _capBack = <String, ZonePath>{
+  'strap': ZonePath(
+    polygons: [
+      [_o(280, 660), _o(780, 665), _o(800, 700), _o(790, 745), _o(280, 740)],
+    ],
+  ),
+  'button': ZonePath(ellipses: [(_o(512, 92), 32, 24)]),
+};
+
+final _toteHandles = ZonePath(
+  polygons: [
+    [
+      _o(355, 385),
+      _o(365, 260),
+      _o(390, 150),
+      _o(440, 70),
+      _o(510, 38),
+      _o(585, 70),
+      _o(630, 150),
+      _o(655, 260),
+      _o(665, 385),
+    ],
+    [
+      _o(435, 385),
+      _o(440, 260),
+      _o(455, 170),
+      _o(490, 110),
+      _o(520, 90),
+      _o(555, 110),
+      _o(585, 170),
+      _o(598, 260),
+      _o(600, 385),
+    ],
+  ],
+  evenOdd: true,
+);
+final _toteZones = <String, ZonePath>{
+  'handles': _toteHandles,
+  'hem': ZonePath(
+    polygons: [
+      [_o(232, 382), _o(780, 382), _o(785, 425), _o(228, 425)],
+    ],
+  ),
+};
+
 const _dir = 'assets/images/garments';
 
 StyleView _crewBackView() => StyleView('$_dir/crew_back.png', _crewBack);
@@ -458,39 +780,59 @@ class GarmentStyles {
         DesignSide.back: StyleView('$_dir/polo_back.png', _poloBack),
       },
     ),
-    _vector(
+    GarmentStyle(
       id: 'vneck',
       label: 'V-neck',
       description: 'V-shaped neckline',
       zones: const [_sleeves, _cuffs, _collar],
+      views: {
+        DesignSide.front: StyleView('$_dir/vneck_front.png', _vneckFront),
+        DesignSide.back: StyleView('$_dir/vneck_back.png', _vneckBack),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'longsleeve',
       label: 'Long sleeve',
       description: 'Full-length sleeves with cuffs',
       zones: const [_sleeves, _cuffs, _collar],
+      views: {
+        DesignSide.front: StyleView('$_dir/longsleeve_front.png', _longFront),
+        DesignSide.back: StyleView('$_dir/longsleeve_back.png', _longBack),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'raglan',
       label: 'Raglan',
       description: '3/4 baseball sleeves, contrast by default',
+      defaultParts: const {'sleeves': '0xFF2B2E33'},
       zones: const [_sleeves, _cuffs, _collar],
-      defaults: const {'sleeves': '0xFF2B2E33'},
+      views: {
+        DesignSide.front: StyleView('$_dir/raglan_front.png', _raglanFront),
+        DesignSide.back: _vBack('raglan'),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'ringer',
       label: 'Ringer',
       description: 'Contrast collar and cuffs',
+      defaultParts: const {'collar': '0xFF1A1F3C', 'cuffs': '0xFF1A1F3C'},
       zones: const [_sleeves, _cuffs, _collar],
-      defaults: const {'collar': '0xFF1A1F3C', 'cuffs': '0xFF1A1F3C'},
+      views: {
+        DesignSide.front: _vFront('ringer'),
+        DesignSide.back: StyleView('$_dir/ringer_back.png', _ringerBack),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'tank',
       label: 'Tank top',
       description: 'Sleeveless with bound edges',
       zones: const [_armholes, _neckTrim],
+      views: {
+        DesignSide.front: StyleView('$_dir/tank_front.png', _tankFront),
+        DesignSide.back: StyleView('$_dir/tank_back.png', _tankBack),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'hoodie',
       label: 'Hoodie',
       description: 'Pullover with hood and pocket',
@@ -503,20 +845,32 @@ class GarmentStyles {
         _hoodiePocket,
         _drawstrings,
       ],
+      views: {
+        DesignSide.front: StyleView('$_dir/hoodie_front.png', _hoodieFront),
+        DesignSide.back: StyleView('$_dir/hoodie_back.png', _hoodieBack),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'cap',
       label: 'Cap',
       description: 'Baseball cap',
       garment: 'cap',
       zones: const [_brim, _capButton, _strap],
+      views: {
+        DesignSide.front: StyleView('$_dir/cap_front.png', _capFront),
+        DesignSide.back: StyleView('$_dir/cap_back.png', _capBack),
+      },
     ),
-    _vector(
+    GarmentStyle(
       id: 'tote',
       label: 'Tote bag',
       description: 'Canvas tote with handles',
       garment: 'totebag',
       zones: const [_handles, _hem],
+      views: {
+        DesignSide.front: StyleView('$_dir/tote_front.png', _toteZones),
+        DesignSide.back: StyleView('$_dir/tote_back.png', _toteZones),
+      },
     ),
   ];
 
