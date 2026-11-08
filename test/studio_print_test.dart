@@ -166,7 +166,10 @@ void main() {
       expect(protectedNameIn('Café Nike'), 'nike');
       expect(protectedNameIn('PUMA cat'), 'puma');
       expect(protectedNameIn('n1ke'), isNotNull);
-      expect(protectedNameIn('p u m a'), isNotNull);
+      expect(
+        protectedNameIn('r e a l  m a d r i d'),
+        isNotNull,
+      ); // spaced-out works for longer names
       expect(protectedNameIn('storm over the city'), isNull);
       expect(
         protectedNameIn('the author'),
