@@ -246,6 +246,20 @@ void main() {
         File(g.backAsset!).readAsBytesSync(),
         isNot(File(g.frontAsset!).readAsBytesSync()),
       );
+      // The back neck is a closed band all the way across, so a colour covers the full neck.
+      final back = await (await ui.instantiateImageCodec(
+        File(g.backAsset!).readAsBytesSync(),
+      )).getNextFrame();
+      final bd = (await back.image.toByteData())!;
+      int alphaB(int x, int y) =>
+          bd.getUint8((y * back.image.width + x) * 4 + 3);
+      for (final x in [420, 480, 533, 590, 650]) {
+        expect(
+          alphaB(x, 238),
+          greaterThan(250),
+          reason: 'neck is cloth at x=$x',
+        );
+      }
     });
   });
 }
