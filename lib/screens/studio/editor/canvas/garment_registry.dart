@@ -48,6 +48,9 @@ class Garment {
   /// The shirt colours to offer in the colour picker (empty: the app's own list).
   final List<GarmentColor> colors;
 
+  /// The size chart, when the business's list has one.
+  final List<SizeSpec> sizes;
+
   /// A tank top has no sleeves, so the sleeve sides are hidden.
   bool get hasSleeves => style != 'tank';
 
@@ -63,6 +66,7 @@ class Garment {
     this.placements = const [],
     this.style = 'crew',
     this.colors = const [],
+    this.sizes = const [],
   });
 
   /// Returns the network URL for [side] if available, otherwise the local asset path.
@@ -92,6 +96,7 @@ class Garment {
     placements: placements,
     style: style,
     colors: colors,
+    sizes: sizes,
   );
 
   factory Garment.fromJson(Map<String, dynamic> json) => Garment(
@@ -106,6 +111,10 @@ class Garment {
         if (p is Map) ?_placement(p.cast<String, dynamic>()),
     ],
     style: (json['style'] as String?)?.toLowerCase() ?? 'crew',
+    sizes: [
+      for (final s in (json['sizes'] as List? ?? const []))
+        if (s is Map) ?SizeSpec.fromJson(s.cast<String, dynamic>()),
+    ],
     colors: [
       for (final c in (json['colors'] as List? ?? const []))
         if (c is Map) ?GarmentColor.fromJson(c.cast<String, dynamic>()),
@@ -172,6 +181,7 @@ class GarmentRegistry {
           placements: bg.placements,
           style: bg.style,
           colors: bg.colors,
+          sizes: bg.sizes,
         ),
       );
     }

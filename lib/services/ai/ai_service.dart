@@ -56,6 +56,7 @@ abstract class AiService {
     String? garment,
     String? color,
     String? name,
+    String? size,
     List<String> sides = const ['front', 'back', 'left', 'right'],
   }) async => throw const AiUnavailable();
 
@@ -113,6 +114,7 @@ class UnconfiguredAiService implements AiService {
     String? garment,
     String? color,
     String? name,
+    String? size,
     List<String> sides = const ['front', 'back', 'left', 'right'],
   }) async => throw const LayersUnsupported();
 

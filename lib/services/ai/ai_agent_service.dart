@@ -56,6 +56,7 @@ class AIAgentService {
     String? garment,
     String? color,
     String? name,
+    String? size,
     String style = 'crew',
     List<String> sides = const ['front', 'back', 'left', 'right'],
   }) async {
@@ -75,6 +76,7 @@ class AIAgentService {
           garment: garment,
           color: color,
           name: name,
+          size: size,
           sides: sides,
         );
         final layers = <DesignElement>[];
@@ -177,14 +179,19 @@ class AIAgentService {
       // reply carries makes all of it part of the same creation.
       // A picture-only request ("generate a dragon") has an art brief but no design edit: the pictures
       // are then added to the current design.
+      final edited = reply.design == null
+          ? null
+          : CustomDesign.fromJson(reply.design!);
+      final size = edited?.size ?? currentDesign.size;
       final brief = reply.art ?? (reply.design != null ? userMessage : null);
       final art = brief != null && ai.tryOnEnabled
           ? await generateSideLayers(
               brief,
               references: images,
               garment: garment,
-              color: _hexColor(currentDesign.baseColor),
-              name: currentDesign.name,
+              color: _hexColor((edited ?? currentDesign).baseColor),
+              name: (edited ?? currentDesign).name,
+              size: size,
               style: _garmentOf(garment).style,
               // A tank top has no sleeves.
               sides: _garmentOf(garment).hasSleeves
@@ -210,7 +217,11 @@ class AIAgentService {
 
       final edit = reply.design;
       if (edit != null) {
-        var design = CustomDesign.fromJson(edit);
+        // A reply that doesn't mention size or fit keeps the ones already chosen.
+        var design = edited!.copyWith(
+          size: edited.size ?? currentDesign.size,
+          fit: edited.fit ?? currentDesign.fit,
+        );
         // The pictures go underneath the assistant's own text and stickers.
         if (art.layers.isNotEmpty) {
           design = design.copyWith(

@@ -322,6 +322,15 @@ extension _ActionMethods on _DesignStudioScreenState {
     });
   }
 
+  void _openSizes() {
+    showSizeSheet(
+      context,
+      garment: GarmentRegistry.byId(_selectedGarmentType),
+      selected: _design.size,
+      onSelected: (s) => _updateDesign(_design.copyWith(size: s)),
+    );
+  }
+
   void _openLayers() {
     final job = _layerJob;
     if (job == null) return;

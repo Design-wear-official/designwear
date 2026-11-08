@@ -903,9 +903,21 @@ extension _LayoutMethods on _DesignStudioScreenState {
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          itemCount: _garmentTypes.length,
+          itemCount: _garmentTypes.length + 1,
           separatorBuilder: (_, _) => const SizedBox(width: 8),
           itemBuilder: (context, index) {
+            if (index == _garmentTypes.length) {
+              return ActionChip(
+                key: const ValueKey('size-chip-open'),
+                onPressed: _openSizes,
+                avatar: const Icon(Icons.straighten, size: 16),
+                label: Text(
+                  _design.size == null
+                      ? 'Size'
+                      : 'Size ${_design.size}${_design.fit == null ? '' : ', ${_design.fit}'}',
+                ),
+              );
+            }
             final type = _garmentTypes[index];
             final isSelected = _selectedGarmentType == type['id'];
             return GestureDetector(
