@@ -27,6 +27,7 @@ class AIAgentService {
     String userMessage,
     CustomDesign currentDesign, {
     List<File>? imageAttachments,
+    bool trends = false,
   }) async {
     final ai = AiService.instance;
     if (!ai.agentEnabled) {
@@ -48,6 +49,7 @@ class AIAgentService {
         design: currentDesign.toJson(),
         history: _history,
         images: images,
+        trends: trends,
       );
       // A graphic only when the assistant actually changed the design; the pass the
       // reply carries makes it part of the same creation.
@@ -65,9 +67,13 @@ class AIAgentService {
         if (imageBase64 != null) {
           design = design.copyWith(designImageBase64: imageBase64);
         }
-        return AgentResponse(text: reply.text, updatedDesign: design);
+        return AgentResponse(
+          text: reply.text,
+          updatedDesign: design,
+          trends: reply.trends,
+        );
       }
-      return AgentResponse(text: reply.text);
+      return AgentResponse(text: reply.text, trends: reply.trends);
     } on AiUnavailable catch (e) {
       return AgentResponse(text: '$e');
     } on AiFailure catch (e) {
@@ -85,5 +91,8 @@ class AgentResponse {
   final String text;
   final CustomDesign? updatedDesign;
 
-  AgentResponse({required this.text, this.updatedDesign});
+  /// Set when the answer drew on the server's web search for trends.
+  final TrendsInfo? trends;
+
+  AgentResponse({required this.text, this.updatedDesign, this.trends});
 }

@@ -159,6 +159,7 @@ class ApiClient {
       return ServerFeatures(
         designAgent: j['designAgent'] == true,
         tryOn: j['tryOn'] == true,
+        trends: j['trends'] == true,
         onlinePayments: j['onlinePayments'] == true,
       );
     } catch (_) {
@@ -171,7 +172,11 @@ class ServerFeatures {
   const ServerFeatures({
     this.designAgent = false,
     this.tryOn = false,
+    this.trends = false,
     this.onlinePayments = false,
   });
   final bool designAgent, tryOn, onlinePayments;
+
+  /// The assistant can use the server's daily web search for what is trending.
+  final bool trends;
 }
