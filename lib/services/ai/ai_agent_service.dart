@@ -99,9 +99,17 @@ class AIAgentService {
       );
       // Artwork for every face only when the assistant actually changed the design; the pass the
       // reply carries makes all of it part of the same creation.
-      final art = reply.design != null && ai.tryOnEnabled
-          ? await generateSideLayers(reply.art ?? userMessage, references: images)
+      // A picture-only request ("generate a dragon") has an art brief but no design edit: the pictures
+      // are then added to the current design.
+      final brief = reply.art ?? (reply.design != null ? userMessage : null);
+      final art = brief != null && ai.tryOnEnabled
+          ? await generateSideLayers(brief, references: images)
           : (layers: const <DesignElement>[], failed: const <String>[]);
+      final preview = art.layers.isEmpty
+          ? null
+          : (art.layers.where((l) => l.side == DesignSide.front).firstOrNull ??
+                    art.layers.first)
+                .content;
 
       _history
         ..add((fromUser: true, text: userMessage))
@@ -123,6 +131,20 @@ class AIAgentService {
           text: reply.text + missing,
           updatedDesign: design,
           trends: reply.trends,
+          previewBase64: preview,
+        );
+      }
+      if (art.layers.isNotEmpty) {
+        final missing = art.failed.isEmpty
+            ? ''
+            : "\n\nI couldn't draw the ${art.failed.join(', ')} this time.";
+        return AgentResponse(
+          text: reply.text + missing,
+          updatedDesign: currentDesign.copyWith(
+            elements: [...art.layers, ...currentDesign.elements],
+          ),
+          trends: reply.trends,
+          previewBase64: preview,
         );
       }
       return AgentResponse(text: reply.text, trends: reply.trends);
@@ -146,5 +168,13 @@ class AgentResponse {
   /// Set when the answer drew on the server's web search for trends.
   final TrendsInfo? trends;
 
-  AgentResponse({required this.text, this.updatedDesign, this.trends});
+  /// The generated front picture (base64 PNG), shown as a thumbnail in the chat.
+  final String? previewBase64;
+
+  AgentResponse({
+    required this.text,
+    this.updatedDesign,
+    this.trends,
+    this.previewBase64,
+  });
 }

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -88,6 +89,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           'text': response.text,
           'hasImages': false,
           'trends': response.trends,
+          'preview': response.previewBase64,
         });
       });
       _scrollToBottom();
@@ -286,6 +288,22 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                     fontSize: 13,
                                   ),
                                 ),
+                                if (msg['preview'] is String)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: Image.memory(
+                                        base64Decode(msg['preview'] as String),
+                                        key: const ValueKey('agent-preview'),
+                                        width: 120,
+                                        height: 120,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, _, _) =>
+                                            const SizedBox.shrink(),
+                                      ),
+                                    ),
+                                  ),
                                 if (msg['trends'] is TrendsInfo)
                                   _TrendsSources(
                                     info: msg['trends'] as TrendsInfo,
