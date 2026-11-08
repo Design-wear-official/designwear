@@ -51,14 +51,15 @@ class _CountingAgent extends UnconfiguredAiService {
   @override
   bool get tryOnEnabled => false;
   @override
-  Future<({String text, Map<String, Object?>? design})> designAgent({
+  Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
+    bool trends = false,
   }) async {
     calls++;
-    return (text: 'ok', design: null);
+    return const DesignAgentReply(text: 'ok');
   }
 }
 

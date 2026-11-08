@@ -24,6 +24,9 @@ class RemoteAiService implements AiService {
   bool get tryOnEnabled => features.tryOn;
 
   @override
+  bool get trendsEnabled => features.trends && features.designAgent;
+
+  @override
   Future<List<int>> tryOn({
     required List<int> personPhoto,
     String? productId,
@@ -52,11 +55,12 @@ class RemoteAiService implements AiService {
   }
 
   @override
-  Future<({String text, Map<String, Object?>? design})> designAgent({
+  Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
+    bool trends = false,
   }) async {
     try {
       final j = await _api.request(
@@ -70,13 +74,25 @@ class RemoteAiService implements AiService {
               {'role': m.fromUser ? 'user' : 'assistant', 'content': m.text},
           ],
           'images': [for (final i in images) base64Encode(i)],
+          if (trends) 'trends': true,
         },
         timeout: const Duration(seconds: 90),
       );
       _imagePass = j['imagePass'] as String?;
-      return (
+      final t = (j['trends'] as Map?)?.cast<String, Object?>();
+      return DesignAgentReply(
         text: '${j['text']}',
         design: (j['design'] as Map?)?.cast<String, Object?>(),
+        trends: t == null
+            ? null
+            : TrendsInfo(
+                asOf: '${t['asOf']}',
+                sources: [
+                  for (final s in (t['sources'] as List? ?? const []))
+                    if (s is Map && '${s['url']}'.startsWith('https://'))
+                      (title: '${s['title'] ?? ''}', url: '${s['url']}'),
+                ],
+              ),
       );
     } on ApiException catch (e) {
       if (e.status == 503) throw const AiUnavailable();
