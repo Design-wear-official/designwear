@@ -30,14 +30,14 @@ GUIDE_DIRS = [Path.home() / "Downloads", SRC / "guides"]
 # inpaint away in the *source* image, e.g. to derive a plain tee from a
 # pocket tee).
 JOBS = {
-    "crew_front": ("Gemini_Generated_Image_bn2vyybn2vyybn2v.png", [(1462, 452, 1690, 730)]),
-    "crew_pocket_left_front": ("Gemini_Generated_Image_bn2vyybn2vyybn2v.png", []),
-    "crew_pocket_right_front": ("Minimal White T-Shirt with Single Chest Pocket.png", []),
-    "crew_pocket_both_front": ("Gemini_Generated_Image_1smxda1smxda1smx.png", []),
-    "crew_back": ("Gemini_Generated_Image_orv44gorv44gorv4.png", []),
-    "henley_front": ("Gemini_Generated_Image_dq6wyedq6wyedq6w.png", []),
-    "polo_front": ("Gemini_Generated_Image_xulvb3xulvb3xulv.png", []),
-    "polo_back": ("Gemini_Generated_Image_qgvq3lqgvq3lqgvq.png", []),
+    "crew_front": ("crew_pocket_left_front.png", [(1462, 452, 1690, 730)]),
+    "crew_pocket_left_front": ("crew_pocket_left_front.png", []),
+    "crew_pocket_right_front": ("crew_pocket_right_front.png", []),
+    "crew_pocket_both_front": ("crew_pocket_both_front.png", []),
+    "crew_back": ("crew_back.png", []),
+    "henley_front": ("henley_front.png", []),
+    "polo_front": ("polo_front.png", []),
+    "polo_back": ("polo_back.png", []),
 }
 
 # Styles generated later, named <style>_<view>.png in the source folder.
@@ -160,7 +160,7 @@ def build(name, src, patches):
     guide = None if patches else guide_alpha(src, alpha.shape)
     if guide is not None:
         alpha = (alpha * guide).astype(np.uint8)
-        print('  guided by remove.bg cut-out')
+        print('  guided by a reference cut-out')
     ys, xs = np.where(alpha > 20)
     x0, x1, y0, y1 = xs.min(), xs.max() + 1, ys.min(), ys.max() + 1
     crop = img[y0:y1, x0:x1]
