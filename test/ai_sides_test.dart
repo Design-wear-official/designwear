@@ -14,7 +14,9 @@ import 'package:http/testing.dart';
 
 /// A stand-in assistant: it edits the design (a text line) and "draws" the faces it is told to.
 class _SidesAgent extends UnconfiguredAiService {
-  _SidesAgent({this.failed = const []});
+  _SidesAgent({this.failed = const [], this.art});
+  final String? art;
+  final prompts = <String>[];
   final List<String> failed;
   final references = <List<List<int>>>[];
 
@@ -32,6 +34,7 @@ class _SidesAgent extends UnconfiguredAiService {
     bool trends = false,
   }) async => DesignAgentReply(
     text: 'Here is your design.',
+    art: art,
     design: <String, Object?>{
       'baseColor': '0xFF000000',
       'elements': [
@@ -54,6 +57,7 @@ class _SidesAgent extends UnconfiguredAiService {
     List<List<int>> images = const [],
   }) async {
     references.add(images);
+    prompts.add(prompt);
     return DesignSides(
       images: {
         for (final s in ['front', 'back', 'left', 'right'])
@@ -130,6 +134,20 @@ void main() {
       );
     });
 
+    test('the faces are drawn from the assistant\'s art brief, not the customer\'s message', () async {
+      final fake = _SidesAgent(art: 'a green storm cloud over a dark city');
+      AiService.instance = fake;
+      await AIAgentService().sendMessage('make it better', CustomDesign());
+      expect(fake.prompts.single, 'a green storm cloud over a dark city');
+    });
+
+    test('without a brief the customer\'s message is the fallback', () async {
+      final fake = _SidesAgent();
+      AiService.instance = fake;
+      await AIAgentService().sendMessage('green storm', CustomDesign());
+      expect(fake.prompts.single, 'green storm');
+    });
+
     test('the customer\'s own pictures are sent as references', () async {
       final fake = _SidesAgent();
       AiService.instance = fake;
@@ -168,6 +186,7 @@ void main() {
               'text': 'ok',
               'design': {'elements': []},
               'imagePass': 'pass-1',
+              'art': ' a storm cloud ',
             });
           }
           sent.add(body);
@@ -181,7 +200,12 @@ void main() {
         api,
         const ServerFeatures(designAgent: true, tryOn: true),
       );
-      await ai.designAgent(message: 'a tee', design: {}, history: const []);
+      final reply = await ai.designAgent(
+        message: 'a tee',
+        design: {},
+        history: const [],
+      );
+      expect(reply.art, 'a storm cloud');
       final out = await ai.designSides(
         'storm',
         images: [

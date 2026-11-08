@@ -83,6 +83,9 @@ class RemoteAiService implements AiService {
       return DesignAgentReply(
         text: '${j['text']}',
         design: (j['design'] as Map?)?.cast<String, Object?>(),
+        art: (j['art'] as String?)?.trim().isEmpty ?? true
+            ? null
+            : (j['art'] as String).trim(),
         trends: t == null
             ? null
             : TrendsInfo(

@@ -100,7 +100,7 @@ class AIAgentService {
       // Artwork for every face only when the assistant actually changed the design; the pass the
       // reply carries makes all of it part of the same creation.
       final art = reply.design != null && ai.tryOnEnabled
-          ? await generateSideLayers(userMessage, references: images)
+          ? await generateSideLayers(reply.art ?? userMessage, references: images)
           : (layers: const <DesignElement>[], failed: const <String>[]);
 
       _history

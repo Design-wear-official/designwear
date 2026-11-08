@@ -99,9 +99,18 @@ class DesignSides {
 
 /// What the assistant answered: text, and when the model made one, a design to apply.
 class DesignAgentReply {
-  const DesignAgentReply({required this.text, this.design, this.trends});
+  const DesignAgentReply({
+    required this.text,
+    this.design,
+    this.trends,
+    this.art,
+  });
   final String text;
   final Map<String, Object?>? design;
+
+  /// A self-contained description of the artwork, written by the server from the whole conversation;
+  /// null when the reply did not edit the design. The pictures for each face are drawn from this.
+  final String? art;
 
   /// Set when the answer drew on the server's web search for trends.
   final TrendsInfo? trends;
