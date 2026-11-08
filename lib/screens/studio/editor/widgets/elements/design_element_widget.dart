@@ -77,6 +77,9 @@ class DesignElementWidget extends StatelessWidget {
       width: w,
       height: h,
       fit: BoxFit.contain,
+      // High-quality filtering keeps scaled artwork smooth instead of blocky.
+      filterQuality: FilterQuality.high,
+      isAntiAlias: true,
       gaplessPlayback: true,
       errorBuilder: (_, _, _) => SizedBox(width: w, height: h),
     );

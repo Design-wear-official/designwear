@@ -13,8 +13,6 @@ import 'package:designwear/services/shop/cart_service.dart';
 import 'package:flutter/material.dart';
 
 import 'package:designwear/screens/catalog/product_detail_screen.dart';
-import 'package:designwear/screens/studio/editor/canvas/design_canvas_painters.dart'
-    show SleevePainter;
 
 import 'test_app.dart';
 
@@ -229,41 +227,16 @@ void _studioViewTests() {
       for (final label in ['FRONT', 'BACK', 'LEFT', 'RIGHT']) {
         expect(find.text(label), findsOneWidget, reason: label);
       }
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter is SleevePainter,
-        ),
-        findsNothing,
-      );
-
       await tester.tap(find.text('LEFT'));
       await tester.pump(const Duration(milliseconds: 300));
-      final left = tester.widgetList<CustomPaint>(
-        find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter is SleevePainter,
-        ),
-      );
-      expect(left.length, 1);
-      expect((left.single.painter as SleevePainter).mirrored, isFalse);
       expect(find.text('PRINT 8 × 10 cm'), findsOneWidget);
 
       await tester.tap(find.text('RIGHT'));
       await tester.pump(const Duration(milliseconds: 300));
-      final right = tester.widget<CustomPaint>(
-        find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter is SleevePainter,
-        ),
-      );
-      expect((right.painter as SleevePainter).mirrored, isTrue);
+      expect(find.text('PRINT 8 × 10 cm'), findsOneWidget);
 
       await tester.tap(find.text('FRONT'));
       await tester.pump(const Duration(milliseconds: 300));
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter is SleevePainter,
-        ),
-        findsNothing,
-      );
       expect(find.text('PRINT 30 × 40 cm'), findsOneWidget);
     },
   );

@@ -23,6 +23,10 @@ class ColorPanel extends StatefulWidget {
 
 class _ColorPanelState extends State<ColorPanel> {
   Color? _customColor;
+
+  /// Which garment zone the Parts swatches colour: 'all' (shared trim) or a
+  /// zone id of the current style ('sleeves', 'collar', 'cuffs', ...).
+  String _trimArea = 'all';
   List<String> _recents = [];
 
   static const String _recentsKey = 'ds_recent_colors';
@@ -491,8 +495,10 @@ class _ColorPanelState extends State<ColorPanel> {
           const SizedBox(height: 16),
           _buildDivider(isDark),
           const SizedBox(height: 16),
-          _buildSectionLabel('Trim / Accent', isDark),
+          _buildSectionLabel('Parts / Trim', isDark),
           const SizedBox(height: 10),
+          _buildTrimAreaChips(isDark),
+          const SizedBox(height: 12),
           _buildTrimRow(isDark),
 
           const SizedBox(height: 16),
@@ -535,8 +541,90 @@ class _ColorPanelState extends State<ColorPanel> {
     );
   }
 
+  GarmentStyle get _style => GarmentStyles.byId(widget.design.styleId);
+
+  /// The area being edited, falling back to 'all' if the style lacks it.
+  String get _area => _trimArea == 'all' || _style.zoneById(_trimArea) != null
+      ? _trimArea
+      : 'all';
+
+  String _trimValue() => _area == 'all'
+      ? widget.design.trimColor
+      : (widget.design.partColors[_area] ?? 'auto');
+
+  void _setTrim(String hex) {
+    final d = widget.design;
+    if (_area == 'all') {
+      // 'All trim' recolours every trim zone, clearing individual overrides.
+      widget.onDesignUpdate(
+        d.copyWith(
+          trimColor: hex,
+          partColors: const {},
+          collarColor: 'auto',
+          pocketColor: 'auto',
+          cuffColor: 'auto',
+        ),
+      );
+      return;
+    }
+    final next = Map<String, String>.from(d.partColors);
+    if (hex == 'auto') {
+      next.remove(_area);
+    } else {
+      next[_area] = hex;
+    }
+    widget.onDesignUpdate(
+      d.copyWith(
+        partColors: next,
+        // A zone set by hand overrides its legacy per-area colour.
+        collarColor: _area == 'collar' ? 'auto' : null,
+        pocketColor: _area == 'pockets' ? 'auto' : null,
+        cuffColor: _area == 'cuffs' ? 'auto' : null,
+      ),
+    );
+  }
+
+  Widget _buildTrimAreaChips(bool isDark) {
+    final areas = [
+      ('all', 'All trim'),
+      for (final z in _style.zones) (z.id, z.label),
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final (id, label) in areas)
+          GestureDetector(
+            onTap: () => setState(() => _trimArea = id),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _area == id
+                    ? (isDark ? Colors.white : const Color(0xFF15182B))
+                    : (isDark
+                          ? const Color(0xFF1A1F2E)
+                          : const Color(0xFFF2F1ED)),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                label,
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: _area == id
+                      ? (isDark ? const Color(0xFF15182B) : Colors.white)
+                      : (isDark ? AppColors.stone : const Color(0xFF7A7B82)),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget _buildTrimRow(bool isDark) {
-    final isAuto = widget.design.trimColor == 'auto';
+    final current = _trimValue();
+    final isAuto = current == 'auto';
     return Wrap(
       spacing: 10,
       runSpacing: 10,
@@ -544,8 +632,7 @@ class _ColorPanelState extends State<ColorPanel> {
       children: [
         // "Auto" pill — derives a contrasting shade from the fabric colour.
         GestureDetector(
-          onTap: () =>
-              widget.onDesignUpdate(widget.design.copyWith(trimColor: 'auto')),
+          onTap: () => _setTrim('auto'),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -591,16 +678,11 @@ class _ColorPanelState extends State<ColorPanel> {
         ),
         ...trimSwatches.map((c) {
           final isSelected =
-              !isAuto &&
-              DesignStudioUtils.isColorSelected(c, widget.design.trimColor);
+              !isAuto && DesignStudioUtils.isColorSelected(c, current);
           return _buildSwatch(
             c,
             isSelected,
-            () => widget.onDesignUpdate(
-              widget.design.copyWith(
-                trimColor: DesignStudioUtils.colorToHex(c),
-              ),
-            ),
+            () => _setTrim(DesignStudioUtils.colorToHex(c)),
             size: 30,
           );
         }),

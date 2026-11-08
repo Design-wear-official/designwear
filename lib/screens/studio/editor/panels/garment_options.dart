@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 
-/// Garment construction options — collar, pocket, sleeve cuff and fabric finish.
+/// Garment construction options — style (crew, pocket tees, henley, polo) and fabric finish.
 ///
 /// These live under the **Shapes** tool (which owns garment form), while the
 /// **Colours** tool owns colour. Every option flows through [CustomDesign] and
@@ -24,60 +24,24 @@ class GarmentOptions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _label('Collar Style', isDark),
+        _label('Style', isDark),
         const SizedBox(height: 10),
         _chips(
-          options: const [
-            {
-              'id': 'crew',
-              'label': 'Crew',
-              'icon': Icons.radio_button_unchecked,
-            },
-            {'id': 'vneck', 'label': 'V-Neck', 'icon': Icons.change_history},
-            {
-              'id': 'polo',
-              'label': 'Polo',
-              'icon': Icons.vertical_align_bottom,
-            },
+          options: [
+            for (final st in GarmentStyles.all)
+              {'id': st.id, 'label': st.label, 'icon': _styleIcon(st.id)},
           ],
-          selected: design.collarStyle,
-          onSelect: (id) => onDesignUpdate(design.copyWith(collarStyle: id)),
+          selected: design.styleId,
+          onSelect: (id) => onDesignUpdate(design.copyWith(styleId: id)),
           isDark: isDark,
         ),
-
-        const SizedBox(height: 16),
-        _divider(isDark),
-        const SizedBox(height: 16),
-
-        _label('Pocket', isDark),
-        const SizedBox(height: 10),
-        _chips(
-          options: const [
-            {'id': 'none', 'label': 'None', 'icon': Icons.block},
-            {'id': 'left', 'label': 'Left', 'icon': Icons.square_outlined},
-            {'id': 'right', 'label': 'Right', 'icon': Icons.square_outlined},
-            {'id': 'both', 'label': 'Both', 'icon': Icons.view_column_outlined},
-          ],
-          selected: design.pocketStyle,
-          onSelect: (id) => onDesignUpdate(design.copyWith(pocketStyle: id)),
-          isDark: isDark,
-        ),
-
-        const SizedBox(height: 16),
-        _divider(isDark),
-        const SizedBox(height: 16),
-
-        _label('Sleeve Cuffs', isDark),
-        const SizedBox(height: 10),
-        _chips(
-          options: const [
-            {'id': 'none', 'label': 'Plain', 'icon': Icons.block},
-            {'id': 'banded', 'label': 'Banded', 'icon': Icons.horizontal_rule},
-            {'id': 'rolled', 'label': 'Rolled', 'icon': Icons.drag_handle},
-          ],
-          selected: design.sleeveCuff,
-          onSelect: (id) => onDesignUpdate(design.copyWith(sleeveCuff: id)),
-          isDark: isDark,
+        const SizedBox(height: 6),
+        Text(
+          GarmentStyles.byId(design.styleId).description,
+          style: GoogleFonts.inter(
+            fontSize: 11,
+            color: isDark ? AppColors.stone : const Color(0xFF7A7B82),
+          ),
         ),
 
         const SizedBox(height: 16),
@@ -99,6 +63,13 @@ class GarmentOptions extends StatelessWidget {
       ],
     );
   }
+
+  static IconData _styleIcon(String id) => switch (id) {
+    'henley' => Icons.radio_button_checked,
+    'polo' => Icons.checkroom,
+    String s when s.startsWith('crew_pocket') => Icons.square_outlined,
+    _ => Icons.radio_button_unchecked,
+  };
 
   Widget _divider(bool isDark) => Container(
     height: 1,

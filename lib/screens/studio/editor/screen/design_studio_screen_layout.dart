@@ -140,6 +140,15 @@ extension _LayoutMethods on _DesignStudioScreenState {
             tooltip: 'Save Design',
           ),
           IconButton(
+            onPressed: _showAllViews,
+            icon: Icon(
+              Icons.grid_view_outlined,
+              size: 20,
+              color: textSecondary,
+            ),
+            tooltip: 'All areas',
+          ),
+          IconButton(
             onPressed: _open3DPreview,
             icon: Icon(
               Icons.view_in_ar_outlined,
@@ -180,6 +189,9 @@ extension _LayoutMethods on _DesignStudioScreenState {
                     captureCallback: _captureCanvasPng,
                   );
                   break;
+                case 'areas':
+                  _showAllViews();
+                  break;
                 case '3d':
                   _open3DPreview();
                   break;
@@ -199,6 +211,15 @@ extension _LayoutMethods on _DesignStudioScreenState {
                   contentPadding: EdgeInsets.zero,
                   leading: Icon(Icons.save_outlined, size: 20),
                   title: Text('Save Design'),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'areas',
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.grid_view_outlined, size: 20),
+                  title: Text('All areas'),
                 ),
               ),
               PopupMenuItem(
@@ -722,6 +743,16 @@ extension _LayoutMethods on _DesignStudioScreenState {
             ),
           ),
           const SizedBox(width: 4),
+          _ElementActionBtn(
+            icon: Icons.align_horizontal_center,
+            tooltip: 'Centre horizontally',
+            onTap: () => _centreSelected(horizontal: true),
+          ),
+          _ElementActionBtn(
+            icon: Icons.align_vertical_center,
+            tooltip: 'Centre vertically',
+            onTap: () => _centreSelected(vertical: true),
+          ),
           _ElementActionBtn(
             icon: Icons.swap_horiz,
             tooltip: 'Flip horizontal',

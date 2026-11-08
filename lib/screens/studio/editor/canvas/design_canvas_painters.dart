@@ -89,6 +89,11 @@ class GarmentOverlayPainter extends CustomPainter {
   /// Explicit accent colour for collar/pocket/cuff trim. When null the trim
   /// auto-derives a contrasting shade from [tshirtColor] (legacy behaviour).
   final Color? trimColor;
+
+  /// Per-area overrides; each falls back to [trimColor], then to the derived shade.
+  final Color? collarColor;
+  final Color? pocketColor;
+  final Color? cuffColor;
   final String sleeveCuff; // 'none' | 'banded' | 'rolled'
   final String fabricFinish; // 'solid' | 'heather' | 'vintage'
 
@@ -97,6 +102,9 @@ class GarmentOverlayPainter extends CustomPainter {
     required this.collarStyle,
     required this.pocketStyle,
     this.trimColor,
+    this.collarColor,
+    this.pocketColor,
+    this.cuffColor,
     this.sleeveCuff = 'none',
     this.fabricFinish = 'solid',
   });
@@ -117,7 +125,9 @@ class GarmentOverlayPainter extends CustomPainter {
   static const Offset _rightCuffOuter = Offset(280, 188);
   static const Offset _rightCuffInner = Offset(236, 174);
 
-  bool get _hasTrim => trimColor != null;
+  Color? get _collarTrim => collarColor ?? trimColor;
+  Color? get _pocketTrim => pocketColor ?? trimColor;
+  Color? get _cuffTrim => cuffColor ?? trimColor;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -133,9 +143,11 @@ class GarmentOverlayPainter extends CustomPainter {
   void _paintCollar(Canvas canvas) {
     if (collarStyle == 'crew') return;
 
-    final fillColor = _hasTrim ? trimColor! : _adjust(tshirtColor, 0.14);
-    final borderColor = _hasTrim
-        ? _adjust(trimColor!, 0.32)
+    final fillColor = _collarTrim != null
+        ? _collarTrim!
+        : _adjust(tshirtColor, 0.14);
+    final borderColor = _collarTrim != null
+        ? _adjust(_collarTrim!, 0.32)
         : _adjust(tshirtColor, 0.32);
     final fill = Paint()
       ..color = fillColor
@@ -175,7 +187,10 @@ class GarmentOverlayPainter extends CustomPainter {
         line,
       );
       final btn = Paint()
-        ..color = _adjust(_hasTrim ? trimColor! : tshirtColor, 0.42)
+        ..color = _adjust(
+          _collarTrim != null ? _collarTrim! : tshirtColor,
+          0.42,
+        )
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(_cx, _collarTopY + 16), 3.5, btn);
       canvas.drawCircle(Offset(_cx, _collarTopY + 30), 3.5, btn);
@@ -188,11 +203,11 @@ class GarmentOverlayPainter extends CustomPainter {
     if (pocketStyle == 'none') return;
 
     final fill = Paint()
-      ..color = _hasTrim ? trimColor! : _adjust(tshirtColor, 0.13)
+      ..color = _pocketTrim != null ? _pocketTrim! : _adjust(tshirtColor, 0.13)
       ..style = PaintingStyle.fill;
     final stitch = Paint()
-      ..color = _hasTrim
-          ? _adjust(trimColor!, 0.30)
+      ..color = _pocketTrim != null
+          ? _adjust(_pocketTrim!, 0.30)
           : _adjust(tshirtColor, 0.30)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
@@ -216,10 +231,10 @@ class GarmentOverlayPainter extends CustomPainter {
     }
 
     if (pocketStyle == 'left' || pocketStyle == 'both') {
-      drawPocket(_leftPocketCX);
+      drawPocket(_rightPocketCX);
     }
     if (pocketStyle == 'right' || pocketStyle == 'both') {
-      drawPocket(_rightPocketCX);
+      drawPocket(_leftPocketCX);
     }
   }
 
@@ -228,7 +243,9 @@ class GarmentOverlayPainter extends CustomPainter {
   void _paintCuffs(Canvas canvas) {
     if (sleeveCuff == 'none') return;
 
-    final bandColor = _hasTrim ? trimColor! : _adjust(tshirtColor, 0.16);
+    final bandColor = _cuffTrim != null
+        ? _cuffTrim!
+        : _adjust(tshirtColor, 0.16);
     final edgeColor = _adjust(bandColor, 0.30);
 
     void drawCuff(Offset outer, Offset inner) {
@@ -368,6 +385,9 @@ class GarmentOverlayPainter extends CustomPainter {
       old.collarStyle != collarStyle ||
       old.pocketStyle != pocketStyle ||
       old.trimColor != trimColor ||
+      old.collarColor != collarColor ||
+      old.pocketColor != pocketColor ||
+      old.cuffColor != cuffColor ||
       old.sleeveCuff != sleeveCuff ||
       old.fabricFinish != fabricFinish;
 }
@@ -486,4 +506,175 @@ class SleevePainter extends CustomPainter {
       old.color != color ||
       old.mirrored != mirrored ||
       old.showGuide != showGuide;
+}
+
+/// A close-up of one chest pocket, for the Left / Right Pocket views. The
+/// shirt photo is only front/back, so the pocket is drawn: fabric in the
+/// garment colour, a pocket patch (in its accent colour, or a derived shade),
+/// stitching, and a dashed box marking the small print area on the pocket.
+class PocketAreaPainter extends CustomPainter {
+  PocketAreaPainter({
+    required this.color,
+    this.pocketColor,
+    this.showGuide = true,
+  });
+
+  final Color color;
+
+  /// Explicit pocket colour; null derives a slightly shifted shade of [color].
+  final Color? pocketColor;
+  final bool showGuide;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    double x(double v) => v * size.width;
+    double y(double v) => v * size.height;
+
+    final fabric = Rect.fromLTWH(x(0.08), y(0.08), x(0.84), y(0.84));
+    canvas.drawShadow(Path()..addRect(fabric), Colors.black, 8, false);
+    canvas.drawRect(fabric, Paint()..color = color);
+    canvas.drawRect(
+      fabric,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withValues(alpha: 0.10),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.12),
+          ],
+        ).createShader(fabric),
+    );
+
+    final dark = color.computeLuminance() < 0.25;
+    final patchColor =
+        pocketColor ??
+        Color.lerp(color, dark ? Colors.white : Colors.black, 0.10)!;
+    final patch = RRect.fromRectAndRadius(
+      Rect.fromLTWH(x(0.22), y(0.20), x(0.56), y(0.56)),
+      const Radius.circular(6),
+    );
+    canvas.drawRRect(patch, Paint()..color = patchColor);
+    final stitchColor = Color.lerp(
+      patchColor,
+      patchColor.computeLuminance() < 0.25 ? Colors.white : Colors.black,
+      0.30,
+    )!;
+    canvas.drawRRect(
+      patch.deflate(6),
+      Paint()
+        ..color = stitchColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+    canvas.drawRRect(
+      patch,
+      Paint()
+        ..color = Colors.black26
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+
+    if (showGuide) {
+      // Print area, centred on the pocket.
+      final guide = Rect.fromLTWH(x(0.30), y(0.30), x(0.40), y(0.38));
+      final paint = Paint()
+        ..color = Colors.black.withValues(alpha: 0.30)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+      const dash = 6.0;
+      void edge(Offset a, Offset b) {
+        final total = (b - a).distance;
+        final dir = (b - a) / total;
+        for (double d = 0; d < total; d += dash * 2) {
+          canvas.drawLine(
+            a + dir * d,
+            a + dir * (d + dash).clamp(0, total).toDouble(),
+            paint,
+          );
+        }
+      }
+
+      edge(guide.topLeft, guide.topRight);
+      edge(guide.topRight, guide.bottomRight);
+      edge(guide.bottomRight, guide.bottomLeft);
+      edge(guide.bottomLeft, guide.topLeft);
+    }
+  }
+
+  @override
+  bool shouldRepaint(PocketAreaPainter old) =>
+      old.color != color ||
+      old.pocketColor != pocketColor ||
+      old.showGuide != showGuide;
+}
+
+/// Fabric finish (heather / vintage) laid over the torso of a style photo.
+/// [size] is the square the 1024-unit garment photo is drawn into.
+class FabricFinishPainter extends CustomPainter {
+  final Color garmentColor;
+  final String finish; // 'solid' | 'heather' | 'vintage'
+  const FabricFinishPainter({required this.garmentColor, required this.finish});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (finish == 'solid') return;
+    final torso = Rect.fromLTRB(
+      size.width * 0.30,
+      size.height * 0.20,
+      size.width * 0.72,
+      size.height * 0.88,
+    );
+    canvas.save();
+    canvas.clipRect(torso);
+    if (finish == 'heather') {
+      final rng = math.Random(7);
+      final light = Paint()..color = Colors.white.withValues(alpha: 0.06);
+      final dark = Paint()..color = Colors.black.withValues(alpha: 0.06);
+      for (int i = 0; i < 260; i++) {
+        final dx = torso.left + rng.nextDouble() * torso.width;
+        final dy = torso.top + rng.nextDouble() * torso.height;
+        canvas.drawCircle(
+          Offset(dx, dy),
+          0.6 + rng.nextDouble() * 1.1,
+          i.isEven ? light : dark,
+        );
+      }
+    } else {
+      final center = torso.center;
+      canvas.drawRect(
+        torso,
+        Paint()
+          ..shader =
+              RadialGradient(
+                colors: [
+                  Colors.white.withValues(alpha: 0.12),
+                  Colors.transparent,
+                ],
+              ).createShader(
+                Rect.fromCircle(center: center, radius: torso.width * 0.7),
+              ),
+      );
+      canvas.drawRect(
+        torso,
+        Paint()
+          ..shader =
+              RadialGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.08),
+                ],
+                stops: const [0.6, 1.0],
+              ).createShader(
+                Rect.fromCircle(center: center, radius: torso.width * 0.8),
+              ),
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(FabricFinishPainter old) =>
+      old.finish != finish || old.garmentColor != garmentColor;
 }

@@ -27,7 +27,7 @@ class AIAgentService {
   /// picture on the front and back, a small emblem on each sleeve.
   static ({double x, double y, double w, double h}) _placement(
     DesignSide side,
-  ) => side.isSleeve
+  ) => side.isSmallArea
       ? (x: -40, y: -25, w: 90, h: 90)
       : (x: -100, y: -20, w: 200, h: 240);
 
@@ -118,6 +118,23 @@ class AIAgentService {
       final edit = reply.design;
       if (edit != null) {
         var design = CustomDesign.fromJson(edit);
+        // The assistant only knows body colour and layers: keep the garment
+        // style and per-part colours the customer already chose, unless the
+        // reply names them itself.
+        design = design.copyWith(
+          styleId: edit.containsKey('styleId')
+              ? design.styleId
+              : currentDesign.styleId,
+          partColors: edit.containsKey('partColors')
+              ? design.partColors
+              : currentDesign.partColors,
+          trimColor: edit.containsKey('trimColor')
+              ? design.trimColor
+              : currentDesign.trimColor,
+          fabricFinish: edit.containsKey('fabricFinish')
+              ? design.fabricFinish
+              : currentDesign.fabricFinish,
+        );
         // The pictures go underneath the assistant's own text and stickers.
         if (art.layers.isNotEmpty) {
           design = design.copyWith(
