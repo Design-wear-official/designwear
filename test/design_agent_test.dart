@@ -9,10 +9,16 @@ import 'package:flutter_test/flutter_test.dart';
 class _FakeAgent extends UnconfiguredAiService {
   _FakeAgent({this.enabled = true, this.reply});
   final bool enabled;
-  final ({String text, Map<String, Object?>? design}) Function(String message)?
-  reply;
+  final DesignAgentReply Function(String message)? reply;
   final calls =
-      <({String message, Map<String, Object?> design, int historyLength})>[];
+      <
+        ({
+          String message,
+          Map<String, Object?> design,
+          int historyLength,
+          bool trends,
+        })
+      >[];
 
   @override
   bool get agentEnabled => enabled;
@@ -21,22 +27,24 @@ class _FakeAgent extends UnconfiguredAiService {
   bool get tryOnEnabled => false;
 
   @override
-  Future<({String text, Map<String, Object?>? design})> designAgent({
+  Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
+    bool trends = false,
   }) async {
     calls.add((
       message: message,
       design: design,
       historyLength: history.length,
+      trends: trends,
     ));
     return reply!(message);
   }
 }
 
-({String text, Map<String, Object?>? design}) _designs(String message) => (
+DesignAgentReply _designs(String message) => DesignAgentReply(
   text: 'Done: $message',
   design: {
     'baseColor': '0xFF1A237E',
@@ -91,7 +99,7 @@ void main() {
 
     test('a reply with no design change is just a message', () async {
       AiService.instance = _FakeAgent(
-        reply: (m) => (text: 'Which colour do you like?', design: null),
+        reply: (m) => const DesignAgentReply(text: 'Which colour do you like?'),
       );
       final r = await AIAgentService().sendMessage('hmm', CustomDesign());
       expect(r.text, 'Which colour do you like?');

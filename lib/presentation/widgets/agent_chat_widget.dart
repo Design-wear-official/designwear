@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/services/services.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 
+import '../../services/ai/ai_service.dart' show AiService, TrendsInfo;
 import '../../services/ai/ai_usage_service.dart';
 import 'ai_allowance_chip.dart';
 import 'ai_image_attachment_widget.dart';
@@ -46,7 +48,10 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
     },
   ];
 
-  Future<void> _handleSubmitted(String text) async {
+  static const _trendingAsk =
+      "What's trending in T-shirt design right now? Make me a design from it.";
+
+  Future<void> _handleSubmitted(String text, {bool trends = false}) async {
     if (text.trim().isEmpty && _selectedImages.isEmpty) return;
     // Nothing left today: the chip says so; don't spend a request the server will refuse.
     if (maybeAiUsage(context, listen: false)?.exhausted ?? false) return;
@@ -73,6 +78,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
         messageText,
         widget.currentDesign,
         imageAttachments: imagesToSend.isNotEmpty ? imagesToSend : null,
+        trends: trends,
       );
 
       setState(() {
@@ -81,6 +87,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           'role': 'agent',
           'text': response.text,
           'hasImages': false,
+          'trends': response.trends,
         });
       });
       _scrollToBottom();
@@ -279,6 +286,10 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                     fontSize: 13,
                                   ),
                                 ),
+                                if (msg['trends'] is TrendsInfo)
+                                  _TrendsSources(
+                                    info: msg['trends'] as TrendsInfo,
+                                  ),
                               ],
                             ),
                           ),
@@ -308,6 +319,27 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (AiService.instance.trendsEnabled)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 6),
+                            child: ActionChip(
+                              key: const Key('trending-chip'),
+                              avatar: const Icon(Icons.trending_up, size: 16),
+                              label: const Text("What's trending"),
+                              onPressed:
+                                  _isLoading ||
+                                      (maybeAiUsage(
+                                            context,
+                                            listen: false,
+                                          )?.exhausted ??
+                                          false)
+                                  ? null
+                                  : () => _handleSubmitted(
+                                      _trendingAsk,
+                                      trends: true,
+                                    ),
+                            ),
+                          ),
                         const AiAllowanceChip(),
                         // Image attachment widget
                         AIImageAttachmentWidget(
@@ -414,6 +446,64 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Under an answer that drew on the web search: when it was searched, and the pages it used.
+class _TrendsSources extends StatelessWidget {
+  const _TrendsSources({required this.info});
+  final TrendsInfo info;
+
+  static String _host(String url) =>
+      Uri.tryParse(url)?.host.replaceFirst('www.', '') ?? url;
+
+  @override
+  Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurface
+        .withValues(alpha: 0.6);
+    return Padding(
+      key: const Key('trends-sources'),
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.travel_explore, size: 12, color: muted),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  'From a web search on ${info.asOf}',
+                  style: TextStyle(fontSize: 10, color: muted),
+                ),
+              ),
+            ],
+          ),
+          if (info.sources.isNotEmpty)
+            Wrap(
+              spacing: 6,
+              children: [
+                for (final s in info.sources)
+                  InkWell(
+                    onTap: () => launchUrl(
+                      Uri.parse(s.url),
+                      mode: LaunchMode.externalApplication,
+                    ),
+                    child: Text(
+                      _host(s.url),
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Theme.of(context).colorScheme.primary,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
         ],
       ),
     );

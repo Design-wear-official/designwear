@@ -24,12 +24,13 @@ class _SidesAgent extends UnconfiguredAiService {
   bool get tryOnEnabled => true;
 
   @override
-  Future<({String text, Map<String, Object?>? design})> designAgent({
+  Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
-  }) async => (
+    bool trends = false,
+  }) async => DesignAgentReply(
     text: 'Here is your design.',
     design: <String, Object?>{
       'baseColor': '0xFF000000',

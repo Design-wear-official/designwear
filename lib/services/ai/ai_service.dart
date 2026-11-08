@@ -10,6 +10,9 @@ abstract class AiService {
   bool get agentEnabled => isConfigured;
   bool get tryOnEnabled => isConfigured;
 
+  /// The assistant can bring in what is trending (a daily web search on the server).
+  bool get trendsEnabled => false;
+
   /// A photo of the person wearing the product, or their custom design when
   /// [garmentImage] is given instead of a catalog [productId].
   Future<List<int>> tryOn({
@@ -20,12 +23,14 @@ abstract class AiService {
   });
 
   /// Design Studio assistant: a reply and, when the model made one, a design
-  /// (the studio's design JSON) to apply.
-  Future<({String text, Map<String, Object?>? design})> designAgent({
+  /// (the studio's design JSON) to apply. With [trends] the server brings in
+  /// what is trending (its daily web search) even if the message does not say so.
+  Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
+    bool trends = false,
   });
 
   /// A PNG graphic for [prompt], or throws.
@@ -62,11 +67,15 @@ class UnconfiguredAiService implements AiService {
   }) async => throw const AiUnavailable();
 
   @override
-  Future<({String text, Map<String, Object?>? design})> designAgent({
+  bool get trendsEnabled => false;
+
+  @override
+  Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,
     required List<({bool fromUser, String text})> history,
     List<List<int>> images = const [],
+    bool trends = false,
   }) async => throw const AiUnavailable();
 
   @override
@@ -86,6 +95,23 @@ class DesignSides {
   final Map<String, String>
   images; // 'front' | 'back' | 'left' | 'right' -> base64 PNG
   final List<String> failed;
+}
+
+/// What the assistant answered: text, and when the model made one, a design to apply.
+class DesignAgentReply {
+  const DesignAgentReply({required this.text, this.design, this.trends});
+  final String text;
+  final Map<String, Object?>? design;
+
+  /// Set when the answer drew on the server's web search for trends.
+  final TrendsInfo? trends;
+}
+
+/// Where trend ideas came from: the day of the search and the pages it used.
+class TrendsInfo {
+  const TrendsInfo({required this.asOf, this.sources = const []});
+  final String asOf;
+  final List<({String title, String url})> sources;
 }
 
 /// The service is connected but this request failed (message is user-safe).
