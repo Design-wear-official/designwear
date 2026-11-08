@@ -86,7 +86,9 @@ class DesignStudioUtils {
         case 'Ubuntu':
           return GoogleFonts.ubuntu(textStyle: textStyle);
         default:
-          return GoogleFonts.outfit(textStyle: textStyle);
+          // Any other Google Fonts family (the assistant may pick one by name, for example "Anton" or
+          // "Permanent Marker"); an unknown name throws and falls back to Outfit below.
+          return GoogleFonts.getFont(fontFamily, textStyle: textStyle);
       }
     } catch (e) {
       return GoogleFonts.outfit(textStyle: textStyle);

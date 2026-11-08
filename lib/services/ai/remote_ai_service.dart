@@ -99,4 +99,37 @@ class RemoteAiService implements AiService {
       throw AiFailure(e.message);
     }
   }
+
+  @override
+  Future<DesignSides> designSides(
+    String prompt, {
+    List<List<int>> images = const [],
+  }) async {
+    try {
+      final pass = _imagePass;
+      _imagePass = null; // one pass covers all the faces
+      final j = await _api.request(
+        'POST',
+        '/v1/ai/design-sides',
+        body: {
+          'prompt': prompt,
+          'pass': ?pass,
+          if (images.isNotEmpty)
+            'images': [for (final i in images) base64Encode(i)],
+        },
+        timeout: const Duration(seconds: 100),
+      );
+      final drawn = (j['images'] as Map?)?.cast<String, Object?>() ?? const {};
+      return DesignSides(
+        images: {
+          for (final e in drawn.entries)
+            if ('${e.value}'.isNotEmpty) e.key: '${e.value}',
+        },
+        failed: [for (final f in (j['failed'] as List? ?? const [])) '$f'],
+      );
+    } on ApiException catch (e) {
+      if (e.status == 503) throw const AiUnavailable();
+      throw AiFailure(e.message);
+    }
+  }
 }

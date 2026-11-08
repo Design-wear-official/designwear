@@ -30,6 +30,15 @@ abstract class AiService {
 
   /// A PNG graphic for [prompt], or throws.
   Future<List<int>> designImage(String prompt);
+
+  /// Artwork for every face of the garment (front, back and both sleeves) for [prompt]: the front is
+  /// drawn first and the others in its style. A face that could not be drawn is in [DesignSides.failed];
+  /// throws only when nothing could be drawn. The customer's own [images] (pictures they attached) are
+  /// references for every face.
+  Future<DesignSides> designSides(
+    String prompt, {
+    List<List<int>> images = const [],
+  }) async => throw const AiUnavailable();
 }
 
 class UnconfiguredAiService implements AiService {
@@ -63,6 +72,14 @@ class UnconfiguredAiService implements AiService {
   @override
   Future<List<int>> designImage(String prompt) async =>
       throw const AiUnavailable();
+}
+
+/// The pictures for each face of the garment, as base64 PNG, and the faces that could not be drawn.
+class DesignSides {
+  const DesignSides({required this.images, this.failed = const []});
+  final Map<String, String>
+  images; // 'front' | 'back' | 'left' | 'right' -> base64 PNG
+  final List<String> failed;
 }
 
 /// The service is connected but this request failed (message is user-safe).
