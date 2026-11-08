@@ -318,6 +318,7 @@ extension _ActionMethods on _DesignStudioScreenState {
     setState(() {
       _layerJob = job;
       _layerJobSignature = _designSignature();
+      _layerJobGarment = _selectedGarmentType;
     });
   }
 

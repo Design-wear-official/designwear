@@ -361,11 +361,11 @@ class DesignCanvas extends StatelessWidget {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        for (final (label, target) in const [
+                        for (final (label, target) in [
                           ('Front', DesignSide.front),
                           ('Back', DesignSide.back),
-                          ('Left', DesignSide.left),
-                          ('Right', DesignSide.right),
+                          if (_garment.hasSleeves) ('Left', DesignSide.left),
+                          if (_garment.hasSleeves) ('Right', DesignSide.right),
                         ])
                           _buildSideToggleButton(
                             context,

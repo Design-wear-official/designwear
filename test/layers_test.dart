@@ -4,6 +4,7 @@ import 'package:designwear/api/api_client.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/screens/studio/editor/canvas/design_canvas.dart';
 import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
+import 'package:designwear/screens/studio/editor/panels/color_panel.dart';
 import 'package:designwear/screens/studio/editor/widgets/dialogs/layers_sheet.dart';
 import 'package:designwear/services/ai/ai_agent_service.dart';
 import 'package:designwear/services/ai/ai_service.dart';
@@ -70,6 +71,7 @@ class _Ai extends UnconfiguredAiService {
   final fetched = <String>[];
   String? garment;
   String? color;
+  List<String>? sides;
 
   @override
   bool get agentEnabled => true;
@@ -101,6 +103,7 @@ class _Ai extends UnconfiguredAiService {
     prompts.add(prompt);
     this.garment = garment;
     this.color = color;
+    this.sides = sides;
     if (refuse != null) throw AiFailure(refuse!);
     if (unsupported) throw const LayersUnsupported();
     return LayerJob.fromJson(job!);
@@ -516,6 +519,108 @@ void main() {
       await pump(tester, layers: () => tapped++);
       await tester.tap(find.byKey(const ValueKey('open-layers')));
       expect(tapped, 1);
+    });
+  });
+
+  group('garment styles and colours', () {
+    setUp(GarmentRegistry.reset);
+    tearDown(GarmentRegistry.reset);
+
+    Garment tank() => Garment.fromJson({
+      'id': 'tank',
+      'label': 'Tank',
+      'style': 'TANK',
+      'colors': [
+        {'name': 'Ink', 'hex': '#1C1C1E'},
+        {'name': 'Bad', 'hex': 'nope'},
+        {'name': 'Chalk', 'hex': 'F5F5F0'},
+      ],
+    });
+
+    test('style and colours are read; a bad colour is dropped', () {
+      final g = tank();
+      expect(g.style, 'tank');
+      expect(g.hasSleeves, isFalse);
+      expect(g.colors.map((c) => c.name), ['Ink', 'Chalk']);
+      expect(g.colors.first.color.toARGB32(), 0xFF1C1C1E);
+      expect(Garment.fromJson({'id': 'a', 'label': 'A'}).hasSleeves, isTrue);
+    });
+
+    testWidgets('the colour picker offers the garment\'s own colours', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(900, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      CustomDesign? picked;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: ColorPanel(
+              design: CustomDesign(baseColor: '0xFF1C1C1E'),
+              onDesignUpdate: (d) => picked = d,
+              garmentColors: tank().colors,
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+      expect(find.text('TEE COLOUR — Ink'), findsOneWidget);
+      final shown = find.byType(GestureDetector);
+      expect(shown, findsWidgets);
+      expect(picked, isNull);
+    });
+
+    testWidgets('a tank top has no sleeve sides to switch to', (tester) async {
+      GarmentRegistry.updateFromBackend([tank()]);
+      tester.view.physicalSize = const Size(1000, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      Future<void> pump(String garment) => tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: DesignCanvas(
+                design: CustomDesign(),
+                selectedElementId: null,
+                garmentType: garment,
+                onElementSelected: (_) {},
+                onElementPreview: (_) {},
+                onElementCommit: () {},
+                onElementDelete: (_) {},
+                onSideChanged: (_) {},
+              ),
+            ),
+          ),
+        ),
+      );
+      await pump('tank');
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('LEFT'), findsNothing);
+      expect(find.text('RIGHT'), findsNothing);
+      expect(find.text('BACK'), findsOneWidget);
+      await pump('tshirt');
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('LEFT'), findsOneWidget);
+    });
+
+    test('a tank asks for front and back only; a polo front sits below the placket', () async {
+      GarmentRegistry.updateFromBackend([
+        tank(),
+        Garment.fromJson({'id': 'polo', 'label': 'Polo', 'style': 'polo'}),
+      ]);
+      final fake = _Ai(job: _job());
+      AiService.instance = fake;
+      await AIAgentService().sendMessage('x', CustomDesign(), garment: 'tank');
+      expect(fake.sides, ['front', 'back']);
+      final r = await AIAgentService().sendMessage(
+        'x',
+        CustomDesign(),
+        garment: 'polo',
+      );
+      expect(fake.sides, ['front', 'back', 'left', 'right']);
+      final front = r.updatedDesign!.elementsForSide(DesignSide.front).single;
+      expect(front.y, greaterThan(0));
     });
   });
 }

@@ -77,13 +77,29 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   // while the design is unchanged the realistic mock-up views are shown instead of the live canvas.
   LayerJob? _layerJob;
   String? _layerJobSignature;
+  String? _layerJobGarment;
+
+  /// A new garment: the mock-ups of the old one are hidden (they show another shirt), and a tank top,
+  /// which has no sleeves, leaves the sleeve sides.
+  void _selectGarment(String id) {
+    setState(() {
+      _selectedGarmentType = id;
+      if (_side.isSleeve && !GarmentRegistry.byId(id).hasSleeves) {
+        _side = DesignSide.front;
+      }
+    });
+  }
 
   String _designSignature() => jsonEncode(_design.toJson());
 
   /// The mock-up for the side being shown, only while the design is exactly what the job made.
   String? get _mockupUrl {
     final job = _layerJob;
-    if (job == null || _layerJobSignature != _designSignature()) return null;
+    if (job == null ||
+        _layerJobGarment != _selectedGarmentType ||
+        _layerJobSignature != _designSignature()) {
+      return null;
+    }
     return job.viewFor(_side.value);
   }
 

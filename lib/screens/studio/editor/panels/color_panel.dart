@@ -5,16 +5,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 
+import '../canvas/garment_registry.dart' show GarmentColor;
 import '../support/design_studio_utils.dart';
 
 class ColorPanel extends StatefulWidget {
   final CustomDesign design;
   final Function(CustomDesign) onDesignUpdate;
 
+  /// The garment's own shirt colours; when empty the app's standard list is offered.
+  final List<GarmentColor> garmentColors;
+
   const ColorPanel({
     super.key,
     required this.design,
     required this.onDesignUpdate,
+    this.garmentColors = const [],
   });
 
   @override
@@ -170,6 +175,14 @@ class _ColorPanelState extends State<ColorPanel> {
     } catch (_) {}
   }
 
+  /// The swatches on offer: the garment's colours, else the standard list.
+  List<Map<String, dynamic>> get _swatches => widget.garmentColors.isEmpty
+      ? fabrics
+      : [
+          for (final c in widget.garmentColors)
+            {'name': c.name, 'color': c.color},
+        ];
+
   String _activeName() {
     if (_customColor != null &&
         DesignStudioUtils.isColorSelected(
@@ -178,7 +191,7 @@ class _ColorPanelState extends State<ColorPanel> {
         )) {
       return 'Custom';
     }
-    for (final fabric in fabrics) {
+    for (final fabric in _swatches) {
       if (DesignStudioUtils.isColorSelected(
         fabric['color'] as Color,
         widget.design.baseColor,
@@ -396,7 +409,7 @@ class _ColorPanelState extends State<ColorPanel> {
             childAspectRatio: 1,
             children: [
               // Preset fabric swatches
-              ...fabrics.map((fabric) {
+              ..._swatches.map((fabric) {
                 final color = fabric['color'] as Color;
                 final isSelected = DesignStudioUtils.isColorSelected(
                   color,

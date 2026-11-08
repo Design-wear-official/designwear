@@ -1,6 +1,24 @@
 import 'package:designwear/models/models.dart';
 import 'package:designwear/services/ai/layers.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Color;
+
+/// A natural shirt colour the business offers for a garment.
+class GarmentColor {
+  const GarmentColor(this.name, this.color);
+  final String name;
+  final Color color;
+
+  /// {name, hex '#1C1C1E'}; null when the hex is not a colour.
+  static GarmentColor? fromJson(Map<String, dynamic> j) {
+    final hex = '${j['hex'] ?? ''}'.replaceFirst('#', '');
+    if (!RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(hex)) return null;
+    return GarmentColor(
+      '${j['name'] ?? '#$hex'}',
+      Color(0xFF000000 | int.parse(hex, radix: 16)),
+    );
+  }
+}
 
 /// Descriptor for a garment the studio can render.
 ///
@@ -24,6 +42,15 @@ class Garment {
   /// The print areas of this garment (size in px at a dpi), when the business's list has them.
   final List<PrintPlacement> placements;
 
+  /// crew, vneck, scoop, henley, polo, raglan, longsleeve, tank, oversized…
+  final String style;
+
+  /// The shirt colours to offer in the colour picker (empty: the app's own list).
+  final List<GarmentColor> colors;
+
+  /// A tank top has no sleeves, so the sleeve sides are hidden.
+  bool get hasSleeves => style != 'tank';
+
   const Garment({
     required this.id,
     required this.label,
@@ -34,6 +61,8 @@ class Garment {
     this.supportsCollarPocketOverlay = false,
     this.basePrice,
     this.placements = const [],
+    this.style = 'crew',
+    this.colors = const [],
   });
 
   /// Returns the network URL for [side] if available, otherwise the local asset path.
@@ -61,6 +90,8 @@ class Garment {
     supportsCollarPocketOverlay: supportsCollarPocketOverlay,
     basePrice: basePrice,
     placements: placements,
+    style: style,
+    colors: colors,
   );
 
   factory Garment.fromJson(Map<String, dynamic> json) => Garment(
@@ -73,6 +104,11 @@ class Garment {
     placements: [
       for (final p in (json['placements'] as List? ?? const []))
         if (p is Map) ?_placement(p.cast<String, dynamic>()),
+    ],
+    style: (json['style'] as String?)?.toLowerCase() ?? 'crew',
+    colors: [
+      for (final c in (json['colors'] as List? ?? const []))
+        if (c is Map) ?GarmentColor.fromJson(c.cast<String, dynamic>()),
     ],
   );
 
@@ -134,6 +170,8 @@ class GarmentRegistry {
           supportsCollarPocketOverlay: bg.supportsCollarPocketOverlay,
           basePrice: bg.basePrice,
           placements: bg.placements,
+          style: bg.style,
+          colors: bg.colors,
         ),
       );
     }

@@ -552,7 +552,11 @@ extension _LayoutMethods on _DesignStudioScreenState {
           onAddLayerTap: () => _addTextElement('NEW TEXT'),
         );
       case 'color':
-        return ColorPanel(design: _design, onDesignUpdate: _updateDesign);
+        return ColorPanel(
+          design: _design,
+          onDesignUpdate: _updateDesign,
+          garmentColors: GarmentRegistry.byId(_selectedGarmentType).colors,
+        );
       case 'text':
         return TextTab(
           design: _design,
@@ -905,7 +909,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
             final type = _garmentTypes[index];
             final isSelected = _selectedGarmentType == type['id'];
             return GestureDetector(
-              onTap: () => setState(() => _selectedGarmentType = type['id']!),
+              onTap: () => _selectGarment(type['id']!),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 curve: Curves.easeOut,

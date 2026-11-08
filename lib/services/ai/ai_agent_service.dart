@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:designwear/models/models.dart';
 
 import '../../logging/app_log.dart';
+import '../../screens/studio/editor/canvas/garment_registry.dart';
 import 'ai_service.dart';
 import 'layers.dart';
 
@@ -27,10 +28,16 @@ class AIAgentService {
   /// Where the picture for each face goes, in the studio's element coordinates (the print area): a large
   /// picture on the front and back, a small emblem on each sleeve.
   static ({double x, double y, double w, double h}) _placement(
-    DesignSide side,
-  ) => side.isSleeve
-      ? (x: -40, y: -25, w: 90, h: 90)
-      : (x: -100, y: -20, w: 200, h: 240);
+    DesignSide side, {
+    String style = 'crew',
+  }) {
+    if (side.isSleeve) return (x: -40, y: -25, w: 90, h: 90);
+    // Polo and henley fronts have a placket: the print area starts below it.
+    if (side == DesignSide.front && (style == 'polo' || style == 'henley')) {
+      return (x: -90, y: 15, w: 180, h: 200);
+    }
+    return (x: -100, y: -20, w: 200, h: 240);
+  }
 
   /// Pictures for the front, back and sleeves, as editable image layers (empty when nothing could be
   /// drawn), the faces that failed, and the layers job they came from (null on the one-picture-per-face
@@ -49,6 +56,8 @@ class AIAgentService {
     String? garment,
     String? color,
     String? name,
+    String style = 'crew',
+    List<String> sides = const ['front', 'back', 'left', 'right'],
   }) async {
     const none = (
       layers: <DesignElement>[],
@@ -66,6 +75,7 @@ class AIAgentService {
           garment: garment,
           color: color,
           name: name,
+          sides: sides,
         );
         final layers = <DesignElement>[];
         final failed = <String>[];
@@ -79,7 +89,7 @@ class AIAgentService {
           }
           try {
             final bytes = await ai.fetchLayerImage(l.url!);
-            final p = _placement(side);
+            final p = _placement(side, style: style);
             layers.add(
               DesignElement(
                 id: 'ai_${side.value}_$stamp',
@@ -106,7 +116,7 @@ class AIAgentService {
       for (final side in DesignSide.values) {
         final data = result.images[side.value];
         if (data == null || data.isEmpty) continue;
-        final p = _placement(side);
+        final p = _placement(side, style: style);
         layers.add(
           DesignElement(
             id: 'ai_${side.value}_$stamp',
@@ -175,6 +185,11 @@ class AIAgentService {
               garment: garment,
               color: _hexColor(currentDesign.baseColor),
               name: currentDesign.name,
+              style: _garmentOf(garment).style,
+              // A tank top has no sleeves.
+              sides: _garmentOf(garment).hasSleeves
+                  ? const ['front', 'back', 'left', 'right']
+                  : const ['front', 'back'],
             )
           : (
               layers: const <DesignElement>[],
@@ -241,6 +256,8 @@ class AIAgentService {
       return AgentResponse(text: 'Something went wrong. Please try again.');
     }
   }
+
+  static Garment _garmentOf(String? id) => GarmentRegistry.byId(id ?? 'tshirt');
 
   /// '0xFF112233' as the API wants it, or null when it is not one.
   static String? _hexColor(String c) =>
