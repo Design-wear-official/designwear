@@ -105,8 +105,12 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
+      # GitHub releases (where Gradle is hosted) sometimes 504 for minutes; seed the wrapper cache from a verified mirror.
+      - name: Seed Gradle distribution
+        run: .github/scripts/seed-gradle.sh
+
       - name: Build Android release APK
-        run: flutter build apk --release --flavor external --dart-define=FLAVOR=external
+        run: .github/scripts/retry.sh 4 flutter build apk --release --flavor external --dart-define=FLAVOR=external
 
       - name: Build web
         run: |

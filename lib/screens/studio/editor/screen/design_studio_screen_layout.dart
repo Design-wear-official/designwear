@@ -343,6 +343,10 @@ extension _LayoutMethods on _DesignStudioScreenState {
                             onElementEdit: _editElement,
                             onSideChanged: (s) => setState(() => _side = s),
                             snapGuides: _snapGuides,
+                            mockupUrl: _mockupUrl,
+                            onOpenLayers: _layerJob == null
+                                ? null
+                                : _openLayers,
                           ),
                           // Off-screen front and back canvases, captured for the published previews.
 
@@ -448,6 +452,8 @@ extension _LayoutMethods on _DesignStudioScreenState {
                       onElementEdit: _editElement,
                       onSideChanged: (s) => setState(() => _side = s),
                       snapGuides: _snapGuides,
+                      mockupUrl: _mockupUrl,
+                      onOpenLayers: _layerJob == null ? null : _openLayers,
                     ),
                     // Off-screen front and back canvases, captured for the published previews.
 
@@ -567,7 +573,11 @@ extension _LayoutMethods on _DesignStudioScreenState {
           onAddLayerTap: () => _addTextElement('NEW TEXT'),
         );
       case 'color':
-        return ColorPanel(design: _design, onDesignUpdate: _updateDesign);
+        return ColorPanel(
+          design: _design,
+          onDesignUpdate: _updateDesign,
+          garmentColors: GarmentRegistry.byId(_selectedGarmentType).colors,
+        );
       case 'text':
         return TextTab(
           design: _design,
@@ -921,62 +931,67 @@ extension _LayoutMethods on _DesignStudioScreenState {
 
   Widget _buildGarmentTypeSelector() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return SizedBox(
-      height: 48.h,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        itemCount: _garmentTypes.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          final type = _garmentTypes[index];
-          final isSelected = _selectedGarmentType == type['id'];
-          return GestureDetector(
-            onTap: () {
-              final id = type['id']!;
-              setState(() => _selectedGarmentType = id);
-              // Switch to a style that exists for the chosen garment.
-              final style = GarmentStyles.resolve(id, _design.styleId);
-              if (style != null && style.id != _design.styleId) {
-                _updateDesign(
-                  _design.copyWith(
-                    styleId: style.id,
-                    partColors: style.defaultParts,
+    return ValueListenableBuilder<int>(
+      valueListenable: GarmentRegistry.revision,
+      builder: (context, _, _) => SizedBox(
+        height: 48.h,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          itemCount: _garmentTypes.length + 1,
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          itemBuilder: (context, index) {
+            if (index == _garmentTypes.length) {
+              return ActionChip(
+                key: const ValueKey('size-chip-open'),
+                onPressed: _openSizes,
+                avatar: const Icon(Icons.straighten, size: 16),
+                label: Text(
+                  _design.size == null
+                      ? 'Size'
+                      : 'Size ${_design.size}${_design.fit == null ? '' : ', ${_design.fit}'}',
+                ),
+              );
+            }
+            final type = _garmentTypes[index];
+            final isSelected = _selectedGarmentType == type['id'];
+            return GestureDetector(
+              onTap: () => _selectGarment(type['id']!),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.dsAccent : Colors.transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.dsAccent
+                        : AppColors.dsBorder(isDark),
                   ),
-                );
-              }
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              curve: Curves.easeOut,
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.dsAccent : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.dsAccent
-                      : AppColors.dsBorder(isDark),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      type['label']!,
+                      style: GoogleFonts.outfit(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isSelected
+                            ? AppColors.dsAccentInk
+                            : AppColors.dsTextPrimary(isDark),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    type['label']!,
-                    style: GoogleFonts.outfit(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: isSelected
-                          ? AppColors.dsAccentInk
-                          : AppColors.dsTextPrimary(isDark),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

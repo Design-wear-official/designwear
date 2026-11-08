@@ -20,7 +20,13 @@ import 'package:designwear/services/services.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/presentation/widgets/widgets.dart';
 import 'package:designwear/screens/studio/editor/design_studio.dart';
+import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
 import 'package:designwear/screens/studio/editor/widgets/widgets.dart';
+import 'package:designwear/screens/studio/editor/widgets/dialogs/layers_sheet.dart';
+import 'package:designwear/screens/studio/editor/widgets/dialogs/size_sheet.dart';
+import 'package:designwear/screens/studio/editor/support/protected_names.dart';
+import 'package:designwear/services/ai/layers.dart';
+import 'package:designwear/services/ai/ai_service.dart' show AiService;
 import 'package:designwear/screens/ai/virtual_tryon_screen.dart';
 
 part 'screen/design_studio_screen_layout.dart';
@@ -69,6 +75,44 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   String? _selectedElementId;
   bool _showTemplates = false;
   String _selectedGarmentType = 'tshirt';
+
+  // The print-layers job the current artwork came from, and the design as it was when it was made:
+  // while the design is unchanged the realistic mock-up views are shown instead of the live canvas.
+  LayerJob? _layerJob;
+  String? _layerJobSignature;
+  String? _layerJobGarment;
+
+  /// A new garment: the mock-ups of the old one are hidden (they show another shirt), and a tank top,
+  /// which has no sleeves, leaves the sleeve sides.
+  void _selectGarment(String id) {
+    setState(() {
+      _selectedGarmentType = id;
+      if (_side.isSleeve && !GarmentRegistry.byId(id).hasSleeves) {
+        _side = DesignSide.front;
+      }
+    });
+    // A style that exists for the chosen garment (hoodie, cap, tote have their own).
+    final style = GarmentStyles.resolve(id, _design.styleId);
+    if (style != null && style.id != _design.styleId) {
+      _updateDesign(
+        _design.copyWith(styleId: style.id, partColors: style.defaultParts),
+      );
+    }
+  }
+
+  String _designSignature() => jsonEncode(_design.toJson());
+
+  /// The mock-up for the side being shown, only while the design is exactly what the job made.
+  String? get _mockupUrl {
+    final job = _layerJob;
+    if (job == null ||
+        _layerJobGarment != _selectedGarmentType ||
+        _layerJobSignature != _designSignature()) {
+      return null;
+    }
+    return job.viewFor(_side.value);
+  }
+
   DesignSide _side = DesignSide.front;
 
   String _activeTool = 'layers';
@@ -78,11 +122,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   // only T-Shirts, so this lists T-Shirt only — hoodie/polo/cap/tote stay
   // hidden from users until they're a real category. Once _loadCategories()
   // returns, the live category list replaces this.
-  final List<Map<String, String>> _garmentTypes = [
-    {'id': 'tshirt', 'label': 'T-Shirt'},
-    {'id': 'hoodie', 'label': 'Hoodie'},
-    {'id': 'cap', 'label': 'Cap'},
-    {'id': 'totebag', 'label': 'Tote Bag'},
+  List<Map<String, String>> get _garmentTypes => [
+    for (final g in GarmentRegistry.selectable) {'id': g.id, 'label': g.label},
   ];
 
   late DateTime _lastAutoSave = DateTime.now();
@@ -121,8 +162,6 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     super.initState();
     _loadAutoSavedDesign();
     _historyService.addToHistory(_design);
-    // Ensure garment images are loaded from the backend before the first frame.
-    GarmentService.loadGarments();
   }
 
   @override
@@ -194,6 +233,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
           AgentChatWidget(
             currentDesign: _design,
             onDesignUpdate: _onAiDesignUpdate,
+            garmentType: _selectedGarmentType,
+            onLayerJob: _onLayerJob,
             bottomOffset: aiBottomOffset,
           ),
           if (_showTemplates)

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../models/commerce.dart';
 import '../../../models/design.dart';
+import '../../../models/custom_design.dart' show CustomDesign;
 import '../../../services/shop/cart_service.dart';
 import '../../../services/community/community_service.dart';
 import '../../account/auth_screens.dart';
@@ -20,7 +21,12 @@ class DesignDetailScreen extends StatefulWidget {
 class _DesignDetailScreenState extends State<DesignDetailScreen> {
   late CommunityDesign _design = widget.design;
   bool _back = false;
-  String _size = 'M';
+
+  /// The size the creator chose in the studio, if any, else M.
+  late String _size = () {
+    final s = widget.design.designJson?['size'];
+    return s is String && CustomDesign.sizes.contains(s) ? s : 'M';
+  }();
 
   Future<void> _like() async {
     if (!await requireSignIn(context) || !mounted) return;
@@ -123,7 +129,7 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
               DropdownButton<String>(
                 value: _size,
                 items: [
-                  for (final s in ['S', 'M', 'L', 'XL', 'XXL'])
+                  for (final s in CustomDesign.sizes)
                     DropdownMenuItem(value: s, child: Text(s)),
                 ],
                 onChanged: (v) => setState(() => _size = v ?? _size),

@@ -10,12 +10,19 @@ import 'package:designwear/presentation/styles/styles.dart';
 
 import '../../services/ai/ai_service.dart' show AiService, TrendsInfo;
 import '../../services/ai/ai_usage_service.dart';
+import '../../services/ai/layers.dart' show LayerJob;
 import 'ai_allowance_chip.dart';
 import 'ai_image_attachment_widget.dart';
 
 class AgentChatWidget extends StatefulWidget {
   final CustomDesign currentDesign;
   final Function(CustomDesign) onDesignUpdate;
+
+  /// The garment being designed (its id), so the artwork is made for its print areas.
+  final String? garmentType;
+
+  /// Called after [onDesignUpdate] when the pictures came from a print-layers job.
+  final void Function(LayerJob job)? onLayerJob;
 
   /// Distance from the bottom of the screen for the floating launcher/chat.
   /// Raised on mobile so the button clears the bottom tools row / open panel
@@ -26,6 +33,8 @@ class AgentChatWidget extends StatefulWidget {
     super.key,
     required this.currentDesign,
     required this.onDesignUpdate,
+    this.garmentType,
+    this.onLayerJob,
     this.bottomOffset = 20,
   });
 
@@ -48,6 +57,14 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
       'hasImages': false,
     },
   ];
+
+  /// The last message is the bot asking which size the customer wants.
+  bool get _asksForSize {
+    if (_messages.length < 2) return false; // not the greeting
+    final last = _messages.last;
+    return last['role'] == 'agent' &&
+        RegExp(r'\bsize\b', caseSensitive: false).hasMatch('${last['text']}');
+  }
 
   static const _trendingAsk =
       "What's trending in T-shirt design right now? Make me a design from it.";
@@ -80,6 +97,7 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
         widget.currentDesign,
         imageAttachments: imagesToSend.isNotEmpty ? imagesToSend : null,
         trends: trends,
+        garment: widget.garmentType,
       );
 
       setState(() {
@@ -90,6 +108,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
           'hasImages': false,
           'trends': response.trends,
           'preview': response.previewBase64,
+          'size': response.updatedDesign?.size,
+          'fit': response.updatedDesign?.fit,
         });
       });
       _scrollToBottom();
@@ -97,6 +117,8 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
 
       if (response.updatedDesign != null) {
         widget.onDesignUpdate(response.updatedDesign!);
+        final job = response.layerJob;
+        if (job != null) widget.onLayerJob?.call(job);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Design updated by AI! ✨')),
@@ -304,6 +326,19 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                                       ),
                                     ),
                                   ),
+                                if (msg['size'] is String)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Chip(
+                                      key: const ValueKey('size-chip'),
+                                      visualDensity: VisualDensity.compact,
+                                      label: Text(
+                                        msg['fit'] is String
+                                            ? 'Size ${msg['size']}, ${msg['fit']} fit'
+                                            : 'Size ${msg['size']}',
+                                      ),
+                                    ),
+                                  ),
                                 if (msg['trends'] is TrendsInfo)
                                   _TrendsSources(
                                     info: msg['trends'] as TrendsInfo,
@@ -315,6 +350,25 @@ class _AgentChatWidgetState extends State<AgentChatWidget> {
                       },
                     ),
                   ),
+
+                  // When the bot's last message asks about size, the sizes are one tap away.
+                  if (!_isLoading && _asksForSize)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                      child: Wrap(
+                        spacing: 6,
+                        runSpacing: 0,
+                        children: [
+                          for (final s in CustomDesign.sizes)
+                            ActionChip(
+                              key: ValueKey('quick-size-$s'),
+                              visualDensity: VisualDensity.compact,
+                              label: Text(s),
+                              onPressed: () => _handleSubmitted('Size $s'),
+                            ),
+                        ],
+                      ),
+                    ),
 
                   // Loading Indicator
                   if (_isLoading)

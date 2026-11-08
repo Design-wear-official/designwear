@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import '../../api/api_client.dart';
 import 'ai_service.dart';
+import 'layers.dart';
 
 /// AI through the DesignWear API, which holds the model keys.
 class RemoteAiService implements AiService {
@@ -115,6 +116,55 @@ class RemoteAiService implements AiService {
       return base64Decode('${j['image']}');
     } on ApiException catch (e) {
       if (e.status == 503) throw const AiUnavailable();
+      throw AiFailure(e.message);
+    }
+  }
+
+  @override
+  Future<LayerJob> designLayers(
+    String prompt, {
+    List<List<int>> images = const [],
+    String? garment,
+    String? color,
+    String? name,
+    String? size,
+    List<String> sides = const ['front', 'back', 'left', 'right'],
+  }) async {
+    final pass = _imagePass;
+    try {
+      _imagePass = null; // one creation, however many sides
+      final j = await _api.request(
+        'POST',
+        '/v1/ai/design-layers',
+        body: {
+          'prompt': prompt,
+          'sides': sides,
+          'pass': ?pass,
+          'garment': ?garment,
+          'color': ?color,
+          'size': ?size,
+          if (name != null && name.isNotEmpty) 'name': name,
+          if (images.isNotEmpty)
+            'images': [for (final i in images.take(3)) base64Encode(i)],
+        },
+        timeout: const Duration(seconds: 120),
+      );
+      return LayerJob.fromJson(j.cast<String, dynamic>());
+    } on ApiException catch (e) {
+      if (e.status == 404) {
+        _imagePass = pass; // the fallback route can still use it
+        throw const LayersUnsupported();
+      }
+      if (e.status == 503) throw const AiUnavailable();
+      throw AiFailure(e.message);
+    }
+  }
+
+  @override
+  Future<List<int>> fetchLayerImage(String url) async {
+    try {
+      return await _api.getBytes(url);
+    } on ApiException catch (e) {
       throw AiFailure(e.message);
     }
   }

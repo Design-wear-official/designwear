@@ -94,14 +94,15 @@ class _TransformableElementWidgetState
 
   void _commitMove() {
     final el = widget.element;
-    final nx = (el.x + _moveDelta.dx).clamp(
-      DesignStudioConstants.printAreaMinX,
-      DesignStudioConstants.printAreaMaxX,
+    final size = _bodySize;
+    final box = DesignStudioConstants.clampBox(
+      el.x + _moveDelta.dx,
+      el.y + _moveDelta.dy,
+      size?.width ?? el.width ?? 0,
+      size?.height ?? el.height ?? 0,
     );
-    final ny = (el.y + _moveDelta.dy).clamp(
-      DesignStudioConstants.printAreaMinY,
-      DesignStudioConstants.printAreaMaxY,
-    );
+    final nx = box.x;
+    final ny = box.y;
     setState(() {
       _moveDelta = Offset.zero;
       _moving = false;

@@ -33,6 +33,12 @@ class DesignCanvas extends StatelessWidget {
   /// readout or handles) — used to capture a clean texture for 3D preview.
   final bool bare;
 
+  /// A realistic mock-up of this side (from a print-layers job). Shown over the live canvas while set.
+  final String? mockupUrl;
+
+  /// Opens the "Layers & sheet" view; the button is shown only when this is set.
+  final VoidCallback? onOpenLayers;
+
   const DesignCanvas({
     super.key,
     required this.design,
@@ -49,6 +55,8 @@ class DesignCanvas extends StatelessWidget {
     this.canvasKey,
     this.snapGuides,
     this.bare = false,
+    this.mockupUrl,
+    this.onOpenLayers,
   });
 
   bool get _showBack => side == DesignSide.back;
@@ -73,7 +81,7 @@ class DesignCanvas extends StatelessWidget {
     final box = DesignStudioConstants.canvasWidth * 1.25;
     final scale = box / 1024;
     Widget tinted(Color c) => ColorFiltered(
-      colorFilter: ColorFilter.mode(c, BlendMode.modulate),
+      colorFilter: DesignStudioUtils.shirtTint(c),
       child: Image.asset(
         view.asset,
         width: box,
@@ -160,6 +168,19 @@ class DesignCanvas extends StatelessWidget {
   }
 
   Garment get _garment => GarmentRegistry.byId(garmentType);
+
+  /// The print area of the side being shown, from the garment's own list when it has one.
+  String get _printLabel {
+    final p = _garment.placementFor(side);
+    if (p != null) {
+      String n(double v) =>
+          v == v.roundToDouble() ? '${v.round()}' : v.toStringAsFixed(1);
+      return 'PRINT ${n(p.widthInches)} × ${n(p.heightInches)} in';
+    }
+    if (_isPocket) return 'PRINT 8 × 8 cm';
+    return _isSleeve ? 'PRINT 8 × 10 cm' : 'PRINT 30 × 40 cm';
+  }
+
   bool get _hasFaceAsset => _garment.hasAsset(side);
   bool get _isNetworkImage => _garment.isNetworkImage(side);
 
@@ -237,14 +258,41 @@ class DesignCanvas extends StatelessWidget {
               // Other garments: one photo tinted with the garment colour.
               else if (_hasFaceAsset)
                 ColorFiltered(
-                  colorFilter: ColorFilter.mode(_baseColor, BlendMode.modulate),
+                  colorFilter: DesignStudioUtils.shirtTint(
+                    DesignStudioUtils.parseColorFromHex(design.baseColor),
+                  ),
                   child: _isNetworkImage
                       ? Image.network(
                           _garment.imageUrl(side)!,
                           width: DesignStudioConstants.canvasWidth,
                           fit: BoxFit.contain,
-                          filterQuality: FilterQuality.high,
-                          errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                          // Show the bundled local asset while the network
+                          // image loads, so there is no blank flash.
+                          frameBuilder: (ctx, child, frame, _) {
+                            final localPath = side == DesignSide.back
+                                ? _garment.backAsset
+                                : _garment.frontAsset;
+                            if (frame == null && localPath != null) {
+                              return Image.asset(
+                                localPath,
+                                width: DesignStudioConstants.canvasWidth,
+                                fit: BoxFit.contain,
+                              );
+                            }
+                            return child;
+                          },
+                          errorBuilder: (_, _, _) {
+                            final fallback =
+                                (side == DesignSide.back
+                                    ? _garment.backAsset
+                                    : _garment.frontAsset) ??
+                                'assets/images/garments/crew_front.png';
+                            return Image.asset(
+                              fallback,
+                              width: DesignStudioConstants.canvasWidth,
+                              fit: BoxFit.contain,
+                            );
+                          },
                         )
                       : Image.asset(
                           _garment.imageUrl(side)!,
@@ -360,6 +408,55 @@ class DesignCanvas extends StatelessWidget {
                   ),
                 ),
 
+              // The realistic mock-up of this side, while the design is what the job made. If it cannot
+              // load, the live canvas underneath stays visible.
+              if (!bare && mockupUrl != null)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Image.network(
+                      mockupUrl!,
+                      key: const ValueKey('mockup-view'),
+                      fit: BoxFit.contain,
+                      frameBuilder: (ctx, child, frame, _) => frame == null
+                          ? const SizedBox.shrink()
+                          : ColoredBox(
+                              color: AppColors.dsCanvasFrame,
+                              child: child,
+                            ),
+                      errorBuilder: (_, _, _) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+
+              // Opens the layers and contact sheet of the artwork made by the assistant.
+              if (!bare && onOpenLayers != null)
+                Positioned(
+                  bottom: 14,
+                  left: 14,
+                  child: GestureDetector(
+                    key: const ValueKey('open-layers'),
+                    onTap: onOpenLayers,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.dsFrameChrome,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        'Layers & sheet',
+                        style: GoogleFonts.outfit(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 11,
+                          color: const Color(0xFFC9C6BC),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
               // Front / Back toggle pill (top-right) — dark translucent
               // segmented control, same chrome style in both themes.
               if (!bare)
@@ -376,17 +473,20 @@ class DesignCanvas extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        for (final row in const [
+                        for (final row in [
                           [
                             ('Front', DesignSide.front),
                             ('Back', DesignSide.back),
-                            ('Left', DesignSide.left),
-                            ('Right', DesignSide.right),
+                            if (_garment.hasSleeves) ('Left', DesignSide.left),
+                            if (_garment.hasSleeves)
+                              ('Right', DesignSide.right),
                           ],
-                          [
-                            ('L Pocket', DesignSide.leftPocket),
-                            ('R Pocket', DesignSide.rightPocket),
-                          ],
+                          if (_garment.hasSleeves &&
+                              _style?.garment == 'tshirt')
+                            [
+                              ('L Pocket', DesignSide.leftPocket),
+                              ('R Pocket', DesignSide.rightPocket),
+                            ],
                         ])
                           Row(
                             mainAxisSize: MainAxisSize.min,
@@ -420,11 +520,7 @@ class DesignCanvas extends StatelessWidget {
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      _isPocket
-                          ? 'PRINT 8 × 8 cm'
-                          : _isSleeve
-                          ? 'PRINT 8 × 10 cm'
-                          : 'PRINT 30 × 40 cm',
+                      _printLabel,
                       style: GoogleFonts.outfit(
                         fontWeight: FontWeight.w700,
                         fontSize: 10,

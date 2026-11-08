@@ -1001,6 +1001,8 @@ class GarmentStyles {
   /// The style to draw for [garment]: [styleId] if it belongs there, else the
   /// garment's first style; null when the garment has none.
   static GarmentStyle? resolve(String garment, String? styleId) {
+    // The business's separate "Polo Shirt" garment is just the polo style.
+    if (garment == 'polo') return byId('polo');
     final list = forGarment(garment);
     if (list.isEmpty) return null;
     return list.firstWhere((s) => s.id == styleId, orElse: () => list.first);

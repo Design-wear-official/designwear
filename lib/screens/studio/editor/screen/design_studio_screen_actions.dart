@@ -179,14 +179,14 @@ extension _ActionMethods on _DesignStudioScreenState {
   void _nudgeSelected(double dx, double dy) {
     final el = _selectedElement;
     if (el == null) return;
-    final nx = (el.x + dx).clamp(
-      DesignStudioConstants.printAreaMinX,
-      DesignStudioConstants.printAreaMaxX,
+    final box = DesignStudioConstants.clampBox(
+      el.x + dx,
+      el.y + dy,
+      el.width ?? 0,
+      el.height ?? 0,
     );
-    final ny = (el.y + dy).clamp(
-      DesignStudioConstants.printAreaMinY,
-      DesignStudioConstants.printAreaMaxY,
-    );
+    final nx = box.x;
+    final ny = box.y;
     _updateDesign(
       _design.updateElement(
         el.id,
@@ -470,6 +470,33 @@ extension _ActionMethods on _DesignStudioScreenState {
     _autoSaveDesign();
   }
 
+  void _onLayerJob(LayerJob job) {
+    setState(() {
+      _layerJob = job;
+      _layerJobSignature = _designSignature();
+      _layerJobGarment = _selectedGarmentType;
+    });
+  }
+
+  void _openSizes() {
+    showSizeSheet(
+      context,
+      garment: GarmentRegistry.byId(_selectedGarmentType),
+      selected: _design.size,
+      onSelected: (s) => _updateDesign(_design.copyWith(size: s)),
+    );
+  }
+
+  void _openLayers() {
+    final job = _layerJob;
+    if (job == null) return;
+    showLayersSheet(
+      context,
+      job: job,
+      garment: GarmentRegistry.byId(_selectedGarmentType),
+    );
+  }
+
   void _onAiDesignUpdate(CustomDesign incoming) {
     final img = incoming.designImageBase64;
     if (img != null && img.isNotEmpty) {
@@ -492,6 +519,26 @@ extension _ActionMethods on _DesignStudioScreenState {
   }
 
   // ── Canvas capture ──────────────────────────────────────────────────────────
+
+  /// The job's mock-up for [side] as base64 PNG, only while the design, garment and size are unchanged
+  /// since the job; null otherwise. The API caps previews (~330 KB); a larger one is skipped.
+  Future<String?> _mockupPreview(DesignSide side) async {
+    final job = _layerJob;
+    if (job == null ||
+        _layerJobGarment != _selectedGarmentType ||
+        _layerJobSignature != _designSignature()) {
+      return null;
+    }
+    final url = job.viewFor(side.value);
+    if (url == null) return null;
+    try {
+      final bytes = await AiService.instance.fetchLayerImage(url);
+      final encoded = base64Encode(bytes);
+      return encoded.length > 440000 ? null : encoded;
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<String?> _captureCanvasPng([GlobalKey? key]) async {
     try {
@@ -526,6 +573,21 @@ extension _ActionMethods on _DesignStudioScreenState {
       );
       return;
     }
+    // Someone else's trademark or character is not published (the API checks AI prompts the same way).
+    final protected = protectedNameInDesign(_design.name, [
+      _design.text,
+      for (final e in _design.elements)
+        if (e.type != DesignElementType.image) e.content,
+    ]);
+    if (protected != null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(protectedNameMessage),
+          duration: Duration(seconds: 6),
+        ),
+      );
+      return;
+    }
     if (!await requireSignIn(context) || !mounted) return;
 
     final handle = (context.read<AuthService>().user?.name ?? 'user')
@@ -538,8 +600,14 @@ extension _ActionMethods on _DesignStudioScreenState {
         : 'Remix by @$handle';
 
     setState(() => _isPublishing = true);
-    final previewImage = await _captureCanvasPng(_frontCaptureKey);
-    final backPreviewImage = await _captureCanvasPng(_backCaptureKey);
+    // The realistic mock-up of each side when the design is exactly what the assistant's layers job drew;
+    // otherwise (or if it can't be fetched or is too big) the studio's own capture.
+    final previewImage =
+        await _mockupPreview(DesignSide.front) ??
+        await _captureCanvasPng(_frontCaptureKey);
+    final backPreviewImage =
+        await _mockupPreview(DesignSide.back) ??
+        await _captureCanvasPng(_backCaptureKey);
     try {
       final saved = await community.publishStudio(
         name: designName,
@@ -730,7 +798,9 @@ extension _ActionMethods on _DesignStudioScreenState {
                 title: _design.name.isNotEmpty
                     ? _design.name
                     : _baseProduct.title,
-                price: _baseProduct.price,
+                price:
+                    GarmentRegistry.byId(_selectedGarmentType).basePrice ??
+                    _baseProduct.price,
               ),
               customClothingBytes: bytes,
             ),

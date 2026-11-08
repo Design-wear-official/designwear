@@ -197,6 +197,13 @@ class CustomDesign {
   final String cuffColor;
   final String sleeveCuff; // 'none' | 'banded' | 'rolled'
   final String fabricFinish; // 'solid' | 'heather' | 'vintage'
+  /// The size the customer wants ('XS'..'XXL') and how it should fit ('regular' | 'relaxed' | 'oversized'),
+  /// when chosen. Anything else is ignored.
+  final String? size;
+  final String? fit;
+  static const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  static const fits = ['regular', 'relaxed', 'oversized'];
+
   // Runtime-only: AI-generated design graphic (base64, not persisted to JSON)
   final String? designImageBase64;
 
@@ -227,6 +234,8 @@ class CustomDesign {
     this.collarColor = 'auto',
     this.pocketColor = 'auto',
     this.cuffColor = 'auto',
+    this.size,
+    this.fit,
     this.sleeveCuff = 'none',
     this.fabricFinish = 'solid',
     this.designImageBase64,
@@ -261,6 +270,8 @@ class CustomDesign {
     String? cuffColor,
     String? sleeveCuff,
     String? fabricFinish,
+    String? size,
+    String? fit,
     Object? designImageBase64 = _keepExisting,
   }) {
     return CustomDesign(
@@ -292,6 +303,8 @@ class CustomDesign {
       cuffColor: cuffColor ?? this.cuffColor,
       sleeveCuff: sleeveCuff ?? this.sleeveCuff,
       fabricFinish: fabricFinish ?? this.fabricFinish,
+      size: size ?? this.size,
+      fit: fit ?? this.fit,
       designImageBase64: identical(designImageBase64, _keepExisting)
           ? this.designImageBase64
           : designImageBase64 as String?,
@@ -332,6 +345,8 @@ class CustomDesign {
       'fabricFinish': fabricFinish,
       // Persisted so saved/published designs keep their AI graphic (was dropped before).
       'designImageBase64': designImageBase64,
+      'size': ?size,
+      'fit': ?fit,
     };
   }
 
@@ -382,6 +397,8 @@ class CustomDesign {
       sleeveCuff: json['sleeveCuff'] ?? 'none',
       fabricFinish: json['fabricFinish'] ?? 'solid',
       designImageBase64: json['designImageBase64'] as String?,
+      size: sizes.contains(json['size']) ? json['size'] as String : null,
+      fit: fits.contains(json['fit']) ? json['fit'] as String : null,
     );
   }
 

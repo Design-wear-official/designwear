@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../../presentation/styles/styles.dart';
+import '../editor/support/design_studio_utils.dart';
 
 /// A design's rendered garment: the studio's own PNG preview when there is one,
 /// otherwise a tinted blank tee so cards never look empty.
@@ -50,7 +51,7 @@ class DesignPreview extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: ColorFiltered(
-          colorFilter: ColorFilter.mode(tint, BlendMode.modulate),
+          colorFilter: DesignStudioUtils.shirtTint(tint),
           child: Image.asset(
             'assets/images/garments/crew_front.png',
             fit: BoxFit.contain,

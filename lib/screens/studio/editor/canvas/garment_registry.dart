@@ -1,4 +1,24 @@
 import 'package:designwear/models/models.dart';
+import 'package:designwear/services/ai/layers.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart' show Color;
+
+/// A natural shirt colour the business offers for a garment.
+class GarmentColor {
+  const GarmentColor(this.name, this.color);
+  final String name;
+  final Color color;
+
+  /// {name, hex '#1C1C1E'}; null when the hex is not a colour.
+  static GarmentColor? fromJson(Map<String, dynamic> j) {
+    final hex = '${j['hex'] ?? ''}'.replaceFirst('#', '');
+    if (!RegExp(r'^[0-9A-Fa-f]{6}$').hasMatch(hex)) return null;
+    return GarmentColor(
+      '${j['name'] ?? '#$hex'}',
+      Color(0xFF000000 | int.parse(hex, radix: 16)),
+    );
+  }
+}
 
 /// Descriptor for a garment the studio can render.
 ///
@@ -20,6 +40,24 @@ class Garment {
   final String? rightUrl;
   final bool supportsCollarPocketOverlay;
 
+  /// Starting price from the business's garment list, when it set one.
+  final double? basePrice;
+
+  /// The print areas of this garment (size in px at a dpi), when the business's list has them.
+  final List<PrintPlacement> placements;
+
+  /// crew, vneck, scoop, henley, polo, raglan, longsleeve, tank, oversized…
+  final String style;
+
+  /// The shirt colours to offer in the colour picker (empty: the app's own list).
+  final List<GarmentColor> colors;
+
+  /// The size chart, when the business's list has one.
+  final List<SizeSpec> sizes;
+
+  /// A tank top has no sleeves, so the sleeve sides are hidden.
+  bool get hasSleeves => style != 'tank';
+
   const Garment({
     required this.id,
     required this.label,
@@ -32,6 +70,11 @@ class Garment {
     this.leftUrl,
     this.rightUrl,
     this.supportsCollarPocketOverlay = false,
+    this.basePrice,
+    this.placements = const [],
+    this.style = 'crew',
+    this.colors = const [],
+    this.sizes = const [],
   });
 
   /// Returns the network URL for [side] if available, otherwise the local asset path.
@@ -70,6 +113,11 @@ class Garment {
     leftUrl: leftUrl ?? this.leftUrl,
     rightUrl: rightUrl ?? this.rightUrl,
     supportsCollarPocketOverlay: supportsCollarPocketOverlay,
+    basePrice: basePrice,
+    placements: placements,
+    style: style,
+    colors: colors,
+    sizes: sizes,
   );
 
   factory Garment.fromJson(Map<String, dynamic> json) => Garment(
@@ -80,7 +128,42 @@ class Garment {
     leftUrl: json['leftImageUrl'] as String?,
     rightUrl: json['rightImageUrl'] as String?,
     supportsCollarPocketOverlay: json['supportsCollarPocket'] as bool? ?? false,
+    basePrice: (json['basePrice'] as num?)?.toDouble(),
+    placements: [
+      for (final p in (json['placements'] as List? ?? const []))
+        if (p is Map) ?_placement(p.cast<String, dynamic>()),
+    ],
+    style: (json['style'] as String?)?.toLowerCase() ?? 'crew',
+    sizes: [
+      for (final s in (json['sizes'] as List? ?? const []))
+        if (s is Map) ?SizeSpec.fromJson(s.cast<String, dynamic>()),
+    ],
+    colors: [
+      for (final c in (json['colors'] as List? ?? const []))
+        if (c is Map) ?GarmentColor.fromJson(c.cast<String, dynamic>()),
+    ],
   );
+
+  static PrintPlacement? _placement(Map<String, dynamic> p) {
+    try {
+      return PrintPlacement.fromJson(p);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// The print area for a studio side ('front'…), if known.
+  PrintPlacement? placementFor(DesignSide side) {
+    final key = switch (side) {
+      DesignSide.front => 'front',
+      DesignSide.back => 'back',
+      DesignSide.left => 'sleeve_left',
+      DesignSide.right => 'sleeve_right',
+      DesignSide.leftPocket => 'pocket_left',
+      DesignSide.rightPocket => 'pocket_right',
+    };
+    return placements.where((p) => p.key == key).firstOrNull;
+  }
 }
 
 class GarmentRegistry {
@@ -93,12 +176,11 @@ class GarmentRegistry {
       label: 'T-Shirt',
       frontAsset: 'assets/images/garments/crew_front.png',
       backAsset: 'assets/images/garments/crew_back.png',
-      // Front/back come from the style photos; sleeves and pockets are drawn.
     ),
-    Garment(id: 'hoodie', label: 'Hoodie'),
-    Garment(id: 'polo', label: 'Polo Shirt'),
-    Garment(id: 'cap', label: 'Cap'),
-    Garment(id: 'totebag', label: 'Tote Bag'),
+    Garment(id: 'hoodie', label: 'Hoodie', style: 'hoodie'),
+    Garment(id: 'polo', label: 'Polo Shirt', style: 'polo'),
+    Garment(id: 'cap', label: 'Cap', style: 'cap'),
+    Garment(id: 'totebag', label: 'Tote Bag', style: 'tote'),
   ];
 
   static List<Garment> _live = List.from(_defaults);
@@ -123,6 +205,11 @@ class GarmentRegistry {
           leftUrl: bg.leftUrl,
           rightUrl: bg.rightUrl,
           supportsCollarPocketOverlay: bg.supportsCollarPocketOverlay,
+          basePrice: bg.basePrice,
+          placements: bg.placements,
+          style: bg.style,
+          colors: bg.colors,
+          sizes: bg.sizes,
         ),
       );
     }
@@ -131,6 +218,31 @@ class GarmentRegistry {
       if (!merged.any((g) => g.id == d.id)) merged.add(d);
     }
     _live = merged;
+    _backendIds = {for (final g in backendGarments) g.id};
+    revision.value++;
+  }
+
+  static Set<String>? _backendIds;
+
+  /// Bumps whenever the list changes, so the chooser can rebuild.
+  static final ValueNotifier<int> revision = ValueNotifier(0);
+
+  /// What the studio's garment chooser offers: the business's own list once it has arrived, until
+  /// then only the garments the app can already draw.
+  static List<Garment> get selectable {
+    final ids = _backendIds;
+    if (ids == null) {
+      return _live.where((g) => g.hasAsset(DesignSide.front)).toList();
+    }
+    return _live.where((g) => ids.contains(g.id)).toList();
+  }
+
+  /// Back to the bundled list (tests).
+  @visibleForTesting
+  static void reset() {
+    _live = List.from(_defaults);
+    _backendIds = null;
+    revision.value++;
   }
 
   static List<Garment> get all => _live;
