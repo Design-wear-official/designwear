@@ -1017,8 +1017,9 @@ class GarmentStyles {
   ];
 
   /// Styles offered for a garment category ('tshirt', 'hoodie', ...).
-  static List<GarmentStyle> forGarment(String garment) => garment == 'tank'
-      ? [byId('tank')]
+  static List<GarmentStyle> forGarment(String garment) =>
+      garment == 'tank' || garment == 'polo'
+      ? [byId(garment)]
       : all.where((s) => s.garment == garment).toList();
 
   /// The style to draw for [garment]: [styleId] if it belongs there, else the
