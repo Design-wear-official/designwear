@@ -256,14 +256,22 @@ extension _ActionMethods on _DesignStudioScreenState {
 
   /// Shows every garment area (front, back, sleeves, pockets) side by side.
   void _showAllViews() {
-    const areas = [
-      ('Front', DesignSide.front),
-      ('Back', DesignSide.back),
-      ('Left sleeve', DesignSide.left),
-      ('Right sleeve', DesignSide.right),
-      ('Left pocket', DesignSide.leftPocket),
-      ('Right pocket', DesignSide.rightPocket),
-    ];
+    final areas =
+        [
+          ('Front', DesignSide.front),
+          ('Back', DesignSide.back),
+          ('Left sleeve', DesignSide.left),
+          ('Right sleeve', DesignSide.right),
+          ('Left pocket', DesignSide.leftPocket),
+          ('Right pocket', DesignSide.rightPocket),
+        ].where((a) {
+          final style = GarmentStyles.resolve(
+            _selectedGarmentType,
+            _design.styleId,
+          );
+          if (!a.$2.isPocket) return true;
+          return style != null && style.hasPocket(a.$2);
+        }).toList();
     showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(

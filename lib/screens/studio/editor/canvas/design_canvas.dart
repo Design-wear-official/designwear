@@ -486,11 +486,14 @@ class DesignCanvas extends StatelessWidget {
                             if (_garment.hasSleeves)
                               ('Right', DesignSide.right),
                           ],
-                          if (_garment.hasSleeves &&
-                              _style?.garment == 'tshirt')
+                          if (_style != null &&
+                              (_style!.hasPocket(DesignSide.leftPocket) ||
+                                  _style!.hasPocket(DesignSide.rightPocket)))
                             [
-                              ('L Pocket', DesignSide.leftPocket),
-                              ('R Pocket', DesignSide.rightPocket),
+                              if (_style!.hasPocket(DesignSide.leftPocket))
+                                ('L Pocket', DesignSide.leftPocket),
+                              if (_style!.hasPocket(DesignSide.rightPocket))
+                                ('R Pocket', DesignSide.rightPocket),
                             ],
                         ])
                           Row(

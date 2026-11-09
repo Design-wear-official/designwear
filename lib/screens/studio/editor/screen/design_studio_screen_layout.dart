@@ -430,10 +430,12 @@ extension _LayoutMethods on _DesignStudioScreenState {
       ('Back', DesignSide.back),
       if (garment.hasSleeves) ('Left', DesignSide.left),
       if (garment.hasSleeves) ('Right', DesignSide.right),
-      if (garment.hasSleeves && style?.garment == 'tshirt') ...[
+      // A pocket is the customer's choice (Pocket tee styles): its print area only
+      // appears for a pocket the chosen style actually has.
+      if (style != null && style.hasPocket(DesignSide.leftPocket))
         ('L Pocket', DesignSide.leftPocket),
+      if (style != null && style.hasPocket(DesignSide.rightPocket))
         ('R Pocket', DesignSide.rightPocket),
-      ],
     ];
     return SizedBox(
       height: 52,
