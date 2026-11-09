@@ -1001,17 +1001,33 @@ class GarmentStyles {
         DesignSide.back: StyleView('$_dir/tote_back.png', _toteZones),
       },
     ),
+    // A crew-neck sweatshirt: until it has its own photo it is drawn on the long-sleeve photo
+    // (rib cuffs, round neck), with the same colourable parts.
+    GarmentStyle(
+      id: 'sweatshirt',
+      label: 'Sweatshirt',
+      description: 'Crew-neck sweatshirt with rib cuffs',
+      garment: 'sweatshirt',
+      zones: const [_sleeves, _cuffs, _collar],
+      views: {
+        DesignSide.front: StyleView('$_dir/longsleeve_front.png', _longFront),
+        DesignSide.back: StyleView('$_dir/longsleeve_back.png', _longBack),
+      },
+    ),
   ];
 
   /// Styles offered for a garment category ('tshirt', 'hoodie', ...).
   static List<GarmentStyle> forGarment(String garment) =>
-      all.where((s) => s.garment == garment).toList();
+      garment == 'tank' || garment == 'polo'
+      ? [byId(garment)]
+      : all.where((s) => s.garment == garment).toList();
 
   /// The style to draw for [garment]: [styleId] if it belongs there, else the
   /// garment's first style; null when the garment has none.
   static GarmentStyle? resolve(String garment, String? styleId) {
-    // The business's separate "Polo Shirt" garment is just the polo style.
+    // Garments the business lists separately that are one of our styles: Polo Shirt, Tank Top.
     if (garment == 'polo') return byId('polo');
+    if (garment == 'tank') return byId('tank');
     final list = forGarment(garment);
     if (list.isEmpty) return null;
     return list.firstWhere((s) => s.id == styleId, orElse: () => list.first);
