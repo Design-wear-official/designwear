@@ -56,6 +56,45 @@ class RemoteAiService implements AiService {
   }
 
   @override
+  Future<TryOnViews> tryOnViews({
+    required List<int> personPhoto,
+    required Map<String, List<int>> views,
+    String? title,
+  }) async {
+    try {
+      final j = await _api.request(
+        'POST',
+        '/v1/ai/try-on',
+        body: {
+          'photo': base64Encode(personPhoto),
+          'views': [
+            for (final e in views.entries)
+              {'side': e.key, 'garment': base64Encode(e.value)},
+          ],
+          'title': ?title,
+        },
+        // One picture per angle, made one after the other.
+        timeout: const Duration(seconds: 240),
+      );
+      final drawn = (j['images'] as Map?)?.cast<String, Object?>() ?? const {};
+      final images = {
+        for (final e in drawn.entries)
+          if ('${e.value}'.isNotEmpty) e.key: base64Decode('${e.value}'),
+      };
+      if (images.isEmpty && '${j['image'] ?? ''}'.isNotEmpty) {
+        images['front'] = base64Decode('${j['image']}');
+      }
+      return TryOnViews(
+        images: images,
+        failed: [for (final f in (j['failed'] as List? ?? const [])) '$f'],
+      );
+    } on ApiException catch (e) {
+      if (e.status == 503) throw const AiUnavailable();
+      throw AiFailure(e.message);
+    }
+  }
+
+  @override
   Future<DesignAgentReply> designAgent({
     required String message,
     required Map<String, Object?> design,

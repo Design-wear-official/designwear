@@ -73,6 +73,10 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   final AIAgentService _aiService = AIAgentService();
   bool _isAutoGenerating = false;
 
+  /// True while the studio draws each side in turn to capture it (try-on): the canvas is then shown without
+  /// its frame, grid, buttons and handles.
+  bool _capturingViews = false;
+
   String? _selectedElementId;
   bool _showTemplates = false;
   String _selectedGarmentType = 'tshirt';
