@@ -94,6 +94,15 @@ class GarmentStyle {
 
   StyleView? viewFor(DesignSide side) => views[side];
 
+  /// Whether this style has a chest pocket on that side (the wearer's left or right).
+  bool hasPocket(DesignSide side) => switch (side) {
+    DesignSide.leftPocket =>
+      id == 'crew_pocket_left' || id == 'crew_pocket_both',
+    DesignSide.rightPocket =>
+      id == 'crew_pocket_right' || id == 'crew_pocket_both',
+    _ => false,
+  };
+
   ColorZone? zoneById(String id) {
     for (final z in zones) {
       if (z.id == id) return z;

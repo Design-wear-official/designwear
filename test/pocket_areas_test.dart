@@ -2,6 +2,7 @@ import 'package:designwear/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  pocketButtonTests();
   vectorStyleTests();
   test('pocket sides parse and are small print areas', () {
     expect(DesignSide.fromString('leftPocket'), DesignSide.leftPocket);
@@ -79,5 +80,23 @@ void vectorStyleTests() {
     }
     expect(GarmentStyles.resolve('hoodie', 'crew')!.id, 'hoodie');
     expect(GarmentStyles.resolve('mug', 'crew'), isNull);
+  });
+}
+
+void pocketButtonTests() {
+  test('a pocket print area exists only for a pocket the style has', () {
+    final crew = GarmentStyles.byId('crew');
+    expect(crew.hasPocket(DesignSide.leftPocket), isFalse);
+    expect(crew.hasPocket(DesignSide.rightPocket), isFalse);
+    final left = GarmentStyles.byId('crew_pocket_left');
+    expect(left.hasPocket(DesignSide.leftPocket), isTrue);
+    expect(left.hasPocket(DesignSide.rightPocket), isFalse);
+    final both = GarmentStyles.byId('crew_pocket_both');
+    expect(both.hasPocket(DesignSide.leftPocket), isTrue);
+    expect(both.hasPocket(DesignSide.rightPocket), isTrue);
+    expect(
+      GarmentStyles.byId('polo').hasPocket(DesignSide.leftPocket),
+      isFalse,
+    );
   });
 }

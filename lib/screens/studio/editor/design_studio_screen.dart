@@ -176,6 +176,14 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     setState(() {
       _design = newDesign;
       _historyService.addToHistory(newDesign);
+      // A pocket view needs that pocket: changing to a style without it goes back to the front.
+      final style = GarmentStyles.resolve(
+        _selectedGarmentType,
+        newDesign.styleId,
+      );
+      if (_side.isPocket && (style == null || !style.hasPocket(_side))) {
+        _side = DesignSide.front;
+      }
     });
     _autoSaveDesign();
   }
