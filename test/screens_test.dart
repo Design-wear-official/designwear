@@ -17,6 +17,8 @@ import 'package:flutter/material.dart';
 
 import 'package:designwear/screens/catalog/product_detail_screen.dart';
 
+import 'package:designwear/services/ai/ai_service.dart';
+
 import 'test_app.dart';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -143,12 +145,101 @@ void main() {
     expect(find.text('Share'), findsOneWidget);
   });
 
+  testWidgets('try-on from several angles shows a tab per angle and switches', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final png = Uint8List.fromList(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      ),
+    );
+    await tester.pumpWidget(
+      _app(
+        VirtualTryOnScreen(
+          product: const Product(id: 'p', title: 'Tee', price: 1),
+          initialResults: {'front': png, 'back': png, 'left': png},
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('tryon-angle-front')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tryon-angle-back')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tryon-angle-left')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tryon-angle-right')), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('tryon-angle-back')));
+    await tester.pump();
+    expect(
+      tester
+          .widget<ChoiceChip>(find.byKey(const ValueKey('tryon-angle-back')))
+          .selected,
+      isTrue,
+    );
+    expect(find.byKey(const ValueKey('tryon-download')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Try it on with several garment views asks for every angle', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    final original = AiService.instance;
+    addTearDown(() => AiService.instance = original);
+    final ai = _AnglesAi();
+    AiService.instance = ai;
+    final png = Uint8List.fromList(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      ),
+    );
+    await tester.pumpWidget(
+      _app(
+        VirtualTryOnScreen(
+          product: const Product(id: 'p', title: 'Tee', price: 1),
+          initialPhoto: png,
+          customViews: {'front': png, 'back': png, 'left': png},
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.tap(find.text('Try it on'));
+    await tester.pumpAndSettle();
+    expect(ai.asked, ['front', 'back', 'left']);
+    expect(find.byKey(const ValueKey('tryon-angle-front')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tryon-angle-back')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tryon-angle-left')), findsNothing);
+    expect(find.textContaining("Couldn't make the left view"), findsOneWidget);
+  });
+
   testWidgets('error pages', (tester) async {
     await tester.pumpWidget(_app(const ErrorScreen.notFound()));
     expect(find.text('404'), findsOneWidget);
     await tester.pumpWidget(_app(const ErrorScreen.notAllowed()));
     expect(find.text('405'), findsOneWidget);
   });
+}
+
+/// A try-on that makes the front and back but fails the left sleeve.
+class _AnglesAi extends UnconfiguredAiService {
+  final asked = <String>[];
+  @override
+  bool get tryOnEnabled => true;
+  @override
+  Future<TryOnViews> tryOnViews({
+    required List<int> personPhoto,
+    required Map<String, List<int>> views,
+    String? title,
+  }) async {
+    asked.addAll(views.keys);
+    return TryOnViews(
+      images: {'front': views['front']!, 'back': views['back']!},
+      failed: const ['left'],
+    );
+  }
 }
 
 void _studioViewTests() {

@@ -24,6 +24,15 @@ abstract class AiService {
     String? title,
   });
 
+  /// The same person wearing the customer's design from several angles. [views] maps 'front', 'back',
+  /// 'left' or 'right' to a picture of the garment from that side; the result has a picture per angle
+  /// that could be made (the rest are in [TryOnViews.failed]).
+  Future<TryOnViews> tryOnViews({
+    required List<int> personPhoto,
+    required Map<String, List<int>> views,
+    String? title,
+  });
+
   /// Design Studio assistant: a reply and, when the model made one, a design
   /// (the studio's design JSON) to apply. With [trends] the server brings in
   /// what is trending (its daily web search) even if the message does not say so.
@@ -82,6 +91,13 @@ class UnconfiguredAiService implements AiService {
     required List<int> personPhoto,
     String? productId,
     List<int>? garmentImage,
+    String? title,
+  }) async => throw const AiUnavailable();
+
+  @override
+  Future<TryOnViews> tryOnViews({
+    required List<int> personPhoto,
+    required Map<String, List<int>> views,
     String? title,
   }) async => throw const AiUnavailable();
 
@@ -174,4 +190,11 @@ class AiUnavailable implements Exception {
   const AiUnavailable();
   @override
   String toString() => 'The AI service is not connected yet.';
+}
+
+/// The try-on pictures by angle ('front', 'back', 'left', 'right'), and the angles that could not be made.
+class TryOnViews {
+  const TryOnViews({required this.images, this.failed = const []});
+  final Map<String, List<int>> images;
+  final List<String> failed;
 }

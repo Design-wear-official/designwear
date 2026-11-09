@@ -772,6 +772,55 @@ extension _ActionMethods on _DesignStudioScreenState {
     );
   }
 
+  /// A picture of the garment from each side that matters for the try-on: the front, the back, and a
+  /// sleeve only when the design prints on it. Each side is shown on the real canvas for a moment (clean,
+  /// without the editor chrome), captured, and the view put back as it was.
+  Future<Map<String, Uint8List>> _captureTryOnViews() async {
+    final original = _side;
+    final selected = _selectedElementId;
+    final sides = <DesignSide>[
+      DesignSide.front,
+      DesignSide.back,
+      if (GarmentRegistry.byId(_selectedGarmentType).hasSleeves) ...[
+        if (_design.elementsForSide(DesignSide.left).isNotEmpty)
+          DesignSide.left,
+        if (_design.elementsForSide(DesignSide.right).isNotEmpty)
+          DesignSide.right,
+      ],
+    ];
+    final out = <String, Uint8List>{};
+    setState(() {
+      _capturingViews = true;
+      _selectedElementId = null;
+    });
+    try {
+      for (final side in sides) {
+        setState(() => _side = side);
+        await WidgetsBinding.instance.endOfFrame;
+        // Let the garment photo and any pictures finish loading before the capture.
+        await Future<void>.delayed(const Duration(milliseconds: 250));
+        final boundary =
+            _canvasKey.currentContext?.findRenderObject()
+                as RenderRepaintBoundary?;
+        if (boundary == null) continue;
+        final image = await boundary.toImage(pixelRatio: 2.0);
+        final data = await image.toByteData(format: ui.ImageByteFormat.png);
+        final bytes = data?.buffer.asUint8List();
+        // The API takes up to 3 MB a picture.
+        if (bytes != null && bytes.length < 2900000) out[side.value] = bytes;
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _capturingViews = false;
+          _side = original;
+          _selectedElementId = selected;
+        });
+      }
+    }
+    return out;
+  }
+
   void _navigateToTryOn() async {
     showDialog(
       context: context,
@@ -781,22 +830,10 @@ extension _ActionMethods on _DesignStudioScreenState {
       ),
     );
     try {
-      final boundary =
-          _canvasKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary?;
-      if (boundary == null) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to capture canvas.')),
-        );
-        return;
-      }
-      final image = await boundary.toImage(pixelRatio: 2.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final bytes = byteData?.buffer.asUint8List();
+      final views = await _captureTryOnViews();
       if (!mounted) return;
       Navigator.pop(context);
-      if (bytes != null) {
+      if (views.isNotEmpty) {
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -810,7 +847,8 @@ extension _ActionMethods on _DesignStudioScreenState {
                     GarmentRegistry.byId(_selectedGarmentType).basePrice ??
                     _baseProduct.price,
               ),
-              customClothingBytes: bytes,
+              customClothingBytes: views['front'] ?? views.values.first,
+              customViews: views,
             ),
           ),
         );

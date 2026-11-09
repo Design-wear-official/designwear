@@ -17,6 +17,8 @@ class VirtualTryOnScreen extends StatefulWidget {
     this.customClothingBytes,
     this.initialPhoto,
     this.initialResult,
+    this.initialResults,
+    this.customViews,
   });
   final Product product;
 
@@ -28,6 +30,13 @@ class VirtualTryOnScreen extends StatefulWidget {
   @visibleForTesting
   final Uint8List? initialResult;
 
+  /// Finished try-on pictures by angle to start with (tests).
+  @visibleForTesting
+  final Map<String, Uint8List>? initialResults;
+
+  /// The customer's design from each side ('front', 'back', 'left', 'right'), to try on from every angle.
+  final Map<String, Uint8List>? customViews;
+
   /// The customer's own design as an image, used instead of the product photo.
   final Uint8List? customClothingBytes;
 
@@ -37,7 +46,26 @@ class VirtualTryOnScreen extends StatefulWidget {
 
 class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
   late Uint8List? _photo = widget.initialPhoto;
-  late Uint8List? _result = widget.initialResult;
+
+  /// The try-on pictures by angle, and the one being shown.
+  late Map<String, Uint8List> _results = {
+    ...?widget.initialResults,
+    if (widget.initialResults == null && widget.initialResult != null)
+      'front': widget.initialResult!,
+  };
+  String _angle = 'front';
+
+  static const _angleOrder = ['front', 'back', 'left', 'right'];
+  static const _angleLabel = {
+    'front': 'Front',
+    'back': 'Back',
+    'left': 'Left',
+    'right': 'Right',
+  };
+
+  /// The picture of the angle being shown (the first one made when that angle was not).
+  Uint8List? get _result =>
+      _results[_angle] ?? (_results.isEmpty ? null : _results.values.first);
   String? _message;
   bool _busy = false;
 
@@ -51,7 +79,8 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
       final bytes = await file.readAsBytes();
       setState(() {
         _photo = bytes;
-        _result = null;
+        _results = {};
+        _angle = 'front';
         _message = null;
       });
     } catch (_) {
@@ -68,13 +97,34 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
     });
     try {
       final custom = widget.customClothingBytes;
-      final out = await AiService.instance.tryOn(
-        personPhoto: _photo!,
-        productId: custom == null ? widget.product.id : null,
-        garmentImage: custom,
-        title: widget.product.title,
-      );
-      _result = Uint8List.fromList(out);
+      final views = widget.customViews;
+      if (views != null && views.isNotEmpty) {
+        final out = await AiService.instance.tryOnViews(
+          personPhoto: _photo!,
+          views: views,
+          title: widget.product.title,
+        );
+        _results = {
+          for (final e in out.images.entries)
+            e.key: Uint8List.fromList(e.value),
+        };
+        _angle = _results.containsKey('front')
+            ? 'front'
+            : (_results.keys.firstOrNull ?? 'front');
+        if (out.failed.isNotEmpty) {
+          _message =
+              "Couldn't make the ${out.failed.map((f) => _angleLabel[f] ?? f).join(', ').toLowerCase()} view this time.";
+        }
+      } else {
+        final out = await AiService.instance.tryOn(
+          personPhoto: _photo!,
+          productId: custom == null ? widget.product.id : null,
+          garmentImage: custom,
+          title: widget.product.title,
+        );
+        _results = {'front': Uint8List.fromList(out)};
+        _angle = 'front';
+      }
     } on AiUnavailable catch (e) {
       _message = '$e';
     } on AiFailure catch (e) {
@@ -93,7 +143,8 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
         .replaceAll(RegExp(r'^-+|-+$'), '');
-    return 'designwear-tryon${slug.isEmpty ? '' : '-$slug'}.png';
+    final angle = _results.length > 1 ? '-$_angle' : '';
+    return 'designwear-tryon${slug.isEmpty ? '' : '-$slug'}$angle.png';
   }
 
   void _toast(String text) {
@@ -167,7 +218,9 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
                           const CircularProgressIndicator(),
                           const SizedBox(height: 12),
                           Text(
-                            'Trying it on…',
+                            (widget.customViews?.length ?? 1) > 1
+                                ? 'Trying it on from every angle…'
+                                : 'Trying it on…',
                             style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(color: Colors.white),
                           ),
@@ -178,6 +231,34 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Front / Back / Left / Right tabs for the angles that were made.
+  Widget _angleTabs() {
+    final angles = [
+      for (final a in _angleOrder)
+        if (_results.containsKey(a)) a,
+    ];
+    if (angles.length < 2) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Center(
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.center,
+          children: [
+            for (final a in angles)
+              ChoiceChip(
+                key: ValueKey('tryon-angle-$a'),
+                label: Text(_angleLabel[a] ?? a),
+                selected: _angle == a,
+                onSelected: (_) => setState(() => _angle = a),
+              ),
+          ],
         ),
       ),
     );
@@ -273,7 +354,17 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: _preview(context, maxHeight: box.maxHeight - 48),
+                      child: Column(
+                        children: [
+                          Flexible(
+                            child: _preview(
+                              context,
+                              maxHeight: box.maxHeight - 48 - 60,
+                            ),
+                          ),
+                          _angleTabs(),
+                        ],
+                      ),
                     ),
                     const SizedBox(width: 32),
                     SizedBox(
@@ -298,7 +389,8 @@ class _VirtualTryOnScreenState extends State<VirtualTryOnScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             _productTile(),
-            _preview(context, maxHeight: box.maxHeight * 0.68),
+            _preview(context, maxHeight: box.maxHeight * 0.62),
+            _angleTabs(),
             const SizedBox(height: 12),
             ..._controls(context),
           ],

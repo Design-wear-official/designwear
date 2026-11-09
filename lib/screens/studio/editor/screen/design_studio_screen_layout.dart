@@ -316,8 +316,9 @@ extension _LayoutMethods on _DesignStudioScreenState {
           onElementEdit: _editElement,
           onSideChanged: (s) => setState(() => _side = s),
           showSideToggle: false,
+          bare: _capturingViews,
           snapGuides: _snapGuides,
-          mockupUrl: _mockupUrl,
+          mockupUrl: _capturingViews ? null : _mockupUrl,
           onOpenLayers: _layerJob == null ? null : _openLayers,
         ),
         // Off-screen front and back canvases, captured for the published previews.
