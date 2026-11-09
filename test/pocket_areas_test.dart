@@ -2,6 +2,7 @@ import 'package:designwear/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  listedGarmentTests();
   pocketButtonTests();
   vectorStyleTests();
   test('pocket sides parse and are small print areas', () {
@@ -98,5 +99,27 @@ void pocketButtonTests() {
       GarmentStyles.byId('polo').hasPocket(DesignSide.leftPocket),
       isFalse,
     );
+  });
+}
+
+void listedGarmentTests() {
+  test('every garment the business lists has a style with photos', () {
+    for (final g in [
+      'tshirt',
+      'hoodie',
+      'sweatshirt',
+      'tank',
+      'polo',
+      'cap',
+      'totebag',
+    ]) {
+      final style = GarmentStyles.resolve(g, 'crew');
+      expect(style, isNotNull, reason: g);
+      expect(style!.viewFor(DesignSide.front), isNotNull, reason: g);
+      expect(style.viewFor(DesignSide.back), isNotNull, reason: g);
+      expect(GarmentStyles.forGarment(g), isNotEmpty, reason: g);
+    }
+    expect(GarmentStyles.resolve('sweatshirt', 'crew')!.id, 'sweatshirt');
+    expect(GarmentStyles.resolve('tank', 'crew')!.id, 'tank');
   });
 }
