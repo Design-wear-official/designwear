@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:designwear/models/commerce.dart';
 import 'package:designwear/models/models.dart'
     show CustomDesign, DesignElement, DesignElementType;
@@ -85,6 +88,59 @@ void main() {
       ),
     );
     expect(find.text('Try it on'), findsOneWidget);
+  });
+
+  testWidgets(
+    'try-on picture is capped on a wide desktop and never overflows',
+    (tester) async {
+      for (final size in const [Size(1920, 1080), Size(390, 844)]) {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          _app(
+            const VirtualTryOnScreen(
+              product: Product(id: 'p', title: 'Tee', price: 1),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull, reason: '$size');
+        final card = tester.getSize(find.byType(AspectRatio).first);
+        expect(card.width, lessThanOrEqualTo(560), reason: '$size');
+        expect(card.height, lessThanOrEqualTo(size.height), reason: '$size');
+        expect(find.text('Try it on'), findsOneWidget);
+      }
+    },
+  );
+
+  testWidgets('try-on result has Download and Share, only once there is one', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(900, 2400);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const product = Product(id: 'p', title: 'Avengers Doomsday', price: 1);
+    await tester.pumpWidget(_app(const VirtualTryOnScreen(product: product)));
+    expect(find.byKey(const ValueKey('tryon-download')), findsNothing);
+    expect(find.byKey(const ValueKey('tryon-share')), findsNothing);
+
+    // 1x1 transparent PNG.
+    final png = Uint8List.fromList(
+      base64Decode(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+      ),
+    );
+    await tester.pumpWidget(
+      const SizedBox(),
+    ); // a fresh screen, not the same state
+    await tester.pumpWidget(
+      _app(VirtualTryOnScreen(product: product, initialResult: png)),
+    );
+    await tester.pump();
+    expect(find.byKey(const ValueKey('tryon-download')), findsOneWidget);
+    expect(find.byKey(const ValueKey('tryon-share')), findsOneWidget);
+    expect(find.text('Download'), findsOneWidget);
+    expect(find.text('Share'), findsOneWidget);
   });
 
   testWidgets('error pages', (tester) async {
