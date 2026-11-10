@@ -205,9 +205,20 @@ void alignmentTests() {
           reason: 'the bar minus its 1px border',
         );
         expect(profile.size, const Size(40, 40));
-        // Everything sits on the bar's centre line.
-        for (final r in [field, profile, searchIcon]) {
-          expect((r.center.dy - bar.center.dy).abs(), lessThan(1.0));
+        // The search icon always sits on the bar's own centre line.
+        expect((field.center.dy - bar.center.dy).abs(), lessThan(1.0));
+        expect((searchIcon.center.dy - bar.center.dy).abs(), lessThan(1.0));
+        if (size.width < 640) {
+          // A phone: the search bar is its own full-width row below the brand and actions.
+          expect(
+            profile.bottom,
+            lessThan(bar.top),
+            reason: 'actions above the search',
+          );
+          expect(bar.width, greaterThan(size.width - 40), reason: 'full width');
+        } else {
+          // Wider: brand, search and actions share one centre line.
+          expect((profile.center.dy - bar.center.dy).abs(), lessThan(1.0));
         }
       },
     );

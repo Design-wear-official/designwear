@@ -63,24 +63,48 @@ class HomeAppBar extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 1440, minHeight: 72),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: sidePad, vertical: 12),
-              child: Row(
-                children: [
-                  HomeBrand(ink: ink, compact: compact),
-                  SizedBox(width: compact ? 10 : 16),
-                  Expanded(
-                    child: _SearchField(
-                      isDark: isDark,
-                      compact: compact,
-                      controller: searchController,
-                      focusNode: searchFocusNode,
-                      onSearch: onSearch,
-                      suggestionPool: suggestionPool,
+              child: compact
+                  // A phone: brand and actions on the first row, the search
+                  // field full width below (as in the design), so nothing is squeezed.
+                  ? Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            HomeBrand(ink: ink, compact: compact),
+                            const Spacer(),
+                            ..._actions(context, isDark, ink, compact),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        _SearchField(
+                          isDark: isDark,
+                          compact: compact,
+                          controller: searchController,
+                          focusNode: searchFocusNode,
+                          onSearch: onSearch,
+                          suggestionPool: suggestionPool,
+                        ),
+                      ],
+                    )
+                  : Row(
+                      children: [
+                        HomeBrand(ink: ink, compact: compact),
+                        SizedBox(width: compact ? 10 : 16),
+                        Expanded(
+                          child: _SearchField(
+                            isDark: isDark,
+                            compact: compact,
+                            controller: searchController,
+                            focusNode: searchFocusNode,
+                            onSearch: onSearch,
+                            suggestionPool: suggestionPool,
+                          ),
+                        ),
+                        SizedBox(width: compact ? 10 : 16),
+                        ..._actions(context, isDark, ink, compact),
+                      ],
                     ),
-                  ),
-                  SizedBox(width: compact ? 10 : 16),
-                  ..._actions(context, isDark, ink, compact),
-                ],
-              ),
             ),
           ),
         ),
