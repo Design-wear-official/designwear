@@ -22,7 +22,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   Address? _address;
-  PaymentMethod _payment = PaymentMethodStore.cod;
+  final PaymentMethod _payment = PaymentMethodStore.cod;
 
   @override
   void initState() {
