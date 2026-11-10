@@ -13,7 +13,6 @@ import '../account/addresses_screen.dart';
 import 'cart_widgets.dart';
 import '../home/home_screen.dart' show formatPrice;
 import '../orders/my_orders_screen.dart';
-import '../account/payment_methods_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -23,7 +22,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   Address? _address;
-  PaymentMethod _payment = PaymentMethodStore.cod;
+  final PaymentMethod _payment = PaymentMethodStore.cod;
 
   @override
   void initState() {
@@ -132,15 +131,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  Future<void> _pickPayment() async {
-    final p = await Navigator.of(context).push<PaymentMethod>(
-      MaterialPageRoute(
-        builder: (_) => const PaymentMethodsScreen(pickMode: true),
-      ),
-    );
-    if (p != null) setState(() => _payment = p);
-  }
-
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartService>();
@@ -165,18 +155,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               onTap: _pickAddress,
             ),
             const SizedBox(height: 26),
-            if (remote && _onlineAvailable)
-              PaymentChoices(
-                online: _payOnline,
-                onChanged: (v) => setState(() => _payOnline = v),
-              )
-            else
-              PillRow(
-                icon: Icons.payments_outlined,
-                title: _payment.label,
-                subtitle: remote ? 'Pay when your order arrives' : null,
-                onTap: remote ? null : _pickPayment,
-              ),
+            // As in the design: Cash on delivery or Pay online, always.
+            PaymentChoices(
+              online: _payOnline,
+              onChanged: (v) {
+                if (v && !(remote && _onlineAvailable)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Online payment is not available right now. Cash on delivery is selected.',
+                      ),
+                    ),
+                  );
+                  return;
+                }
+                setState(() => _payOnline = v);
+              },
+            ),
             const SizedBox(height: 30),
             for (final l in cart.lines) OrderLineRow(line: l),
             Divider(color: rule, thickness: 2, height: 28),
