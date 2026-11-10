@@ -497,14 +497,14 @@ class _SearchFieldState extends State<_SearchField> {
   Widget build(BuildContext context) {
     final dark = widget.isDark;
     final focused = widget.focusNode.hasFocus;
-    final fill = dark ? const Color(0xFF202027) : AppColors.cardLight;
+    final fill = dark ? const Color(0xFF1B1B21) : AppColors.cardLight;
     final border = focused
         ? (dark
-              ? const Color(0xFF777783)
+              ? const Color(0xFF8D8B98)
               : AppColors.inkLight.withValues(alpha: 0.55))
-        : (dark ? const Color(0xFF373743) : AppColors.hairLight);
-    final icon = dark ? const Color(0xFF878791) : AppColors.stone;
-    final hint = dark ? const Color(0xFF777780) : AppColors.stone;
+        : (dark ? const Color(0xFF5E5C68) : AppColors.hairLight);
+    final icon = dark ? const Color(0xFF878691) : AppColors.stone;
+    final hint = dark ? const Color(0xFF797883) : AppColors.stone;
     final text = dark ? Colors.white : AppColors.inkLight;
     final hasText = widget.controller.text.isNotEmpty;
 
@@ -557,7 +557,7 @@ class _SearchFieldState extends State<_SearchField> {
               children: [
                 Padding(
                   padding: const EdgeInsets.only(left: 16, right: 4),
-                  child: Icon(Icons.search, size: 16, color: icon),
+                  child: Icon(Icons.search, size: 18, color: icon),
                 ),
                 Expanded(
                   // The hint is a plain Text in the same Row as the icons, so
@@ -576,7 +576,7 @@ class _SearchFieldState extends State<_SearchField> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: GoogleFonts.inter(
-                                fontSize: 13,
+                                fontSize: 14,
                                 height: 1.2,
                                 color: hint,
                               ),
@@ -587,7 +587,7 @@ class _SearchFieldState extends State<_SearchField> {
                         focusNode: widget.focusNode,
                         controller: widget.controller,
                         style: GoogleFonts.inter(
-                          fontSize: 13,
+                          fontSize: 14,
                           height: 1.2,
                           color: text,
                         ),
