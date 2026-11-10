@@ -7,6 +7,7 @@ import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/services/auth/auth_service.dart';
 import 'package:designwear/services/notifications/notification_service.dart';
 import 'package:designwear/services/shop/cart_service.dart';
+import 'package:designwear/screens/cart/cart_screen.dart';
 import 'package:designwear/screens/home/profile_menu.dart';
 import 'package:designwear/screens/studio/editor/design_studio_screen.dart';
 
@@ -106,17 +107,22 @@ class HomeAppBar extends StatelessWidget {
                 child: _CreateButton(isDark: isDark, isMini: compact),
               ),
       ),
+      // The cart, always in reach: a violet chip with the number of items.
+      Padding(
+        padding: EdgeInsets.only(right: gap.width!),
+        child: _CartChip(compact: compact),
+      ),
       // Hover (or tap) the profile icon for the menu. Its badge counts unread
       // notifications and items in the cart.
       Consumer<AuthService>(
         builder: (context, auth, _) => HomeProfileMenu(
           onSearch: onSearch,
           builder: (context, toggle) {
-            final cart = context.watch<CartService>().count;
+            // The cart has its own chip with a count; this badge is for notifications.
             final unread = auth.isSignedIn && auth.isRemote
                 ? context.watch<NotificationService?>()?.unread ?? 0
                 : 0;
-            final total = cart + unread;
+            final total = unread;
             return Badge(
               isLabelVisible: total > 0,
               label: Text('$total'),
@@ -126,6 +132,94 @@ class HomeAppBar extends StatelessWidget {
         ),
       ),
     ];
+  }
+}
+
+/// "Cart" with the number of items on a red badge; opens the cart.
+class _CartChip extends StatelessWidget {
+  const _CartChip({required this.compact});
+  final bool compact;
+
+  static const _violet = Color(0xFF8064FF);
+
+  @override
+  Widget build(BuildContext context) {
+    final count = context.watch<CartService>().count;
+    return Tooltip(
+      message: count == 1 ? 'Cart, 1 item' : 'Cart, $count items',
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Material(
+            color: _violet,
+            borderRadius: BorderRadius.circular(13),
+            child: InkWell(
+              key: const ValueKey('header-cart'),
+              borderRadius: BorderRadius.circular(13),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const CartScreen(),
+                  settings: const RouteSettings(name: '/cart'),
+                ),
+              ),
+              child: Container(
+                height: 40,
+                padding: EdgeInsets.symmetric(horizontal: compact ? 11 : 13),
+                alignment: Alignment.center,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 17,
+                      color: Colors.white,
+                    ),
+                    if (!compact) ...[
+                      const SizedBox(width: 7),
+                      Text(
+                        'Cart',
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (count > 0)
+            Positioned(
+              right: -5,
+              top: -6,
+              child: IgnorePointer(
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 18,
+                    minHeight: 18,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFD6073D),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
@@ -461,9 +555,7 @@ class _SearchFieldState extends State<_SearchField> {
                     cursorColor: AppColors.marigold,
                     onSubmitted: (_) => widget.onSearch(),
                     decoration: InputDecoration(
-                      hintText: widget.compact
-                          ? 'Search designs, creators...'
-                          : 'Search designs, creators...   Ctrl K',
+                      hintText: 'Search designs, creators...',
                       hintStyle: GoogleFonts.inter(
                         fontSize: 13,
                         height: 1.2,
@@ -480,6 +572,15 @@ class _SearchFieldState extends State<_SearchField> {
                     ),
                   ),
                 ),
+                // The shortcut, as its own label, while the field is empty.
+                if (!widget.compact && !hasText)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Text(
+                      'Ctrl K',
+                      style: GoogleFonts.inter(fontSize: 12, color: hint),
+                    ),
+                  ),
                 if (hasText)
                   _FieldIconButton(
                     tooltip: 'Clear search',
@@ -487,13 +588,21 @@ class _SearchFieldState extends State<_SearchField> {
                     color: icon,
                     onTap: widget.controller.clear,
                   ),
-                if (!widget.compact)
+                if (!widget.compact) ...[
+                  // A hairline sets the filter button apart, as in the design.
+                  Container(
+                    width: 1,
+                    height: 18,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    color: dark ? const Color(0xFF3C3B45) : AppColors.hairLight,
+                  ),
                   _FieldIconButton(
                     tooltip: 'Filter search',
                     icon: Icons.tune_rounded,
                     color: icon,
                     onTap: widget.onSearch,
                   ),
+                ],
                 const SizedBox(width: 4),
               ],
             ),
