@@ -174,8 +174,8 @@ class GarmentRegistry {
     Garment(
       id: 'tshirt',
       label: 'T-Shirt',
-      frontAsset: 'assets/images/garments/crew_front.png',
-      backAsset: 'assets/images/garments/crew_back.png',
+      frontAsset: 'assets/images/garments/crew_front.webp',
+      backAsset: 'assets/images/garments/crew_back.webp',
     ),
     Garment(id: 'hoodie', label: 'Hoodie', style: 'hoodie'),
     Garment(id: 'polo', label: 'Polo Shirt', style: 'polo'),

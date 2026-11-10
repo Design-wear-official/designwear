@@ -799,26 +799,26 @@ Map<String, ZonePath> _side(
 
 Map<DesignSide, StyleView> _crewSides() => {
   DesignSide.left: StyleView(
-    '$_dir/crew_left.png',
+    '$_dir/crew_left.webp',
     _side(_crewSleeveL, _crewSideCuffL),
   ),
   DesignSide.right: StyleView(
-    '$_dir/crew_right.png',
+    '$_dir/crew_right.webp',
     _side(_crewSleeveL, _crewSideCuffL, mirror: true),
   ),
 };
 Map<DesignSide, StyleView> _poloSides() => {
   DesignSide.left: StyleView(
-    '$_dir/polo_left.png',
+    '$_dir/polo_left.webp',
     _side(_poloSleeveL, _poloSideCuffL),
   ),
   DesignSide.right: StyleView(
-    '$_dir/polo_right.png',
+    '$_dir/polo_right.webp',
     _side(_poloSleeveL, _poloSideCuffL, mirror: true, sum: 1066),
   ),
 };
 
-StyleView _crewBackView() => StyleView('$_dir/crew_back.png', _crewBack);
+StyleView _crewBackView() => StyleView('$_dir/crew_back.webp', _crewBack);
 
 Map<String, ZonePath> _withPockets(List<List<Offset>> pockets) => {
   ..._crewFront,
@@ -838,7 +838,7 @@ class GarmentStyles {
       description: 'Classic round neck',
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: StyleView('$_dir/crew_front.png', _crewFront),
+        DesignSide.front: StyleView('$_dir/crew_front.webp', _crewFront),
         DesignSide.back: _crewBackView(),
         ..._crewSides(),
       },
@@ -850,7 +850,7 @@ class GarmentStyles {
       zones: const [_sleeves, _cuffs, _collar, _pockets],
       views: {
         DesignSide.front: StyleView(
-          '$_dir/crew_pocket_left_front.png',
+          '$_dir/crew_pocket_left_front.webp',
           _withPockets([_pocketViewerRight]),
         ),
         DesignSide.back: _crewBackView(),
@@ -864,7 +864,7 @@ class GarmentStyles {
       zones: const [_sleeves, _cuffs, _collar, _pockets],
       views: {
         DesignSide.front: StyleView(
-          '$_dir/crew_pocket_right_front.png',
+          '$_dir/crew_pocket_right_front.webp',
           _withPockets([_pocketViewerLeft]),
         ),
         DesignSide.back: _crewBackView(),
@@ -878,7 +878,7 @@ class GarmentStyles {
       zones: const [_sleeves, _cuffs, _collar, _pockets],
       views: {
         DesignSide.front: StyleView(
-          '$_dir/crew_pocket_both_front.png',
+          '$_dir/crew_pocket_both_front.webp',
           _withPockets([_pocketViewerLeft, _pocketViewerRight]),
         ),
         DesignSide.back: _crewBackView(),
@@ -891,7 +891,7 @@ class GarmentStyles {
       description: 'Buttoned placket, round neck',
       zones: const [_sleeves, _cuffs, _collar, _placket, _buttons],
       views: {
-        DesignSide.front: StyleView('$_dir/henley_front.png', _henleyFront),
+        DesignSide.front: StyleView('$_dir/henley_front.webp', _henleyFront),
         // No separate henley back photo: it is a plain crew back.
         DesignSide.back: _crewBackView(),
         ..._crewSides(),
@@ -903,8 +903,8 @@ class GarmentStyles {
       description: 'Collar, placket and buttons',
       zones: const [_sleeves, _cuffs, _collar, _placket, _buttons],
       views: {
-        DesignSide.front: StyleView('$_dir/polo_front.png', _poloFront),
-        DesignSide.back: StyleView('$_dir/polo_back.png', _poloBack),
+        DesignSide.front: StyleView('$_dir/polo_front.webp', _poloFront),
+        DesignSide.back: StyleView('$_dir/polo_back.webp', _poloBack),
         ..._poloSides(),
       },
     ),
@@ -914,8 +914,8 @@ class GarmentStyles {
       description: 'V-shaped neckline',
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: StyleView('$_dir/vneck_front.png', _vneckFront),
-        DesignSide.back: StyleView('$_dir/vneck_back.png', _vneckBack),
+        DesignSide.front: StyleView('$_dir/vneck_front.webp', _vneckFront),
+        DesignSide.back: StyleView('$_dir/vneck_back.webp', _vneckBack),
         ..._crewSides(),
       },
     ),
@@ -925,8 +925,8 @@ class GarmentStyles {
       description: 'Full-length sleeves with cuffs',
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: StyleView('$_dir/longsleeve_front.png', _longFront),
-        DesignSide.back: StyleView('$_dir/longsleeve_back.png', _longBack),
+        DesignSide.front: StyleView('$_dir/longsleeve_front.webp', _longFront),
+        DesignSide.back: StyleView('$_dir/longsleeve_back.webp', _longBack),
       },
     ),
     GarmentStyle(
@@ -936,8 +936,8 @@ class GarmentStyles {
       defaultParts: const {'sleeves': '0xFF2B2E33'},
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: StyleView('$_dir/raglan_front.png', _raglanFront),
-        DesignSide.back: StyleView('$_dir/raglan_back.png', _raglanBack),
+        DesignSide.front: StyleView('$_dir/raglan_front.webp', _raglanFront),
+        DesignSide.back: StyleView('$_dir/raglan_back.webp', _raglanBack),
       },
     ),
     GarmentStyle(
@@ -947,8 +947,8 @@ class GarmentStyles {
       defaultParts: const {'collar': '0xFF1A1F3C', 'cuffs': '0xFF1A1F3C'},
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: StyleView('$_dir/ringer_front.png', _ringerFront),
-        DesignSide.back: StyleView('$_dir/ringer_back.png', _ringerBack),
+        DesignSide.front: StyleView('$_dir/ringer_front.webp', _ringerFront),
+        DesignSide.back: StyleView('$_dir/ringer_back.webp', _ringerBack),
       },
     ),
     GarmentStyle(
@@ -957,8 +957,8 @@ class GarmentStyles {
       description: 'Sleeveless with bound edges',
       zones: const [_armholes, _neckTrim],
       views: {
-        DesignSide.front: StyleView('$_dir/tank_front.png', _tankFront),
-        DesignSide.back: StyleView('$_dir/tank_back.png', _tankBack),
+        DesignSide.front: StyleView('$_dir/tank_front.webp', _tankFront),
+        DesignSide.back: StyleView('$_dir/tank_back.webp', _tankBack),
       },
     ),
     GarmentStyle(
@@ -975,8 +975,8 @@ class GarmentStyles {
         _drawstrings,
       ],
       views: {
-        DesignSide.front: StyleView('$_dir/hoodie_front.png', _hoodieFront),
-        DesignSide.back: StyleView('$_dir/hoodie_back.png', _hoodieBack),
+        DesignSide.front: StyleView('$_dir/hoodie_front.webp', _hoodieFront),
+        DesignSide.back: StyleView('$_dir/hoodie_back.webp', _hoodieBack),
       },
     ),
     GarmentStyle(
@@ -986,8 +986,8 @@ class GarmentStyles {
       garment: 'cap',
       zones: const [_brim, _capButton, _strap],
       views: {
-        DesignSide.front: StyleView('$_dir/cap_front.png', _capFront),
-        DesignSide.back: StyleView('$_dir/cap_back.png', _capBack),
+        DesignSide.front: StyleView('$_dir/cap_front.webp', _capFront),
+        DesignSide.back: StyleView('$_dir/cap_back.webp', _capBack),
       },
     ),
     GarmentStyle(
@@ -997,8 +997,8 @@ class GarmentStyles {
       garment: 'totebag',
       zones: const [_handles, _hem],
       views: {
-        DesignSide.front: StyleView('$_dir/tote_front.png', _toteZones),
-        DesignSide.back: StyleView('$_dir/tote_back.png', _toteZones),
+        DesignSide.front: StyleView('$_dir/tote_front.webp', _toteZones),
+        DesignSide.back: StyleView('$_dir/tote_back.webp', _toteZones),
       },
     ),
     // A crew-neck sweatshirt: until it has its own photo it is drawn on the long-sleeve photo
@@ -1010,8 +1010,8 @@ class GarmentStyles {
       garment: 'sweatshirt',
       zones: const [_sleeves, _cuffs, _collar],
       views: {
-        DesignSide.front: StyleView('$_dir/longsleeve_front.png', _longFront),
-        DesignSide.back: StyleView('$_dir/longsleeve_back.png', _longBack),
+        DesignSide.front: StyleView('$_dir/longsleeve_front.webp', _longFront),
+        DesignSide.back: StyleView('$_dir/longsleeve_back.webp', _longBack),
       },
     ),
   ];

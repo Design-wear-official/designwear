@@ -1,7 +1,12 @@
+import 'dart:io';
+
+import 'package:designwear/screens/studio/editor/canvas/design_canvas.dart';
+import 'package:flutter/material.dart';
 import 'package:designwear/models/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  styleSwitchTests();
   listedGarmentTests();
   pocketButtonTests();
   vectorStyleTests();
@@ -121,5 +126,51 @@ void listedGarmentTests() {
     }
     expect(GarmentStyles.resolve('sweatshirt', 'crew')!.id, 'sweatshirt');
     expect(GarmentStyles.resolve('tank', 'crew')!.id, 'tank');
+  });
+}
+
+void styleSwitchTests() {
+  testWidgets(
+    'switching style swaps the garment photo (the old one is not kept)',
+    (tester) async {
+      tester.view.physicalSize = const Size(800, 600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      Widget canvas(String styleId) => MaterialApp(
+        home: DesignCanvas(
+          design: CustomDesign(styleId: styleId),
+          garmentType: 'tshirt',
+          selectedElementId: null,
+          side: DesignSide.front,
+          bare: true,
+          onElementSelected: (_) {},
+          onElementPreview: (_) {},
+          onElementCommit: () {},
+          onElementDelete: (_) {},
+          onSideChanged: (_) {},
+        ),
+      );
+      final tank = GarmentStyles.byId('tank').viewFor(DesignSide.front)!.asset;
+      final polo = GarmentStyles.byId('polo').viewFor(DesignSide.front)!.asset;
+      await tester.pumpWidget(canvas('tank'));
+      expect(find.byKey(ValueKey(tank)), findsWidgets);
+      await tester.pumpWidget(canvas('polo'));
+      expect(find.byKey(ValueKey(polo)), findsWidgets);
+      expect(find.byKey(ValueKey(tank)), findsNothing);
+    },
+  );
+
+  test('style photos are small WebP files', () {
+    for (final st in GarmentStyles.all) {
+      for (final v in st.views.values) {
+        if (v.asset.isEmpty) continue;
+        expect(v.asset.endsWith('.webp'), isTrue, reason: v.asset);
+        expect(
+          File(v.asset).lengthSync(),
+          lessThan(150 * 1024),
+          reason: v.asset,
+        );
+      }
+    }
   });
 }

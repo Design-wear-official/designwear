@@ -96,6 +96,7 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
         _side = DesignSide.front;
       }
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _precacheStyles());
     // A style that exists for the chosen garment (hoodie, cap, tote have their own).
     final style = GarmentStyles.resolve(id, _design.styleId);
     if (style != null && style.id != _design.styleId) {
@@ -167,6 +168,19 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
     super.initState();
     _loadAutoSavedDesign();
     _historyService.addToHistory(_design);
+    // Load the style photos of this garment in the background so switching styles is instant.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _precacheStyles());
+  }
+
+  /// Decodes every style photo of the chosen garment ahead of time (they are small WebP files).
+  void _precacheStyles() {
+    if (!mounted) return;
+    for (final style in GarmentStyles.forGarment(_selectedGarmentType)) {
+      for (final view in style.views.values) {
+        if (view.asset.isEmpty) continue;
+        precacheImage(AssetImage(view.asset), context).catchError((_) {});
+      }
+    }
   }
 
   @override

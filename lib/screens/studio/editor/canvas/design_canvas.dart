@@ -89,12 +89,21 @@ class DesignCanvas extends StatelessWidget {
       colorFilter: DesignStudioUtils.shirtTint(c),
       child: Image.asset(
         view.asset,
+        // A new style gets a new image widget: the old style's photo is never left on screen
+        // while the new one loads.
+        key: ValueKey(view.asset),
         width: box,
         height: box,
         fit: BoxFit.fill,
         filterQuality: FilterQuality.high,
         isAntiAlias: true,
-        gaplessPlayback: true,
+        frameBuilder: (context, child, frame, loadedSync) => loadedSync
+            ? child
+            : AnimatedOpacity(
+                opacity: frame == null ? 0 : 1,
+                duration: const Duration(milliseconds: 150),
+                child: child,
+              ),
       ),
     );
     const frameW = DesignStudioConstants.canvasWidth + 32;
@@ -291,7 +300,7 @@ class DesignCanvas extends StatelessWidget {
                                 (side == DesignSide.back
                                     ? _garment.backAsset
                                     : _garment.frontAsset) ??
-                                'assets/images/garments/crew_front.png';
+                                'assets/images/garments/crew_front.webp';
                             return Image.asset(
                               fallback,
                               width: DesignStudioConstants.canvasWidth,

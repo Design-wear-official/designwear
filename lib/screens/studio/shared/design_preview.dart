@@ -53,7 +53,7 @@ class DesignPreview extends StatelessWidget {
         child: ColorFiltered(
           colorFilter: DesignStudioUtils.shirtTint(tint),
           child: Image.asset(
-            'assets/images/garments/crew_front.png',
+            'assets/images/garments/crew_front.webp',
             fit: BoxFit.contain,
           ),
         ),

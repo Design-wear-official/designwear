@@ -197,7 +197,7 @@ def build(name, src, patches):
     # Colour of fully transparent pixels is irrelevant; zero it to shrink PNGs.
     canvas[canvas[:, :, 3] == 0] = 0
     OUT.mkdir(parents=True, exist_ok=True)
-    cv2.imwrite(str(OUT / f"{name}.png"), canvas)
+    cv2.imwrite(str(OUT / f"{name}.webp"), canvas, [cv2.IMWRITE_WEBP_QUALITY, 88])
     print("wrote", OUT / f"{name}.png", "garment box", (ox, oy, rgba.shape[1], rgba.shape[0]))
 
 
