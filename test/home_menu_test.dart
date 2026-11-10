@@ -4,6 +4,8 @@ import 'package:designwear/cms/cms_config.dart';
 import 'package:designwear/cms/cms_service.dart';
 import 'package:designwear/data/product_repository.dart';
 import 'package:designwear/screens/catalog/search_screen.dart';
+import 'package:designwear/models/commerce.dart';
+import 'package:designwear/screens/cart/cart_screen.dart';
 import 'package:designwear/screens/home/home_screen.dart';
 import 'package:designwear/services/auth/auth_service.dart';
 import 'package:designwear/services/shop/cart_service.dart';
@@ -72,7 +74,12 @@ void main() {
       'Settings',
       'Help & support',
     ]) {
-      expect(find.text(label), findsOneWidget, reason: label);
+      // The header also has a Cart chip, so "Cart" shows twice: chip + menu row.
+      expect(
+        find.text(label),
+        label == 'Cart' ? findsNWidgets(2) : findsOneWidget,
+        reason: label,
+      );
     }
 
     await mouse.moveTo(const Offset(5, 5));
@@ -106,7 +113,9 @@ void main() {
     expect(find.byType(SearchScreen), findsOneWidget);
   });
 
-  testWidgets('the header has no cart or bell', (tester) async {
+  testWidgets('the header has a cart chip with the item count, and no bell', (
+    tester,
+  ) async {
     final cart = CartService();
     tester.view.physicalSize = const Size(1200, 900);
     tester.view.devicePixelRatio = 1;
@@ -116,9 +125,28 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.shopping_bag_outlined), findsNothing);
+    expect(find.byKey(const ValueKey('header-cart')), findsOneWidget);
     expect(find.byIcon(Icons.notifications_none), findsNothing);
     expect(find.text('Create'), findsOneWidget); // signed out: the way in
+
+    // The chip's red badge shows how many items are in the cart (and only the chip does).
+    expect(find.text('3'), findsNothing);
+    cart.add(
+      CartLine(
+        productId: 'p',
+        title: 'Tee',
+        unitPrice: 500,
+        size: 'M',
+        quantity: 3,
+      ),
+    );
+    await tester.pump();
+    expect(find.text('3'), findsOneWidget);
+
+    // Tapping it opens the cart.
+    await tester.tap(find.byKey(const ValueKey('header-cart')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CartScreen), findsOneWidget);
   });
 
   testWidgets('signed in: the + is gone from the header', (tester) async {

@@ -81,9 +81,18 @@ void main() {
 
       expect(find.text('Create'), findsOneWidget);
       expect(find.byTooltip('Filter search'), findsOneWidget);
-      // Cart and notifications are in the profile menu, not the header.
-      expect(find.byIcon(Icons.shopping_bag_outlined), findsNothing);
+      // The cart is a chip in the header (icon + "Cart"); notifications stay in the profile menu.
+      expect(find.byKey(const ValueKey('header-cart')), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const ValueKey('header-cart')),
+          matching: find.text('Cart'),
+        ),
+        findsOneWidget,
+      );
       expect(find.byIcon(Icons.notifications_none), findsNothing);
+      // The shortcut is its own label, and the filter button is set apart.
+      expect(find.text('Ctrl K'), findsOneWidget);
     },
   );
 
@@ -97,6 +106,10 @@ void main() {
       expect(bar.width, greaterThan(40));
       expect(bar.right, lessThan(390));
       expect(find.byTooltip('Filter search'), findsNothing);
+      expect(find.text('Ctrl K'), findsNothing);
+      // Compact: the cart chip is just the icon.
+      expect(find.byKey(const ValueKey('header-cart')), findsOneWidget);
+      expect(find.text('Cart'), findsNothing);
       expect(find.text('Create'), findsNothing);
       expect(find.byTooltip('Create a design'), findsOneWidget);
     },
@@ -192,9 +205,20 @@ void alignmentTests() {
           reason: 'the bar minus its 1px border',
         );
         expect(profile.size, const Size(40, 40));
-        // Everything sits on the bar's centre line.
-        for (final r in [field, profile, searchIcon]) {
-          expect((r.center.dy - bar.center.dy).abs(), lessThan(1.0));
+        // The search icon always sits on the bar's own centre line.
+        expect((field.center.dy - bar.center.dy).abs(), lessThan(1.0));
+        expect((searchIcon.center.dy - bar.center.dy).abs(), lessThan(1.0));
+        if (size.width < 640) {
+          // A phone: the search bar is its own full-width row below the brand and actions.
+          expect(
+            profile.bottom,
+            lessThan(bar.top),
+            reason: 'actions above the search',
+          );
+          expect(bar.width, greaterThan(size.width - 40), reason: 'full width');
+        } else {
+          // Wider: brand, search and actions share one centre line.
+          expect((profile.center.dy - bar.center.dy).abs(), lessThan(1.0));
         }
       },
     );

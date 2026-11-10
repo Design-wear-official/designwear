@@ -8,7 +8,9 @@ import '../../services/auth/auth_service.dart';
 import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/cart_service.dart';
 import '../../services/shop/stores.dart';
+import '../../theme/app_theme.dart';
 import '../account/addresses_screen.dart';
+import 'cart_widgets.dart';
 import '../home/home_screen.dart' show formatPrice;
 import '../orders/my_orders_screen.dart';
 import '../account/payment_methods_screen.dart';
@@ -120,151 +122,98 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  Future<void> _pickAddress() async {
+    final a = await Navigator.of(context).push<Address>(
+      MaterialPageRoute(builder: (_) => const AddressesScreen(pickMode: true)),
+    );
+    if (a != null) {
+      setState(() => _address = a);
+      _checkDelivery();
+    }
+  }
+
+  Future<void> _pickPayment() async {
+    final p = await Navigator.of(context).push<PaymentMethod>(
+      MaterialPageRoute(
+        builder: (_) => const PaymentMethodsScreen(pickMode: true),
+      ),
+    );
+    if (p != null) setState(() => _payment = p);
+  }
+
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartService>();
     final remote = context.read<OrderStore>().isRemote;
+    final error = Theme.of(context).colorScheme.error;
+    final canPlace =
+        _address != null && !cart.isEmpty && !_placing && _serviceable;
+    final rule = CartPalette.of(context).rule;
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
       body: ContentWidth(
+        maxWidth: 728,
         child: ListView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
           children: [
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.location_on_outlined),
-                title: Text(
-                  _address == null
-                      ? 'Add a delivery address'
-                      : '${_address!.label} · ${_address!.name}',
-                ),
-                subtitle: _address == null ? null : Text(_address!.oneLine),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () async {
-                  final a = await Navigator.of(context).push<Address>(
-                    MaterialPageRoute(
-                      builder: (_) => const AddressesScreen(pickMode: true),
-                    ),
-                  );
-                  if (a != null) {
-                    setState(() => _address = a);
-                    _checkDelivery();
-                  }
-                },
-              ),
+            PillRow(
+              icon: Icons.location_on_outlined,
+              title: _address == null
+                  ? 'Add a delivery address'
+                  : '${_address!.label} · ${_address!.name}',
+              subtitle: _address?.oneLine,
+              onTap: _pickAddress,
             ),
+            const SizedBox(height: 26),
             if (remote && _onlineAvailable)
-              Card(
-                child: RadioGroup<bool>(
-                  groupValue: _payOnline,
-                  onChanged: (v) => setState(() => _payOnline = v!),
-                  child: const Column(
-                    children: [
-                      RadioListTile<bool>(
-                        value: false,
-                        title: Text('Cash on delivery'),
-                        subtitle: Text('Pay when your order arrives'),
-                      ),
-                      RadioListTile<bool>(
-                        value: true,
-                        title: Text('Pay online'),
-                        subtitle: Text('UPI, cards, netbanking, wallets'),
-                      ),
-                    ],
-                  ),
-                ),
+              PaymentChoices(
+                online: _payOnline,
+                onChanged: (v) => setState(() => _payOnline = v),
               )
             else
-              Card(
-                child: ListTile(
-                  leading: const Icon(Icons.payments_outlined),
-                  title: Text(_payment.label),
-                  trailing: const Icon(Icons.chevron_right),
-                  subtitle: remote
-                      ? const Text('Pay when your order arrives')
-                      : null,
-                  onTap: remote
-                      ? null
-                      : () async {
-                          final p = await Navigator.of(context)
-                              .push<PaymentMethod>(
-                                MaterialPageRoute(
-                                  builder: (_) => const PaymentMethodsScreen(
-                                    pickMode: true,
-                                  ),
-                                ),
-                              );
-                          if (p != null) setState(() => _payment = p);
-                        },
-                ),
+              PillRow(
+                icon: Icons.payments_outlined,
+                title: _payment.label,
+                subtitle: remote ? 'Pay when your order arrives' : null,
+                onTap: remote ? null : _pickPayment,
               ),
-            const SizedBox(height: 8),
-            for (final l in cart.lines)
-              ListTile(
-                dense: true,
-                title: Text('${l.title}  ×${l.quantity}'),
-                subtitle: Text('Size ${l.size}'),
-                trailing: Text(formatPrice(l.total)),
-              ),
-            const Divider(),
-            ListTile(
-              dense: true,
-              title: const Text('Subtotal'),
-              trailing: Text(formatPrice(cart.subtotal)),
+            const SizedBox(height: 30),
+            for (final l in cart.lines) OrderLineRow(line: l),
+            Divider(color: rule, thickness: 2, height: 28),
+            const SizedBox(height: 4),
+            SummaryCard(
+              subtotal: cart.subtotal,
+              tax: cart.tax,
+              total: cart.total,
+              actionLabel: _placing
+                  ? 'Placing order…'
+                  : _payOnline
+                  ? 'Pay ${formatPrice(cart.total)}'
+                  : 'Place order',
+              onAction: canPlace ? _place : null,
+              notes: [
+                if (!_serviceable)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(
+                      'We do not deliver to ${_address!.pin} yet. Choose another address.',
+                      style: TextStyle(color: error),
+                    ),
+                  ),
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Text(_error!, style: TextStyle(color: error)),
+                  ),
+              ],
             ),
-            ListTile(
-              dense: true,
-              title: const Text('GST (18%)'),
-              trailing: Text(formatPrice(cart.tax)),
-            ),
-            ListTile(
-              title: const Text(
-                'Total',
-                style: TextStyle(fontWeight: FontWeight.w700),
-              ),
-              trailing: Text(
-                formatPrice(cart.total),
-                style: const TextStyle(fontWeight: FontWeight.w700),
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (!_serviceable)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  'We do not deliver to ${_address!.pin} yet. '
-                  'Choose another address.',
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
-                  _error!,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
-              ),
-            FilledButton(
-              onPressed:
-                  _address == null || cart.isEmpty || _placing || !_serviceable
-                  ? null
-                  : _place,
-              child: Text(
-                _placing
-                    ? 'Placing order…'
-                    : _payOnline
-                    ? 'Pay ${formatPrice(cart.total)}'
-                    : 'Place order',
-              ),
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               remote
                   ? 'Prices are confirmed by the store when you place the order.'
                   : 'Orders are saved on this device until the store backend is connected.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 12, color: context.muted),
             ),
           ],
         ),
@@ -278,35 +227,73 @@ class OrderPlacedScreen extends StatelessWidget {
   final Order order;
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    body: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, size: 72, color: Colors.green),
-            const SizedBox(height: 16),
-            Text(
-              'Order placed',
-              style: Theme.of(context).textTheme.headlineSmall,
+  Widget build(BuildContext context) {
+    final p = CartPalette.of(context);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Container(
+            width: 410,
+            constraints: const BoxConstraints(maxWidth: 410),
+            padding: const EdgeInsets.all(38),
+            decoration: BoxDecoration(
+              color: p.panel,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: p.panelBorder),
             ),
-            const SizedBox(height: 8),
-            Text('#${order.id} · ${formatPrice(order.total)}'),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
-              ),
-              child: const Text('View my orders'),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 54,
+                  height: 54,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.accent,
+                  ),
+                  child: Icon(
+                    Icons.check,
+                    color: context.isDark
+                        ? const Color(0xFF171717)
+                        : Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  'Order placed',
+                  style: Theme.of(context).textTheme.headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Thanks for shopping with DesignWear. Your order is being prepared.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: context.muted, height: 1.5),
+                ),
+                const SizedBox(height: 10),
+                Text('#${order.id} · ${formatPrice(order.total)}'),
+                const SizedBox(height: 26),
+                SizedBox(
+                  width: double.infinity,
+                  height: 46,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const MyOrdersScreen()),
+                    ),
+                    child: const Text('View my orders'),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      Navigator.of(context).popUntil((r) => r.isFirst),
+                  child: const Text('Continue shopping'),
+                ),
+              ],
             ),
-            TextButton(
-              onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-              child: const Text('Continue shopping'),
-            ),
-          ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
