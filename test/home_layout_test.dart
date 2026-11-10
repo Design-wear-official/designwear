@@ -197,13 +197,10 @@ void alignmentTests() {
         );
         final searchIcon = tester.getRect(find.byIcon(Icons.search).first);
 
-        // The text field fills the whole bar and centres its text, so the
-        // placeholder shares the icons' centre line in the browser too.
-        expect(
-          field.height,
-          bar.height - 2,
-          reason: 'the bar minus its 1px border',
-        );
+        // The hint and the field are single lines centred in the bar, on the
+        // same line as the icons.
+        final hint = tester.getRect(find.text('Search designs, creators...'));
+        expect((hint.center.dy - bar.center.dy).abs(), lessThan(1.0));
         expect(profile.size, const Size(40, 40));
         // The search icon always sits on the bar's own centre line.
         expect((field.center.dy - bar.center.dy).abs(), lessThan(1.0));

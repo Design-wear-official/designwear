@@ -560,40 +560,51 @@ class _SearchFieldState extends State<_SearchField> {
                   child: Icon(Icons.search, size: 16, color: icon),
                 ),
                 Expanded(
-                  child: TextField(
-                    focusNode: widget.focusNode,
-                    controller: widget.controller,
-                    style: GoogleFonts.inter(
-                      fontSize: 13,
-                      height: 1.2,
-                      color: text,
-                    ),
-                    // Fill the bar's full height and centre the text in it: the
-                    // placeholder then sits on the same line as the icons in the
-                    // browser too, whatever the font's own metrics are.
-                    expands: true,
-                    minLines: null,
-                    maxLines: null,
-                    textAlignVertical: TextAlignVertical.center,
-                    textInputAction: TextInputAction.search,
-                    cursorColor: AppColors.marigold,
-                    onSubmitted: (_) => widget.onSearch(),
-                    decoration: InputDecoration(
-                      hintText: 'Search designs, creators...',
-                      hintStyle: GoogleFonts.inter(
-                        fontSize: 13,
-                        height: 1.2,
-                        color: hint,
+                  // The hint is a plain Text in the same Row as the icons, so
+                  // it is centred exactly like them and "Ctrl K" in every
+                  // browser; the field itself is a single collapsed line that
+                  // the Row centres the same way.
+                  child: Stack(
+                    alignment: Alignment.centerLeft,
+                    children: [
+                      if (!hasText)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: IgnorePointer(
+                            child: Text(
+                              'Search designs, creators...',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                height: 1.2,
+                                color: hint,
+                              ),
+                            ),
+                          ),
+                        ),
+                      TextField(
+                        focusNode: widget.focusNode,
+                        controller: widget.controller,
+                        style: GoogleFonts.inter(
+                          fontSize: 13,
+                          height: 1.2,
+                          color: text,
+                        ),
+                        maxLines: 1,
+                        textInputAction: TextInputAction.search,
+                        cursorColor: AppColors.marigold,
+                        onSubmitted: (_) => widget.onSearch(),
+                        decoration: const InputDecoration(
+                          isCollapsed: true,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                        ),
                       ),
-                      // Collapsed: no built-in vertical padding, so the text is
-                      // centred in the bar and lines up with the icons.
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      filled: false,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
+                    ],
                   ),
                 ),
                 // The shortcut, as its own label, while the field is empty.
