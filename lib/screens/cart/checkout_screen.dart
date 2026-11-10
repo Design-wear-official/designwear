@@ -141,11 +141,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final rule = CartPalette.of(context).rule;
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
-      body: ContentWidth(
-        maxWidth: 728,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
-          children: [
+      body: LayoutBuilder(
+        builder: (context, box) {
+          final left = <Widget>[
             PillRow(
               icon: Icons.location_on_outlined,
               title: _address == null
@@ -175,43 +173,78 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 30),
             for (final l in cart.lines) OrderLineRow(line: l),
             Divider(color: rule, thickness: 2, height: 28),
-            const SizedBox(height: 4),
-            SummaryCard(
-              subtotal: cart.subtotal,
-              tax: cart.tax,
-              total: cart.total,
-              actionLabel: _placing
-                  ? 'Placing order…'
-                  : _payOnline
-                  ? 'Pay ${formatPrice(cart.total)}'
-                  : 'Place order',
-              onAction: canPlace ? _place : null,
-              notes: [
-                if (!_serviceable)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Text(
-                      'We do not deliver to ${_address!.pin} yet. Choose another address.',
-                      style: TextStyle(color: error),
-                    ),
+          ];
+          final summary = SummaryCard(
+            subtotal: cart.subtotal,
+            tax: cart.tax,
+            total: cart.total,
+            actionLabel: _placing
+                ? 'Placing order…'
+                : _payOnline
+                ? 'Pay ${formatPrice(cart.total)}'
+                : 'Place order',
+            onAction: canPlace ? _place : null,
+            notes: [
+              if (!_serviceable)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    'We do not deliver to ${_address!.pin} yet. Choose another address.',
+                    style: TextStyle(color: error),
                   ),
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: Text(_error!, style: TextStyle(color: error)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
+                ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(_error!, style: TextStyle(color: error)),
+                ),
+            ],
+          );
+          final footnote = Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Text(
               remote
                   ? 'Prices are confirmed by the store when you place the order.'
                   : 'Orders are saved on this device until the store backend is connected.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 12, color: context.muted),
             ),
-          ],
-        ),
+          );
+          // A wide window: the details on the left and the summary on the
+          // right, like the cart.
+          if (box.maxWidth >= 880) {
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1000),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: ListView(children: left)),
+                      const SizedBox(width: 56),
+                      SizedBox(
+                        width: 360,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [summary, footnote],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+          return ContentWidth(
+            maxWidth: 728,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 28, 16, 24),
+              children: [...left, const SizedBox(height: 4), summary, footnote],
+            ),
+          );
+        },
       ),
     );
   }
