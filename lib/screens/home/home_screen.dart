@@ -11,6 +11,7 @@ import '../../presentation/styles/styles.dart';
 import '../../theme/app_theme.dart' show AppThemeColors;
 import '../../services/community/community_service.dart';
 import 'home_app_bar.dart';
+import '../../config/shop_config.dart';
 import '../../models/watch.dart';
 import 'home_categories.dart';
 import 'home_challenge_banner.dart';
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final repo = _repo;
     _products = repo == null
         ? Future.error(StateError('not-configured'))
-        : repo.list().then((items) {
+        : repo.list(limit: ShopConfig.catalogPageSize).then((items) {
             if (mounted) {
               setState(
                 () => _suggestionPool = [

@@ -1,3 +1,4 @@
+import '../config/shop_config.dart';
 import 'product.dart';
 
 /// What a watch listing carries that a garment does not: case, strap,
@@ -62,7 +63,7 @@ class WatchSpecs {
 
   /// One line for cards and search rows: "40 mm · Quartz · Leather strap".
   String get summary => [
-    if (caseSizeMm != null) '${_mm(caseSizeMm!)} mm',
+    if (caseSizeMm != null) '${_fmtMm(caseSizeMm!)} mm',
     ?movement,
     if (strapMaterial != null) '$strapMaterial strap',
   ].join(' · ');
@@ -106,7 +107,7 @@ class WatchSpecs {
   String? get fitAdvice {
     final mm = caseSizeMm;
     if (mm == null) return null;
-    final size = _mm(mm);
+    final size = _fmtMm(mm);
     if (mm < 34) {
       return 'A $size mm case is small. It suits slim wrists up to about 15 cm around.';
     }
@@ -127,16 +128,16 @@ class WatchSpecs {
   List<(String, String)> get specRows => [
     if (brand != null) ('Brand', brand!),
     if (gender != null) ('For', gender!),
-    if (caseSizeMm != null) ('Case size', '${_mm(caseSizeMm!)} mm'),
+    if (caseSizeMm != null) ('Case size', '${_fmtMm(caseSizeMm!)} mm'),
     if (caseThicknessMm != null)
-      ('Case thickness', '${_mm(caseThicknessMm!)} mm'),
+      ('Case thickness', '${_fmtMm(caseThicknessMm!)} mm'),
     if (caseShape != null) ('Case shape', caseShape!),
     if (caseMaterial != null) ('Case material', caseMaterial!),
     if (dialColor != null) ('Dial colour', dialColor!),
     if (glass != null) ('Glass', glass!),
     if (strapMaterial != null) ('Strap material', strapMaterial!),
     if (strapColor != null) ('Strap colour', strapColor!),
-    if (strapWidthMm != null) ('Strap width', '${_mm(strapWidthMm!)} mm'),
+    if (strapWidthMm != null) ('Strap width', '${_fmtMm(strapWidthMm!)} mm'),
     if (movement != null) ('Movement', movement!),
     if (display != null) ('Display', display!),
     if (waterResistanceLabel != null)
@@ -157,9 +158,6 @@ class WatchSpecs {
     ?movement,
     ?display,
   ];
-
-  static String _mm(double v) =>
-      v.truncateToDouble() == v ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
 
   /// Parses the `watch` object of a product record. Numbers may arrive as
   /// strings ("40", "40 mm"), and the older key spellings are accepted.
@@ -208,18 +206,26 @@ class WatchSpecs {
 
 /// A group of case sizes shoppers filter by.
 enum CaseSizeBand {
-  small('Under 38 mm'),
-  medium('38 to 42 mm'),
-  large('Over 42 mm');
+  small,
+  medium,
+  large;
 
-  const CaseSizeBand(this.label);
-  final String label;
+  /// "Under 38 mm", "38 to 42 mm", "Over 42 mm"; the limits are in ShopConfig.
+  String get label {
+    final low = _fmtMm(ShopConfig.watchSmallBelowMm);
+    final high = _fmtMm(ShopConfig.watchLargeAboveMm);
+    return switch (this) {
+      small => 'Under $low mm',
+      medium => '$low to $high mm',
+      large => 'Over $high mm',
+    };
+  }
 
   static CaseSizeBand? of(double? mm) => mm == null
       ? null
-      : mm < 38
+      : mm < ShopConfig.watchSmallBelowMm
       ? small
-      : mm <= 42
+      : mm <= ShopConfig.watchLargeAboveMm
       ? medium
       : large;
 }
@@ -303,3 +309,6 @@ class WatchFilter {
 
   static String _norm(String s) => s.trim().toLowerCase();
 }
+
+String _fmtMm(double v) =>
+    v.truncateToDouble() == v ? v.toStringAsFixed(0) : v.toStringAsFixed(1);

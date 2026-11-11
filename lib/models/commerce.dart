@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../config/shop_config.dart';
+
 class UserProfile {
   const UserProfile({
     required this.name,
@@ -117,7 +119,7 @@ class CartLine {
   static const _clothingSizes = {'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'};
 
   /// The size sent for a product with nothing to choose (Product.oneSize).
-  static const oneSize = 'One size';
+  static String get oneSize => ShopConfig.oneSizeLabel;
 
   final String productId;
   final String title;

@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../api/api_client.dart';
+import '../../config/shop_config.dart';
 import '../../models/commerce.dart';
 import '../../models/product.dart';
 import '../../logging/app_log.dart';
@@ -17,7 +18,7 @@ class CartService extends ChangeNotifier {
   /// re-prices at checkout.
   final ApiClient? api;
 
-  static const taxRate = 0.18;
+  static double get taxRate => ShopConfig.taxRate;
   static const _key = 'cart.v1';
 
   final List<CartLine> _lines = [];

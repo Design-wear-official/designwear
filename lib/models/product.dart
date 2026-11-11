@@ -1,3 +1,4 @@
+import '../config/shop_config.dart';
 import 'watch.dart';
 
 /// A catalog item as served by the SethuCMS `products` collection.
@@ -23,7 +24,7 @@ class Product {
     this.tags = const [],
     this.material,
     this.productType,
-    this.availableSizes = const ['S', 'M', 'L', 'XL', 'XXL'],
+    this.availableSizes = defaultSizes,
     this.availableColors = const [],
     this.variantLabel,
     this.variants = const [],
@@ -72,7 +73,10 @@ class Product {
   final int remixCount;
 
   /// The size sent for a product with nothing to choose.
-  static const oneSize = 'One size';
+  /// Sizes a directly built Product starts with; parsed records use ShopConfig.clothingSizes.
+  static const defaultSizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+  static String get oneSize => ShopConfig.oneSizeLabel;
 
   static const _watchNames = {'watch', 'watches'};
 
@@ -95,8 +99,7 @@ class Product {
   bool get isInStock => stockCount > 0;
 
   /// Few enough left that shoppers should be told.
-  static const lowStockThreshold = 5;
-  bool get isLowStock => isInStock && stockCount <= lowStockThreshold;
+  bool get isLowStock => isInStock && stockCount <= ShopConfig.lowStockAt;
 
   /// What shoppers read: "In stock", "Only 3 left" or "Out of stock".
   String get stockLabel => !isInStock
@@ -167,9 +170,7 @@ class Product {
       tags: strings(map['tags']),
       material: str(map['material']),
       productType: str(map['productType']),
-      availableSizes: sizes.isEmpty
-          ? const ['S', 'M', 'L', 'XL', 'XXL']
-          : sizes,
+      availableSizes: sizes.isEmpty ? ShopConfig.clothingSizes : sizes,
       availableColors: strings(map['availableColors']),
       variantLabel: str(map['variantLabel']),
       variants: strings(map['variants']),

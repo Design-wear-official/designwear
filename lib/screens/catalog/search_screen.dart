@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../api/api_client.dart';
 import '../../cms/cms_service.dart';
+import '../../config/shop_config.dart';
 import '../../data/product_repository.dart';
 import '../../models/product.dart';
 import '../../theme/app_theme.dart' show AppThemeColors;
@@ -42,7 +43,7 @@ class _SearchScreenState extends State<SearchScreen> {
     final repo =
         widget.repository ??
         ProductRepository.resolve(api: context.read<ApiClient?>(), cms: cms);
-    _all = repo?.list(limit: 200);
+    _all = repo?.list(limit: ShopConfig.searchPageSize);
     _controller.text = widget.initialQuery;
     _query = widget.initialQuery;
   }
