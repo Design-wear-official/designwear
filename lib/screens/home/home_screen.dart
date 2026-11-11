@@ -11,6 +11,8 @@ import '../../presentation/styles/styles.dart';
 import '../../theme/app_theme.dart' show AppThemeColors;
 import '../../services/community/community_service.dart';
 import 'home_app_bar.dart';
+import '../../models/watch.dart';
+import 'home_categories.dart';
 import 'home_challenge_banner.dart';
 import 'home_sections.dart';
 import '../catalog/search_screen.dart';
@@ -35,6 +37,10 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchFocus = FocusNode();
   bool _searchFocused = false;
   final _allKey = GlobalKey();
+
+  /// The part of the shop on show under "All Products".
+  ShopCategory _category = ShopCategory.all;
+  WatchFilter _watchFilter = const WatchFilter();
 
   @override
   void initState() {
@@ -74,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     p.title,
                     if ((p.productType ?? '').isNotEmpty) p.productType!,
                     ...p.tags,
+                    ...?p.watch?.searchTerms,
                   ],
                 ],
               );
@@ -178,6 +185,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
                     final featured = products.where((p) => p.featured).toList();
+                    final watches = products.where((p) => p.isWatch).toList();
+                    // Nothing to choose between until the catalog has watches.
+                    final category = watches.isEmpty
+                        ? ShopCategory.all
+                        : _category;
                     return RefreshIndicator(
                       onRefresh: () async {
                         _retry();
@@ -236,15 +248,40 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                                 HomeSectionTitle(
                                   key: _allKey,
-                                  title: 'All Products',
+                                  title: category.title,
                                   onSeeAll: _scrollToAll,
                                 ),
+                                if (watches.isNotEmpty)
+                                  HomeCategoryBar(
+                                    selected: category,
+                                    hp: hp,
+                                    onSelected: (c) => setState(() {
+                                      _category = c;
+                                      _watchFilter = const WatchFilter();
+                                    }),
+                                  ),
+                                if (category == ShopCategory.watches)
+                                  WatchFilterBar(
+                                    options: WatchFilter.options(watches),
+                                    filter: _watchFilter,
+                                    hp: hp,
+                                    onChanged: (f) =>
+                                        setState(() => _watchFilter = f),
+                                  ),
                                 HomeProductGrid(
                                   future: Future.value(products),
                                   searchQuery: '',
                                   selectedCategoryId: null,
+                                  where: switch (category) {
+                                    ShopCategory.all => null,
+                                    ShopCategory.clothing => (p) => !p.isWatch,
+                                    ShopCategory.watches =>
+                                      _watchFilter.matches,
+                                  },
                                   onRetry: _retry,
-                                  onClearFilters: _retry,
+                                  onClearFilters: () => setState(
+                                    () => _watchFilter = const WatchFilter(),
+                                  ),
                                 ),
                                 const SizedBox(height: 32),
                               ],

@@ -340,6 +340,9 @@ class HomeProductGrid extends StatelessWidget {
   final VoidCallback onRetry;
   final VoidCallback onClearFilters;
 
+  /// Keeps only the products it accepts (the category and watch filters).
+  final bool Function(Product)? where;
+
   const HomeProductGrid({
     super.key,
     required this.future,
@@ -347,6 +350,7 @@ class HomeProductGrid extends StatelessWidget {
     required this.selectedCategoryId,
     required this.onRetry,
     required this.onClearFilters,
+    this.where,
   });
 
   @override
@@ -405,7 +409,7 @@ class HomeProductGrid extends StatelessWidget {
               q.isEmpty ||
               p.title.toLowerCase().contains(q) ||
               p.description.toLowerCase().contains(q);
-          return matchesCat && matchesQ;
+          return matchesCat && matchesQ && (where?.call(p) ?? true);
         }).toList();
 
         if (filtered.isEmpty) {
@@ -423,6 +427,8 @@ class HomeProductGrid extends StatelessWidget {
                 Text(
                   q.isNotEmpty
                       ? 'No results for "$q"'
+                      : where != null
+                      ? 'No products match these filters'
                       : 'No products in this category',
                   style: GoogleFonts.archivo(
                     fontSize: 15,
@@ -595,6 +601,19 @@ class HomeProductGrid extends StatelessWidget {
                                                 height: 1.3,
                                               ),
                                             ),
+                                            if ((p.watch?.summary ?? '')
+                                                .isNotEmpty) ...[
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                p.watch!.summary,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: GoogleFonts.inter(
+                                                  fontSize: 11,
+                                                  color: Colors.white70,
+                                                ),
+                                              ),
+                                            ],
                                             const SizedBox(height: 4),
                                             Text(
                                               '₹${p.price.toStringAsFixed(0)}',

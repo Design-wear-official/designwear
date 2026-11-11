@@ -141,11 +141,10 @@ class CartItemCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'Size ${line.size}',
-                  style: TextStyle(color: context.muted),
-                ),
-                const SizedBox(height: 6),
+                if (line.optionText.isNotEmpty) ...[
+                  Text(line.optionText, style: TextStyle(color: context.muted)),
+                  const SizedBox(height: 6),
+                ],
                 Text(
                   formatPrice(line.total),
                   style: TextStyle(
@@ -420,11 +419,13 @@ class OrderLineRow extends StatelessWidget {
                 '${line.title}  ×${line.quantity}',
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: 4),
-              Text(
-                'Size ${line.size}',
-                style: TextStyle(fontSize: 12, color: context.muted),
-              ),
+              if (line.optionText.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  line.optionText,
+                  style: TextStyle(fontSize: 12, color: context.muted),
+                ),
+              ],
             ],
           ),
         ),

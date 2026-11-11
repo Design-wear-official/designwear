@@ -93,7 +93,9 @@ class _SearchScreenState extends State<SearchScreen> {
       return p.title.toLowerCase().contains(q) ||
           p.description.toLowerCase().contains(q) ||
           p.tags.any((t) => t.toLowerCase().contains(q)) ||
-          (p.productType ?? '').toLowerCase().contains(q);
+          (p.productType ?? '').toLowerCase().contains(q) ||
+          (p.watch?.searchTerms.any((t) => t.toLowerCase().contains(q)) ??
+              false);
     }).toList();
     switch (_sort) {
       case 'low':
@@ -211,7 +213,12 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
           title: Text(p.title),
-          subtitle: Text(p.stockLabel),
+          subtitle: Text(
+            [
+              if ((p.watch?.summary ?? '').isNotEmpty) p.watch!.summary,
+              p.stockLabel,
+            ].join(' · '),
+          ),
           trailing: Text(
             formatPrice(p.price),
             style: TextStyle(
