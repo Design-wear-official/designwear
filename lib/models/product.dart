@@ -1,3 +1,5 @@
+import 'watch.dart';
+
 /// A catalog item as served by the SethuCMS `products` collection.
 ///
 /// The parser accepts both the backend's flat shape (`id`, `slug`,
@@ -23,6 +25,9 @@ class Product {
     this.productType,
     this.availableSizes = const ['S', 'M', 'L', 'XL', 'XXL'],
     this.availableColors = const [],
+    this.variantLabel,
+    this.variants = const [],
+    this.watch,
     this.previewImageUrl,
     this.creatorName,
     this.creatorHandle,
@@ -49,12 +54,43 @@ class Product {
   final String? productType;
   final List<String> availableSizes;
   final List<String> availableColors;
+
+  /// What [variants] are called on the product page ("Strap", "Colour").
+  final String? variantLabel;
+
+  /// Choices for a product that is not sold by clothing size, such as a
+  /// watch's straps. Empty when there is only one version.
+  final List<String> variants;
+
+  /// Set for watches; see [isWatch].
+  final WatchSpecs? watch;
   final String? previewImageUrl;
   final String? creatorName;
   final String? creatorHandle;
   final String? remixedFromHandle;
   final int likeCount;
   final int remixCount;
+
+  /// The size sent for a product with nothing to choose.
+  static const oneSize = 'One size';
+
+  static const _watchNames = {'watch', 'watches'};
+
+  /// A watch: marked by product type or category, or carrying watch specs.
+  bool get isWatch =>
+      watch != null ||
+      _watchNames.contains((productType ?? '').trim().toLowerCase()) ||
+      _watchNames.contains(categoryId.trim().toLowerCase());
+
+  /// What the shopper picks before buying: clothing sizes for garments, the
+  /// listed variants (straps) for watches. Empty means nothing to pick.
+  List<String> get options => isWatch ? variants : availableSizes;
+
+  /// The name of that choice: "Size", or "Strap" for a watch.
+  String get optionLabel => variantLabel ?? (isWatch ? 'Strap' : 'Size');
+
+  /// Garments can be remixed in the Studio and tried on; watches cannot.
+  bool get isGarment => !isWatch;
 
   bool get isInStock => stockCount > 0;
 
@@ -110,6 +146,7 @@ class Product {
     final slug = map['slug'];
     final category = map['categoryId'] ?? map['category'];
     final sizes = strings(map['availableSizes']);
+    final watch = map['watch'];
 
     return Product(
       id: '${map['id'] ?? map['_id'] ?? ''}',
@@ -134,6 +171,11 @@ class Product {
           ? const ['S', 'M', 'L', 'XL', 'XXL']
           : sizes,
       availableColors: strings(map['availableColors']),
+      variantLabel: str(map['variantLabel']),
+      variants: strings(map['variants']),
+      watch: watch is Map
+          ? WatchSpecs.fromRecord(watch.cast<String, Object?>())
+          : null,
       previewImageUrl: str(map['previewImageUrl']),
       creatorName: str(map['creatorName']),
       creatorHandle: str(map['creatorHandle']),

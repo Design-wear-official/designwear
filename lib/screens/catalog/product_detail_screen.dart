@@ -16,6 +16,7 @@ import '../studio/editor/design_studio_screen.dart';
 import '../cart/cart_screen.dart';
 import '../home/home_app_bar.dart' show HomeBrand;
 import '../ai/virtual_tryon_screen.dart';
+import 'watch_details.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -29,7 +30,13 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _selectedSize;
-  final List<String> _sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+  List<String> get _sizes => widget.product.options;
+
+  /// "size" for a garment, "strap" for a watch.
+  String get _optionName => widget.product.optionLabel.toLowerCase();
+
+  /// False when the product has choices and none is picked yet.
+  bool get _hasChoice => _sizes.isEmpty || _selectedSize != null;
   bool _isAddingToCart = false;
   bool _isBuyingNow = false;
 
@@ -65,8 +72,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           children: [
             ...[
               _hero(context, wide: false),
-              _tryOn(context),
-              _remixButton(context),
+              if (widget.product.isGarment) ...[
+                _tryOn(context),
+                _remixButton(context),
+              ],
               _info(context),
             ],
           ],
@@ -205,10 +214,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _addToCart() async {
-    if (_selectedSize == null) {
+    if (!_hasChoice) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select a size', style: GoogleFonts.poppins()),
+          content: Text(
+            'Please select a $_optionName',
+            style: GoogleFonts.poppins(),
+          ),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -256,10 +268,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   }
 
   Future<void> _buyNow() async {
-    if (_selectedSize == null) {
+    if (!_hasChoice) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please select a size', style: GoogleFonts.poppins()),
+          content: Text(
+            'Please select a $_optionName',
+            style: GoogleFonts.poppins(),
+          ),
           backgroundColor: Colors.orange,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
@@ -376,27 +391,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   _stockChip(context),
                                 ],
                               ),
-                              Divider(height: 40, color: line),
-                              Text(
-                                'Select Size',
-                                style: ResponsiveTypography.h4(context),
-                              ),
-                              const SizedBox(height: 12),
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 8,
-                                children: [
-                                  for (final size in _sizes)
-                                    _SizeChip(
-                                      size: size,
-                                      isSelected: _selectedSize == size,
-                                      onTap: () => setState(
-                                        () => _selectedSize =
-                                            _selectedSize == size ? null : size,
-                                      ),
-                                    ),
-                                ],
-                              ),
+                              if (_sizes.isNotEmpty) ...[
+                                Divider(height: 40, color: line),
+                                ..._optionPicker(context),
+                              ],
                               if (p.description.isNotEmpty) ...[
                                 Divider(height: 40, color: line),
                                 Text(
@@ -414,26 +412,32 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                   ).copyWith(height: 1.5),
                                 ),
                               ],
+                              if (p.watch case final watch?) ...[
+                                Divider(height: 40, color: line),
+                                WatchDetails(watch: watch),
+                              ],
                               Divider(height: 40, color: line),
-                              _wideButton(
-                                context,
-                                icon: Icons.fork_right,
-                                label: 'Remix this T-shirt',
-                                onPressed: _remix,
-                                filled: true,
-                              ),
-                              _wideButton(
-                                context,
-                                icon: Icons.auto_awesome,
-                                label: 'Try It On Virtually ✨',
-                                onPressed: () => Navigator.push(
+                              if (p.isGarment) ...[
+                                _wideButton(
                                   context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        VirtualTryOnScreen(product: p),
+                                  icon: Icons.fork_right,
+                                  label: 'Remix this T-shirt',
+                                  onPressed: _remix,
+                                  filled: true,
+                                ),
+                                _wideButton(
+                                  context,
+                                  icon: Icons.auto_awesome,
+                                  label: 'Try It On Virtually ✨',
+                                  onPressed: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) =>
+                                          VirtualTryOnScreen(product: p),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                               if (!threeColumns) ...[
                                 const SizedBox(height: 8),
                                 ..._buyButtons(context, outOfStock),
@@ -473,15 +477,17 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                                     child: _stockChip(context),
                                   ),
                                   const SizedBox(height: 16),
-                                  Text(
-                                    _selectedSize == null
-                                        ? 'Choose a size to continue'
-                                        : 'Size $_selectedSize',
-                                    style: text.bodyMedium?.copyWith(
-                                      fontWeight: FontWeight.w600,
+                                  if (_sizes.isNotEmpty) ...[
+                                    Text(
+                                      _selectedSize == null
+                                          ? 'Choose a $_optionName to continue'
+                                          : '${p.optionLabel}: $_selectedSize',
+                                      style: text.bodyMedium?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 16),
+                                    const SizedBox(height: 16),
+                                  ],
                                   ..._buyButtons(context, outOfStock),
                                 ],
                               ),
@@ -766,27 +772,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ),
         const SizedBox(height: 24),
 
-        // Size Selection
-        Text('Select Size', style: ResponsiveTypography.h4(context)),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 12,
-          runSpacing: 8,
-          children: _sizes.map((size) {
-            final isSelected = _selectedSize == size;
-            return _SizeChip(
-              size: size,
-              isSelected: isSelected,
-              onTap: () {
-                setState(() {
-                  _selectedSize = isSelected ? null : size;
-                });
-              },
-            );
-          }).toList(),
-        ),
-
-        const SizedBox(height: 24),
+        if (_sizes.isNotEmpty) ...[
+          ..._optionPicker(context),
+          const SizedBox(height: 24),
+        ],
+        if (widget.product.watch case final watch?) ...[
+          WatchDetails(watch: watch),
+          const SizedBox(height: 24),
+        ],
         Text(
           'Description',
           style: ResponsiveTypography.h4(context)
@@ -805,6 +798,37 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ],
     ),
   );
+
+  /// The heading and chips for the product's choice: round size chips for a
+  /// garment, wider pills for a watch's straps (their names are longer).
+  List<Widget> _optionPicker(BuildContext context) {
+    final p = widget.product;
+    void pick(String option) =>
+        setState(() => _selectedSize = _selectedSize == option ? null : option);
+    return [
+      Text('Select ${p.optionLabel}', style: ResponsiveTypography.h4(context)),
+      const SizedBox(height: 12),
+      Wrap(
+        spacing: 12,
+        runSpacing: 8,
+        children: [
+          for (final option in _sizes)
+            if (p.isWatch)
+              ChoiceChip(
+                label: Text(option),
+                selected: _selectedSize == option,
+                onSelected: (_) => pick(option),
+              )
+            else
+              _SizeChip(
+                size: option,
+                isSelected: _selectedSize == option,
+                onTap: () => pick(option),
+              ),
+        ],
+      ),
+    ];
+  }
 
   // Amber when only a few are left, otherwise by availability.
   Color _stockColor(Product p) =>

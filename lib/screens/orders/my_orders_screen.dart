@@ -159,7 +159,12 @@ class _OrderCard extends StatelessWidget {
             ListTile(
               dense: true,
               title: Text(l.title),
-              subtitle: Text('Size ${l.size} · ×${l.quantity}'),
+              subtitle: Text(
+                [
+                  if (l.optionText.isNotEmpty) l.optionText,
+                  '×${l.quantity}',
+                ].join(' · '),
+              ),
               trailing: Text(formatPrice(l.total)),
             ),
           if (order.history.isNotEmpty) _Timeline(order: order),

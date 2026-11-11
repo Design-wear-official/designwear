@@ -4,3 +4,4 @@ export 'custom_design.dart';
 export 'garment_style.dart';
 export 'vector_garments.dart';
 export 'product.dart';
+export 'watch.dart';

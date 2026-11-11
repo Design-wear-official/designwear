@@ -110,12 +110,26 @@ class CartLine {
     this.imageUrl,
     this.quantity = 1,
     this.designId,
-  });
+    String? optionLabel,
+  }) : optionLabel =
+           optionLabel ?? (_clothingSizes.contains(size) ? 'Size' : '');
+
+  static const _clothingSizes = {'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL'};
+
+  /// The size sent for a product with nothing to choose (Product.oneSize).
+  static const oneSize = 'One size';
 
   final String productId;
   final String title;
   final double unitPrice;
+
+  /// The chosen size, or the chosen variant (a watch's strap). The server
+  /// knows it as `size` either way.
   final String size;
+
+  /// What [size] is a choice of: "Size", "Strap". Empty when unknown, as for
+  /// a line the server returned without it.
+  final String optionLabel;
   final String? imageUrl;
   final String? designId; // set for custom Studio designs
   int quantity;
@@ -123,11 +137,21 @@ class CartLine {
   String get key => '$productId|$size|${designId ?? ''}';
   double get total => unitPrice * quantity;
 
+  /// "Size XL", "Strap: Black leather", or empty for a one-version product.
+  String get optionText => size.isEmpty || size == oneSize
+      ? ''
+      : optionLabel == 'Size'
+      ? 'Size $size'
+      : optionLabel.isEmpty
+      ? size
+      : '$optionLabel: $size';
+
   Map<String, Object?> toJson() => {
     'productId': productId,
     'title': title,
     'unitPrice': unitPrice,
     'size': size,
+    'optionLabel': optionLabel,
     'imageUrl': imageUrl,
     'quantity': quantity,
     'designId': designId,
@@ -140,6 +164,7 @@ class CartLine {
     imageUrl: j['imageUrl'] as String?,
     quantity: (j['quantity'] as num?)?.toInt() ?? 1,
     designId: j['designId'] as String?,
+    optionLabel: j['optionLabel'] as String?,
   );
 }
 

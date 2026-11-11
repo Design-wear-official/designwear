@@ -120,13 +120,15 @@ class CartService extends ChangeNotifier {
     );
   }
 
-  /// Adds a catalog product (one unit) in the given size.
+  /// Adds a catalog product (one unit) in the given size, or for a watch the
+  /// given strap. A product with nothing to choose goes in as one size.
   void addToCart(Product product, {String? size}) => add(
     CartLine(
       productId: product.id,
       title: product.title,
       unitPrice: product.price,
-      size: size ?? 'M',
+      size: size ?? (product.options.isEmpty ? Product.oneSize : 'M'),
+      optionLabel: product.optionLabel,
       imageUrl: product.displayImageUrl,
     ),
   );
