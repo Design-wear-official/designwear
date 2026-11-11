@@ -16,6 +16,7 @@ import 'cms/cms_service.dart';
 import 'flavours/flavour_selector.dart';
 import 'screens/errors/error_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'services/analytics/analytics.dart';
 import 'services/auth/auth_service.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/notifications/push_service.dart';
@@ -41,6 +42,10 @@ Future<void> main() async {
     overrideWithFiles: ['.env.local'],
     isOptional: true,
   );
+
+  // Google Analytics: switched on by GA_MEASUREMENT_ID in .env, off otherwise.
+  final analytics = Analytics.instance = Analytics();
+  await analytics.init();
 
   final cmsConfig = getCmsConfig();
   if (cmsConfig.isConfigured) {
@@ -115,6 +120,7 @@ Future<void> main() async {
       providers: [
         Provider<CommunityService?>.value(value: community),
         Provider<ApiClient?>.value(value: api),
+        ChangeNotifierProvider.value(value: analytics),
         ChangeNotifierProvider.value(value: auth),
         ChangeNotifierProvider.value(value: cart),
         ChangeNotifierProvider.value(value: themeService),

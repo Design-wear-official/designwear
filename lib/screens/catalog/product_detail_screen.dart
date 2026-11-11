@@ -11,6 +11,8 @@ import 'package:designwear/presentation/styles/styles.dart';
 import 'package:designwear/theme/app_theme.dart' show AppThemeColors;
 import 'package:designwear/models/models.dart' show CustomDesign;
 
+import 'package:designwear/services/analytics/analytics.dart';
+
 import '../studio/editor/design_studio_screen.dart';
 
 import '../cart/cart_screen.dart';
@@ -30,6 +32,21 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _selectedSize;
+
+  @override
+  void initState() {
+    super.initState();
+    final p = widget.product;
+    Analytics.instance
+      ..screen('product')
+      ..viewItem(
+        id: p.id,
+        name: p.title,
+        price: p.price,
+        category: p.isWatch ? 'watch' : 'clothing',
+      );
+  }
+
   List<String> get _sizes => widget.product.options;
 
   /// "size" for a garment, "strap" for a watch.

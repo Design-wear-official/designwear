@@ -8,6 +8,7 @@ import '../../api/api_client.dart';
 import '../../models/commerce.dart';
 import '../../models/product.dart';
 import '../../logging/app_log.dart';
+import '../analytics/analytics.dart';
 
 class CartService extends ChangeNotifier {
   CartService({this.api});
@@ -122,16 +123,24 @@ class CartService extends ChangeNotifier {
 
   /// Adds a catalog product (one unit) in the given size, or for a watch the
   /// given strap. A product with nothing to choose goes in as one size.
-  void addToCart(Product product, {String? size}) => add(
-    CartLine(
+  void addToCart(Product product, {String? size}) {
+    final line = CartLine(
       productId: product.id,
       title: product.title,
       unitPrice: product.price,
       size: size ?? (product.options.isEmpty ? Product.oneSize : 'M'),
       optionLabel: product.optionLabel,
       imageUrl: product.displayImageUrl,
-    ),
-  );
+    );
+    add(line);
+    Analytics.instance.addToCart(
+      id: product.id,
+      name: product.title,
+      price: product.price,
+      variant: line.size,
+      category: product.isWatch ? 'watch' : 'clothing',
+    );
+  }
 
   void add(CartLine line) {
     final existing = _lines.where((l) => l.key == line.key);

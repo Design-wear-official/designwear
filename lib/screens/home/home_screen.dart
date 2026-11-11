@@ -9,6 +9,7 @@ import '../../models/challenge.dart';
 import '../../models/product.dart';
 import '../../presentation/styles/styles.dart';
 import '../../theme/app_theme.dart' show AppThemeColors;
+import '../../services/analytics/analytics.dart';
 import '../../services/community/community_service.dart';
 import 'home_app_bar.dart';
 import '../../models/watch.dart';
@@ -45,6 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    Analytics.instance.screen('home');
     final cms = CmsService.instance;
     _repo =
         widget.repository ??

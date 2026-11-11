@@ -6,6 +6,7 @@ import '../../flavours/flavour_selector.dart';
 import '../../presentation/widgets/content_width.dart';
 import '../../presentation/widgets/designwear_logo.dart';
 import '../../presentation/widgets/settings_group.dart';
+import '../../services/analytics/analytics.dart';
 import '../../services/app/theme_service.dart';
 import '../../services/shop/cart_service.dart';
 import '../../services/shop/stores.dart';
@@ -58,6 +59,21 @@ class SettingsScreen extends StatelessWidget {
                 ),
               ],
             ),
+            if (context.watch<Analytics>().configured)
+              SettingsGroup(
+                title: 'Privacy',
+                children: [
+                  SwitchListTile(
+                    secondary: const Icon(Icons.insights_outlined),
+                    title: const Text('Share usage data'),
+                    subtitle: const Text(
+                      'Anonymous screens and shopping steps help us improve the app. Never your name, email, address or what you type.',
+                    ),
+                    value: context.watch<Analytics>().enabled,
+                    onChanged: (v) => context.read<Analytics>().setEnabled(v),
+                  ),
+                ],
+              ),
             SettingsGroup(
               title: 'Connection',
               children: [_ConnectionRow(api: api)],

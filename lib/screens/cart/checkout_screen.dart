@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../api/api_client.dart';
 import '../../models/commerce.dart';
 import '../../presentation/widgets/content_width.dart';
+import '../../services/analytics/analytics.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/cart_service.dart';
@@ -29,6 +30,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.initState();
     final addresses = context.read<AddressStore>().items;
     if (addresses.isNotEmpty) _address = addresses.first;
+    final cart = context.read<CartService>();
+    Analytics.instance
+      ..screen('checkout')
+      ..beginCheckout(value: cart.total, itemCount: cart.lines.length);
     _checkDelivery();
     _checkOnlinePayments();
   }
@@ -88,6 +93,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             return;
           }
         }
+        _trackPurchase(order);
         cart.clear();
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
@@ -114,12 +120,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       total: cart.total,
     );
     await orders.upsert(order, atFront: true);
+    _trackPurchase(order);
     cart.clear();
     if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => OrderPlacedScreen(order: order)),
     );
   }
+
+  /// An order was placed. Sends the total and the items, never the address.
+  void _trackPurchase(Order order) => Analytics.instance.purchase(
+    orderId: order.id,
+    value: order.total,
+    paymentMethod: _payOnline ? 'online' : 'cod',
+    items: [
+      for (final l in order.lines)
+        Analytics.item(
+          id: l.productId,
+          name: l.title,
+          price: l.unitPrice,
+          quantity: l.quantity,
+          variant: l.size,
+        ),
+    ],
+  );
 
   Future<void> _pickAddress() async {
     final a = await Navigator.of(context).push<Address>(
