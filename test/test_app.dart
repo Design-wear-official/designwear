@@ -1,5 +1,6 @@
 import 'package:designwear/api/api_client.dart';
 import 'package:designwear/services/ai/ai_usage_service.dart';
+import 'package:designwear/services/analytics/analytics.dart';
 import 'package:designwear/services/auth/auth_service.dart';
 import 'package:designwear/services/shop/cart_service.dart';
 import 'package:designwear/services/community/community_service.dart';
@@ -39,6 +40,8 @@ Widget testApp(
         ),
       ),
     ),
+    // An unconfigured instance: it ignores every event, so no test reports anything.
+    ChangeNotifierProvider(create: (_) => Analytics()),
     ChangeNotifierProvider.value(value: auth ?? AuthService()),
     ChangeNotifierProvider.value(value: cart ?? CartService()),
     ChangeNotifierProvider(create: (_) => ThemeService()),

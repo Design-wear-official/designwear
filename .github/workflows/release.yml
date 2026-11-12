@@ -74,10 +74,15 @@ jobs:
 
       # The app bundles .env as an asset, so only public values go in it. The CMS
       # credentials live on the API server, never in a build of the app.
+      # GA_API_SECRET is the one exception: phone and desktop builds report to Google
+      # Analytics with it. It can only add events to the property; leave the secret
+      # unset to build without analytics.
       - name: Write .env from repository secrets
         run: |
           cat > .env <<EOF
           DESIGNWEAR_API_URL=${{ secrets.DESIGNWEAR_API_URL }}
+          GA_MEASUREMENT_ID=${{ vars.GA_MEASUREMENT_ID == '' && 'G-Q71RGCNCR1' || vars.GA_MEASUREMENT_ID }}
+          GA_API_SECRET=${{ secrets.GA_API_SECRET }}
           EOF
           printf '# CI placeholder\n' > .env.local
 

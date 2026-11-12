@@ -5,6 +5,7 @@ import '../../api/api_client.dart';
 import '../../models/commerce.dart';
 import '../../models/return_request.dart';
 import '../../presentation/widgets/content_width.dart';
+import '../../services/analytics/analytics.dart';
 import '../../services/auth/auth_service.dart';
 import '../../services/payments/razorpay_checkout.dart';
 import '../../services/shop/stores.dart';
@@ -20,6 +21,7 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   @override
   void initState() {
     super.initState();
+    Analytics.instance.screen('my_orders');
     context.read<OrderStore>().refresh();
   }
 

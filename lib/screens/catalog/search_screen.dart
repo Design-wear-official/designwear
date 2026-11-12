@@ -8,6 +8,7 @@ import '../../api/api_client.dart';
 import '../../cms/cms_service.dart';
 import '../../data/product_repository.dart';
 import '../../models/product.dart';
+import '../../services/analytics/analytics.dart';
 import '../../theme/app_theme.dart' show AppThemeColors;
 import '../home/home_screen.dart' show formatPrice;
 import 'product_detail_screen.dart';
@@ -38,6 +39,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void initState() {
     super.initState();
+    Analytics.instance.screen('search');
     final cms = CmsService.instance;
     final repo =
         widget.repository ??
@@ -122,6 +124,7 @@ class _SearchScreenState extends State<SearchScreen> {
             _debounce = Timer(const Duration(milliseconds: 250), () {
               if (!mounted) return;
               setState(() => _query = v.trim());
+              if (_query.length >= 3) Analytics.instance.search(_query);
               _runRemote();
             });
           },
