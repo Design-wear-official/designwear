@@ -5,14 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:designwear/models/models.dart';
 import 'package:designwear/presentation/styles/styles.dart';
 
-import '../canvas/garment_registry.dart' show GarmentColor;
+import '../canvas/garment_registry.dart' show GarmentColor, GarmentRegistry;
 import '../support/design_studio_utils.dart';
 
 class ColorPanel extends StatefulWidget {
   final CustomDesign design;
   final Function(CustomDesign) onDesignUpdate;
 
-  /// The garment's own shirt colours; when empty the app's standard list is offered.
+  /// The garment's own shirt colours, from the business's list; when empty only white and black are offered.
   final List<GarmentColor> garmentColors;
 
   const ColorPanel({
@@ -36,56 +36,6 @@ class _ColorPanelState extends State<ColorPanel> {
 
   static const String _recentsKey = 'ds_recent_colors';
   static const int _maxRecents = 8;
-
-  static const List<Map<String, dynamic>> fabrics = [
-    // Whites & Neutrals
-    {'name': 'White', 'color': Color(0xFFFFFFFF)},
-    {'name': 'Ivory', 'color': Color(0xFFFFFFF0)},
-    {'name': 'Bone', 'color': Color(0xFFC1BCB1)},
-    {'name': 'Stone', 'color': Color(0xFF9E9E9E)},
-    {'name': 'Charcoal', 'color': Color(0xFF2B2E33)},
-    {'name': 'Black', 'color': Color(0xFF111111)},
-    // Reds & Pinks
-    {'name': 'Blush', 'color': Color(0xFFFFB6C1)},
-    {'name': 'Rose', 'color': Color(0xFFE8557A)},
-    {'name': 'Crimson', 'color': Color(0xFFDC143C)},
-    {'name': 'Scarlet', 'color': Color(0xFFFF2400)},
-    {'name': 'Burgundy', 'color': Color(0xFF800020)},
-    {'name': 'Maroon', 'color': Color(0xFF5C0A17)},
-    // Oranges & Yellows
-    {'name': 'Peach', 'color': Color(0xFFFFCBA4)},
-    {'name': 'Coral', 'color': Color(0xFFFF6B35)},
-    {'name': 'Amber', 'color': Color(0xFFF59E0B)},
-    {'name': 'Gold', 'color': Color(0xFFC9A227)},
-    {'name': 'Honey', 'color': Color(0xFFE8A838)},
-    {'name': 'Sand', 'color': Color(0xFFF4D99C)},
-    // Greens
-    {'name': 'Mint', 'color': Color(0xFF8FC9A2)},
-    {'name': 'Sage', 'color': Color(0xFF7E8B6B)},
-    {'name': 'Olive', 'color': Color(0xFF6B7C3E)},
-    {'name': 'Forest', 'color': Color(0xFF2D5A27)},
-    {'name': 'Teal', 'color': Color(0xFF2C5F5A)},
-    {'name': 'Emerald', 'color': Color(0xFF006B4B)},
-    // Blues
-    {'name': 'Sky', 'color': Color(0xFF87BFDC)},
-    {'name': 'Denim', 'color': Color(0xFF5878A0)},
-    {'name': 'Cobalt', 'color': Color(0xFF2B4590)},
-    {'name': 'Indigo', 'color': Color(0xFF27314F)},
-    {'name': 'Navy', 'color': Color(0xFF1A1F3C)},
-    {'name': 'Slate', 'color': Color(0xFF475569)},
-    // Purples
-    {'name': 'Lavender', 'color': Color(0xFFC8B8E0)},
-    {'name': 'Lilac', 'color': Color(0xFFA78DC4)},
-    {'name': 'Plum', 'color': Color(0xFF7B3F8C)},
-    {'name': 'Violet', 'color': Color(0xFF5C2D8F)},
-    {'name': 'Mauve', 'color': Color(0xFF8B637A)},
-    // Browns & Earth
-    {'name': 'Clay', 'color': Color(0xFFB65D3C)},
-    {'name': 'Rust', 'color': Color(0xFF9B3A1E)},
-    {'name': 'Camel', 'color': Color(0xFFC19A6B)},
-    {'name': 'Mocha', 'color': Color(0xFF6B4226)},
-    {'name': 'Espresso', 'color': Color(0xFF3C1F0F)},
-  ];
 
   // Accent colours offered for collar / pocket / cuff trim.
   static const List<Color> trimSwatches = [
@@ -179,13 +129,15 @@ class _ColorPanelState extends State<ColorPanel> {
     } catch (_) {}
   }
 
-  /// The swatches on offer: the garment's colours, else the standard list.
-  List<Map<String, dynamic>> get _swatches => widget.garmentColors.isEmpty
-      ? fabrics
-      : [
-          for (final c in widget.garmentColors)
-            {'name': c.name, 'color': c.color},
-        ];
+  /// The swatches on offer: the garment's colours from the business's list. Before that list has arrived
+  /// (or offline) only plain white and black are offered.
+  List<Map<String, dynamic>> get _swatches => [
+    for (final c
+        in widget.garmentColors.isEmpty
+            ? GarmentRegistry.fallbackColors
+            : widget.garmentColors)
+      {'name': c.name, 'color': c.color},
+  ];
 
   String _activeName() {
     if (_customColor != null &&

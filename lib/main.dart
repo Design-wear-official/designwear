@@ -24,6 +24,7 @@ import 'services/ai/ai_service.dart';
 import 'services/ai/ai_usage_service.dart';
 import 'services/shop/cart_service.dart';
 import 'services/studio/garment_service.dart';
+import 'services/studio/design_template_service.dart';
 import 'services/community/community_service.dart';
 import 'services/ai/remote_ai_service.dart';
 import 'services/shop/stores.dart';
@@ -138,6 +139,7 @@ Future<void> main() async {
   // never delays startup.
   if (api != null) {
     unawaited(GarmentService.loadGarments(api));
+    unawaited(DesignTemplateService.loadTemplates(api));
     unawaited(
       api.features().then((f) => AiService.instance = RemoteAiService(api!, f)),
     );

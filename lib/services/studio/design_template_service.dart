@@ -1,7 +1,11 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:designwear/models/models.dart';
+
+import '../../api/api_client.dart';
+import '../../logging/app_log.dart';
 
 class DesignTemplate {
   final String id;
@@ -36,12 +40,14 @@ class DesignTemplate {
 
   factory DesignTemplate.fromJson(Map<String, dynamic> json) {
     return DesignTemplate(
-      id: json['id'],
-      name: json['name'],
-      description: json['description'],
-      category: json['category'],
-      design: CustomDesign.fromJson(json['design']),
-      thumbnailUrl: json['thumbnailUrl'],
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? 'graphic',
+      design: CustomDesign.fromJson(
+        (json['design'] as Map).cast<String, dynamic>(),
+      ),
+      thumbnailUrl: json['thumbnailUrl'] as String? ?? '',
       tags: List<String>.from(json['tags'] ?? []),
     );
   }
@@ -50,29 +56,44 @@ class DesignTemplate {
 class DesignTemplateService {
   static const String _customTemplatesKey = 'custom_design_templates';
 
-  // Built-in templates ship with the app (the starter designs below); the
-  // person's own saved templates are added after them.
-  static List<DesignTemplate> _cachedBuiltInTemplates = [];
+  // The starter designs are the business's list in SethuCMS, served by the API at `GET /v1/templates`.
+  // The app ships none of its own; the person's own saved templates are added after them.
+  static List<DesignTemplate> _starters = [];
 
-  List<DesignTemplate> _builtIn() => [
-    for (final d in getStarterDesigns())
-      DesignTemplate(
-        id: 'builtin_${d.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_')}',
-        name: d.name,
-        description: 'Starter design',
-        category: 'graphic',
-        design: d,
-        thumbnailUrl: '',
-        tags: const ['starter'],
-      ),
-  ];
+  /// Bumps whenever the starter list changes.
+  static final ValueNotifier<int> revision = ValueNotifier(0);
+
+  /// Fetches the starter designs. Silent on any failure: the list stays as it was.
+  static Future<void> loadTemplates([ApiClient? api]) async {
+    if (api == null) return;
+    try {
+      final j = await api.get('/v1/templates');
+      final list = <DesignTemplate>[];
+      for (final e in (j['data'] as List? ?? const [])) {
+        if (e is! Map) continue;
+        try {
+          list.add(DesignTemplate.fromJson(e.cast<String, dynamic>()));
+        } catch (_) {
+          // A malformed row is skipped; the rest still count.
+        }
+      }
+      _starters = list;
+      revision.value++;
+    } catch (e) {
+      AppLog.instance.info('studio', 'Starter designs unavailable: $e');
+    }
+  }
+
+  /// Back to no starter designs (tests).
+  @visibleForTesting
+  static void reset() {
+    _starters = [];
+    revision.value++;
+  }
 
   Future<List<DesignTemplate>> getAllTemplates() async {
-    if (_cachedBuiltInTemplates.isEmpty) {
-      _cachedBuiltInTemplates = _builtIn();
-    }
     final customTemplates = await getCustomTemplates();
-    return [..._cachedBuiltInTemplates, ...customTemplates];
+    return [..._starters, ...customTemplates];
   }
 
   Future<List<DesignTemplate>> getTemplatesByCategory(String category) async {
@@ -97,7 +118,7 @@ class DesignTemplateService {
 
   DesignTemplate? getTemplateById(String id) {
     try {
-      return _cachedBuiltInTemplates.firstWhere((t) => t.id == id);
+      return _starters.firstWhere((t) => t.id == id);
     } catch (_) {
       return null;
     }
@@ -155,237 +176,10 @@ class DesignTemplateService {
     ];
   }
 
-  /// Built-in auto-start designs shown when the studio opens on a blank canvas.
-  List<CustomDesign> getStarterDesigns() {
-    return [
-      CustomDesign(
-        baseColor: '0xFFE65100',
-        name: 'Sunset Vibes',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'sv_t',
-            type: DesignElementType.text,
-            content: 'SUNSET VIBES',
-            x: -60,
-            y: -30,
-            size: 30,
-            color: '0xFFFFFFFF',
-            properties: {'fontFamily': 'Oswald', 'bold': true, 'shadow': true},
-          ),
-          DesignElement(
-            id: 'sv_s',
-            type: DesignElementType.sticker,
-            content: '🌅',
-            x: -15,
-            y: 40,
-            size: 60,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFF111111',
-        name: 'Midnight',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'mn_t',
-            type: DesignElementType.text,
-            content: 'MIDNIGHT',
-            x: -55,
-            y: -20,
-            size: 36,
-            color: '0xFFFFFFFF',
-            properties: {'fontFamily': 'Oswald', 'bold': true},
-          ),
-          DesignElement(
-            id: 'mn_s',
-            type: DesignElementType.sticker,
-            content: '🌙',
-            x: -15,
-            y: 45,
-            size: 55,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFF1B5E20',
-        name: 'Wild & Free',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'wf_t',
-            type: DesignElementType.text,
-            content: 'WILD & FREE',
-            x: -60,
-            y: -25,
-            size: 26,
-            color: '0xFFFFFFFF',
-            properties: {'fontFamily': 'Pacifico', 'shadow': true},
-          ),
-          DesignElement(
-            id: 'wf_s',
-            type: DesignElementType.sticker,
-            content: '🌿',
-            x: -15,
-            y: 45,
-            size: 58,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFF880E4F',
-        name: 'Hustle',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'hu_t1',
-            type: DesignElementType.text,
-            content: 'HUSTLE',
-            x: -45,
-            y: -35,
-            size: 42,
-            color: '0xFFFFFFFF',
-            properties: {'fontFamily': 'Oswald', 'bold': true},
-          ),
-          DesignElement(
-            id: 'hu_t2',
-            type: DesignElementType.text,
-            content: 'HARDER',
-            x: -38,
-            y: 20,
-            size: 32,
-            color: '0xFFFF80AB',
-            properties: {'fontFamily': 'Oswald', 'bold': true},
-          ),
-          DesignElement(
-            id: 'hu_s',
-            type: DesignElementType.sticker,
-            content: '🔥',
-            x: -15,
-            y: 70,
-            size: 50,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFF006064',
-        name: 'Zen Mode',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'zm_t',
-            type: DesignElementType.text,
-            content: 'ZEN MODE',
-            x: -50,
-            y: -20,
-            size: 32,
-            color: '0xFFE0F7FA',
-            properties: {'fontFamily': 'Comfortaa', 'italic': true},
-          ),
-          DesignElement(
-            id: 'zm_s',
-            type: DesignElementType.sticker,
-            content: '☮️',
-            x: -15,
-            y: 40,
-            size: 60,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFF1A237E',
-        name: 'Galaxy',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'gx_t',
-            type: DesignElementType.text,
-            content: 'GALAXY',
-            x: -45,
-            y: -25,
-            size: 40,
-            color: '0xFFE8EAF6',
-            properties: {'fontFamily': 'Oswald', 'bold': true, 'shadow': true},
-          ),
-          DesignElement(
-            id: 'gx_s',
-            type: DesignElementType.sticker,
-            content: '✨',
-            x: -15,
-            y: 42,
-            size: 58,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFFF06292',
-        name: 'Summer Days',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'sd_t',
-            type: DesignElementType.text,
-            content: 'SUMMER DAYS',
-            x: -65,
-            y: -25,
-            size: 24,
-            color: '0xFFFFFFFF',
-            properties: {'fontFamily': 'Pacifico', 'shadow': true},
-          ),
-          DesignElement(
-            id: 'sd_s',
-            type: DesignElementType.sticker,
-            content: '🌊',
-            x: -15,
-            y: 42,
-            size: 58,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-      CustomDesign(
-        baseColor: '0xFF0D47A1',
-        name: 'Champion',
-        productType: 'T-Shirt',
-        elements: [
-          DesignElement(
-            id: 'ch_t',
-            type: DesignElementType.text,
-            content: 'CHAMPION',
-            x: -55,
-            y: -20,
-            size: 34,
-            color: '0xFFFFD700',
-            properties: {'fontFamily': 'Oswald', 'bold': true, 'shadow': true},
-          ),
-          DesignElement(
-            id: 'ch_s',
-            type: DesignElementType.sticker,
-            content: '🏆',
-            x: -15,
-            y: 42,
-            size: 60,
-            color: '0xFFFFFFFF',
-            properties: {},
-          ),
-        ],
-      ),
-    ];
-  }
+  /// The starter designs offered when the studio opens on a blank canvas (empty until the list arrives).
+  List<CustomDesign> getStarterDesigns() => [
+    for (final t in _starters) t.design,
+  ];
 
   List<String> getAvailableFonts() {
     return [

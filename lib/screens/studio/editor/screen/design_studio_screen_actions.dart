@@ -691,47 +691,49 @@ extension _ActionMethods on _DesignStudioScreenState {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 96,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: starters.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 10),
-                  itemBuilder: (_, i) {
-                    final s = starters[i];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        _updateDesign(s);
-                      },
-                      child: Container(
-                        width: 96,
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: DesignStudioUtils.parseColorFromHex(
-                            s.baseColor,
+              if (starters.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 96,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: starters.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
+                    itemBuilder: (_, i) {
+                      final s = starters[i];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          _updateDesign(s);
+                        },
+                        child: Container(
+                          width: 96,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: DesignStudioUtils.parseColorFromHex(
+                              s.baseColor,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.black.withValues(alpha: 0.1),
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: Colors.black.withValues(alpha: 0.1),
+                          child: Text(
+                            s.name,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.outfit(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                        child: Text(
-                          s.name,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.outfit(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
               const SizedBox(height: 14),
               Row(
                 children: [
