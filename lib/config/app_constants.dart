@@ -20,13 +20,6 @@ class AppConstants {
     'XXL',
     '3XL',
   ];
-  static const List<String> productTypes = [
-    'T-Shirt',
-    'Hoodie',
-    'Polo',
-    'Cap',
-    'Tote Bag',
-  ];
   static const int maxCartQuantityPerItem = 10;
   static const int maxImagesPerProduct = 8;
 

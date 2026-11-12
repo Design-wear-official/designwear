@@ -70,6 +70,9 @@ class TemplatesPanel extends StatelessWidget {
                   }
 
                   final templates = snapshot.data ?? [];
+                  if (templates.isEmpty) {
+                    return const Center(child: Text('No templates yet'));
+                  }
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     itemCount: templates.length,

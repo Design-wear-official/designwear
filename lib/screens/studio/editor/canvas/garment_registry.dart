@@ -169,7 +169,8 @@ class Garment {
 class GarmentRegistry {
   GarmentRegistry._();
 
-  // Bundled defaults — used before the backend response arrives and as fallback.
+  // The one garment the app ships: used before the backend's list arrives and as the fallback. Every
+  // other garment (hoodie, polo, cap...) comes from the business's list in SethuCMS.
   static const List<Garment> _defaults = [
     Garment(
       id: 'tshirt',
@@ -177,10 +178,12 @@ class GarmentRegistry {
       frontAsset: 'assets/images/garments/crew_front.webp',
       backAsset: 'assets/images/garments/crew_back.webp',
     ),
-    Garment(id: 'hoodie', label: 'Hoodie', style: 'hoodie'),
-    Garment(id: 'polo', label: 'Polo Shirt', style: 'polo'),
-    Garment(id: 'cap', label: 'Cap', style: 'cap'),
-    Garment(id: 'totebag', label: 'Tote Bag', style: 'tote'),
+  ];
+
+  /// Shirt colours offered until the business's list (which carries each garment's colours) has arrived.
+  static const List<GarmentColor> fallbackColors = [
+    GarmentColor('White', Color(0xFFF4F2EC)),
+    GarmentColor('Black', Color(0xFF1C1C1E)),
   ];
 
   static List<Garment> _live = List.from(_defaults);

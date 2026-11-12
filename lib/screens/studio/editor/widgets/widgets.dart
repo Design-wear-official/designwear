@@ -1,4 +1,3 @@
-export 'tabs/colors_tab.dart';
 export 'elements/design_element_widget.dart';
 export 'elements/draggable_element_widget.dart';
 export 'text/enhanced_text_editor.dart';
