@@ -568,6 +568,52 @@ extension _ActionMethods on _DesignStudioScreenState {
 
   // ── Publish ─────────────────────────────────────────────────────────────────
 
+  /// Who may see the design: 'private' (only me), 'shared' (people I pick, set up right after saving) or 'public'
+  /// (the community). Null when the designer backs out.
+  Future<String?> _askVisibility() => showModalBottomSheet<String>(
+    context: context,
+    showDragHandle: true,
+    builder: (ctx) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Who can see this design?',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.lock_outline),
+            title: const Text('Only me'),
+            subtitle: const Text('Saved to your account, private'),
+            onTap: () => Navigator.pop(ctx, 'private'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.group_outlined),
+            title: const Text('People I choose, or a private link'),
+            subtitle: const Text(
+              'Pick who after saving; details and try-on links',
+            ),
+            onTap: () => Navigator.pop(ctx, 'shared'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.public),
+            title: const Text('Everyone (public)'),
+            subtitle: const Text(
+              'Appears in the community; anyone can remix it',
+            ),
+            onTap: () => Navigator.pop(ctx, 'public'),
+          ),
+        ],
+      ),
+    ),
+  );
+
   Future<void> _publishAndSync() async {
     final community = context.read<CommunityService?>();
     final messenger = ScaffoldMessenger.of(context);
@@ -598,6 +644,12 @@ extension _ActionMethods on _DesignStudioScreenState {
     }
     if (!await requireSignIn(context) || !mounted) return;
 
+    // Who can see it: a challenge entry is public; otherwise the designer chooses.
+    final visibility = widget.challenge != null
+        ? 'public'
+        : await _askVisibility();
+    if (visibility == null || !mounted) return;
+
     final handle = (context.read<AuthService>().user?.name ?? 'user')
         .split(' ')
         .first
@@ -623,9 +675,11 @@ extension _ActionMethods on _DesignStudioScreenState {
         designJson: _design.toJson(),
         serverId: _serverId,
         remixOfId: widget.remixSource?.id,
+        remixToken: widget.remixSource?.accessToken,
         challengeId: widget.challenge?.id,
         previewImage: previewImage,
         backPreviewImage: backPreviewImage,
+        publish: visibility == 'public',
       );
       _serverId = saved.id;
 
@@ -641,12 +695,24 @@ extension _ActionMethods on _DesignStudioScreenState {
 
       if (!mounted) return;
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Design published and synced!'),
-          backgroundColor: Color(0xFF2D8B57),
-          duration: Duration(seconds: 3),
+        SnackBar(
+          content: Text(
+            visibility == 'public'
+                ? 'Design published and synced!'
+                : 'Design saved privately. Share it from Studio › Mine.',
+          ),
+          backgroundColor: const Color(0xFF2D8B57),
+          duration: const Duration(seconds: 3),
         ),
       );
+      if (visibility == 'shared') {
+        await showShareDesignSheet(
+          context,
+          designId: saved.id,
+          designName: designName,
+        );
+        if (!mounted) return;
+      }
       Navigator.pop(context);
     } on ApiException catch (e) {
       messenger.showSnackBar(

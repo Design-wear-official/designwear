@@ -201,6 +201,7 @@ void main() {
               liked: false,
               mine: false,
               price: 499,
+              published: true,
               designJson: {'size': 'XL'},
             ),
           ),

@@ -16,6 +16,7 @@ import 'cms/cms_service.dart';
 import 'flavours/flavour_selector.dart';
 import 'screens/errors/error_screen.dart';
 import 'screens/home/home_screen.dart';
+import 'screens/studio/community/share_links.dart';
 import 'services/analytics/analytics.dart';
 import 'services/auth/auth_service.dart';
 import 'services/notifications/notification_service.dart';
@@ -135,6 +136,17 @@ Future<void> main() async {
     ),
   );
 
+  // A web link to a shared design (?share=<code>, with &view=tryon for the try-on) opens it once the app is up.
+  if (kIsWeb) {
+    final request = parseShareRequest(Uri.base.toString());
+    if (request != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final context = navigatorKey.currentContext;
+        if (context != null) unawaited(openShareRequest(context, request));
+      });
+    }
+  }
+
   // Network work happens after the first frame so a slow or offline API
   // never delays startup.
   if (api != null) {
@@ -203,6 +215,7 @@ class DesignWearApp extends StatelessWidget {
 
   Widget _buildApp(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       scaffoldMessengerKey: scaffoldMessengerKey,
       title: getAppTitle(),
       // Flutter's debug banner tracks build mode, not flavour, so it's off and

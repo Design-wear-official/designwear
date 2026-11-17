@@ -22,10 +22,11 @@ Widget testApp(
   NotificationService? inbox,
   AiUsageService? aiUsage,
   OrderStore? orders,
+  CommunityService? community,
   Brightness brightness = Brightness.dark,
 }) => MultiProvider(
   providers: [
-    Provider<CommunityService?>.value(value: null),
+    Provider<CommunityService?>.value(value: community),
     // A real (non-null) client: Provider rejects Listenable types in debug.
     Provider<ApiClient?>.value(
       value: ApiClient(

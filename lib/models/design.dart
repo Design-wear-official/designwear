@@ -15,6 +15,9 @@ class CommunityDesign {
     required this.mine,
     required this.price,
     this.published = false,
+    this.visibility = 'private',
+    this.allowRemix = false,
+    this.accessToken,
     this.designJson,
     this.previewImage,
     this.backPreviewImage,
@@ -25,6 +28,15 @@ class CommunityDesign {
   final String id, name, garment, creatorName, creatorHandle;
   final int likeCount, remixCount;
   final bool liked, mine, published;
+
+  /// 'private' (only the owner), 'shared' (named people and/or a private link) or 'public' (the community).
+  final String visibility;
+
+  /// Whether people it is shared with (or the public) may make a copy or order it.
+  final bool allowRemix;
+
+  /// The private-link token this design was opened with, if any (kept to make a copy of it).
+  final String? accessToken;
   final double price;
   final Map<String, Object?>? designJson;
 
@@ -45,6 +57,31 @@ class CommunityDesign {
     mine: mine,
     price: price,
     published: published,
+    visibility: visibility,
+    allowRemix: allowRemix,
+    accessToken: accessToken,
+    designJson: designJson,
+    previewImage: previewImage,
+    backPreviewImage: backPreviewImage,
+    remixedFromName: remixedFromName,
+    lineage: lineage,
+  );
+
+  CommunityDesign withAccessToken(String? token) => CommunityDesign(
+    id: id,
+    name: name,
+    garment: garment,
+    creatorName: creatorName,
+    creatorHandle: creatorHandle,
+    likeCount: likeCount,
+    remixCount: remixCount,
+    liked: liked,
+    mine: mine,
+    price: price,
+    published: published,
+    visibility: visibility,
+    allowRemix: allowRemix,
+    accessToken: token,
     designJson: designJson,
     previewImage: previewImage,
     backPreviewImage: backPreviewImage,
@@ -65,6 +102,9 @@ class CommunityDesign {
       liked: j['liked'] == true,
       mine: j['mine'] == true,
       published: j['published'] == true,
+      visibility:
+          '${j['visibility'] ?? (j['published'] == true ? 'public' : 'private')}',
+      allowRemix: j['allowRemix'] == true,
       price: (j['price'] as num?)?.toDouble() ?? 499,
       designJson: (j['designJson'] as Map?)?.cast<String, Object?>(),
       previewImage: j['previewImage'] as String?,
@@ -84,4 +124,52 @@ class CommunityDesign {
     return CustomDesign.fromJson(json.cast<String, dynamic>())
         .copyWith(name: '$name remix');
   }
+}
+
+/// Who a design is open to, as the owner sees it.
+class DesignSharing {
+  const DesignSharing({
+    required this.visibility,
+    required this.allowRemix,
+    required this.linkToken,
+    required this.people,
+    this.notFound = const [],
+  });
+
+  final String visibility;
+  final bool allowRemix;
+
+  /// The private link's token, or null while the link is off.
+  final String? linkToken;
+  final List<({String userId, String name})> people;
+
+  /// Emails that were not added because no DesignWear account uses them.
+  final List<String> notFound;
+
+  bool get linkOn => linkToken != null;
+
+  factory DesignSharing.fromJson(Map<String, Object?> j) {
+    final link = (j['link'] as Map?)?.cast<String, Object?>();
+    return DesignSharing(
+      visibility: '${j['visibility'] ?? 'private'}',
+      allowRemix: j['allowRemix'] == true,
+      linkToken: link?['enabled'] == true ? link!['token'] as String? : null,
+      people: [
+        for (final p in (j['people'] as List? ?? const []))
+          (userId: '${(p as Map)['userId']}', name: '${p['name'] ?? ''}'),
+      ],
+      notFound: [for (final e in (j['notFound'] as List? ?? const [])) '$e'],
+    );
+  }
+}
+
+/// A link's `share` value as text: the design id, and for a private design a dot and the token.
+String shareCode(String designId, [String? token]) =>
+    token == null ? designId : '$designId.$token';
+
+/// The design id and token (null for a public design) from a pasted code, or null when it is not one.
+({String id, String? token})? parseShareCode(String input) {
+  final m = RegExp(r'^(d_[A-Za-z0-9_-]+?)(?:\.([A-Za-z0-9_-]{16,}))?$')
+      .firstMatch(Uri.decodeComponent(input.trim()));
+  return m == null ? null : (id: m.group(1)!, token: m.group(2));
 }
