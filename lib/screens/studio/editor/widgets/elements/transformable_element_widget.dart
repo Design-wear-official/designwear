@@ -51,6 +51,9 @@ class _TransformableElementWidgetState
 
   // Live move delta (applied as a translate until committed on drag end).
   Offset _moveDelta = Offset.zero;
+  // Where the pointer has really moved the element, before the print-area limit and the centre snap. The snap is
+  // worked out from this each time, so a slow drag leaves the centre line instead of being held on it.
+  Offset _rawDelta = Offset.zero;
   bool _moving = false;
 
   double get _min => DesignStudioConstants.minElementSize;
@@ -75,21 +78,36 @@ class _TransformableElementWidgetState
       return candidate;
     }
     final el = widget.element;
-    double dx = candidate.dx;
-    double dy = candidate.dy;
+    // Stop at the print area edge while dragging, so the element never floats outside and jumps back on release.
+    final inside = DesignStudioConstants.clampBox(
+      el.x + candidate.dx,
+      el.y + candidate.dy,
+      size.width,
+      size.height,
+    );
+    double dx = inside.x - el.x;
+    double dy = inside.y - el.y;
     bool snapV = false, snapH = false;
 
     final centerX = _anchorX + el.x + dx + size.width / 2;
     if ((centerX - _canvasCenterX).abs() <
         DesignStudioConstants.snapThreshold) {
-      dx = _canvasCenterX - _anchorX - el.x - size.width / 2;
-      snapV = true;
+      final snapped = _canvasCenterX - _anchorX - el.x - size.width / 2;
+      final room = DesignStudioConstants.clampBox(el.x + snapped, el.y, size.width, size.height);
+      if ((room.x - el.x - snapped).abs() < 0.5) {
+        dx = snapped;
+        snapV = true;
+      }
     }
     final centerY = _anchorY + el.y + dy + size.height / 2;
     if ((centerY - _canvasCenterY).abs() <
         DesignStudioConstants.snapThreshold) {
-      dy = _canvasCenterY - _anchorY - el.y - size.height / 2;
-      snapH = true;
+      final snapped = _canvasCenterY - _anchorY - el.y - size.height / 2;
+      final room = DesignStudioConstants.clampBox(el.x, el.y + snapped, size.width, size.height);
+      if ((room.y - el.y - snapped).abs() < 0.5) {
+        dy = snapped;
+        snapH = true;
+      }
     }
     widget.onSnapChanged?.call(snapV, snapH);
     return Offset(dx, dy);
@@ -175,46 +193,56 @@ class _TransformableElementWidgetState
       child: content,
     );
 
+    // A press only reaches a child that lies inside its parent's box, so the round handles (half of the resize and
+    // delete handles, and all of the rotate handle, hang outside the element) could not be grabbed. The stack is
+    // therefore made larger than the element by a margin that holds the handles, and the whole thing is shifted back
+    // so the element itself stays exactly where it was.
+    const padL = 18.0, padT = 44.0, padR = 18.0, padB = 18.0;
+    final shift = (_moving ? _moveDelta : Offset.zero) - const Offset(padL, padT);
     return Transform.translate(
-      offset: _moving ? _moveDelta : Offset.zero,
+      offset: shift,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
           // Body — tap to select, double-tap to edit, drag to move
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () => widget.onSelected(selected ? null : el.id),
-            onDoubleTap: widget.onEdit,
-            onPanStart: (_) => setState(() {
-              _moving = true;
-              _moveDelta = Offset.zero;
-            }),
-            onPanUpdate: (d) => setState(
-              () => _moveDelta = _applySnap(
-                _moveDelta + d.delta / CanvasScale.of(context),
-              ),
-            ),
-            onPanEnd: (_) => _commitMove(),
-            onPanCancel: () {
-              widget.onSnapChanged?.call(false, false);
-              setState(() {
-                _moving = false;
+          Padding(
+            padding: const EdgeInsets.fromLTRB(padL, padT, padR, padB),
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => widget.onSelected(selected ? null : el.id),
+              onDoubleTap: widget.onEdit,
+              onPanStart: (_) => setState(() {
+                _moving = true;
                 _moveDelta = Offset.zero;
-              });
-            },
-            child: Container(
-              key: _bodyKey,
-              decoration: BoxDecoration(
-                border: selected
-                    ? Border.all(color: AppColors.marigold, width: 1.5)
-                    : _moving
-                    ? Border.all(
-                        color: AppColors.marigold.withValues(alpha: 0.4),
-                        width: 1,
-                      )
-                    : null,
+                _rawDelta = Offset.zero;
+              }),
+              onPanUpdate: (d) {
+                _rawDelta += d.delta / CanvasScale.of(context);
+                setState(() => _moveDelta = _applySnap(_rawDelta));
+              },
+              onPanEnd: (_) => _commitMove(),
+              onPanCancel: () {
+                widget.onSnapChanged?.call(false, false);
+                setState(() {
+                  _moving = false;
+                  _moveDelta = Offset.zero;
+                  _rawDelta = Offset.zero;
+                });
+              },
+              child: Container(
+                key: _bodyKey,
+                decoration: BoxDecoration(
+                  border: selected
+                      ? Border.all(color: AppColors.marigold, width: 1.5)
+                      : _moving
+                      ? Border.all(
+                          color: AppColors.marigold.withValues(alpha: 0.4),
+                          width: 1,
+                        )
+                      : null,
+                ),
+                child: content,
               ),
-              child: content,
             ),
           ),
 
@@ -222,8 +250,8 @@ class _TransformableElementWidgetState
             // Delete (top-left)
             if (widget.onDelete != null)
               Positioned(
-                left: -12,
-                top: -12,
+                left: padL - 12,
+                top: padT - 12,
                 child: _Handle(
                   icon: Icons.close,
                   color: AppColors.like,
@@ -232,11 +260,12 @@ class _TransformableElementWidgetState
               ),
             // Rotate (top-center)
             Positioned(
-              top: -34,
-              left: 0,
-              right: 0,
+              top: padT - 34,
+              left: padL,
+              right: padR,
               child: Center(
                 child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onPanUpdate: (d) => _rotateTo(d.globalPosition),
                   onPanEnd: (_) => widget.onCommit(),
                   child: const _Handle(icon: Icons.rotate_right),
@@ -245,9 +274,10 @@ class _TransformableElementWidgetState
             ),
             // Resize (bottom-right)
             Positioned(
-              right: -12,
-              bottom: -12,
+              right: padR - 12,
+              bottom: padB - 12,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onPanUpdate: (d) =>
                     _resizeBy(d.delta / CanvasScale.of(context)),
                 onPanEnd: (_) => widget.onCommit(),
