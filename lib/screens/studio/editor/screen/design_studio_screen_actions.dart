@@ -179,11 +179,12 @@ extension _ActionMethods on _DesignStudioScreenState {
   void _nudgeSelected(double dx, double dy) {
     final el = _selectedElement;
     if (el == null) return;
+    final size = _elementSize(el);
     final box = DesignStudioConstants.clampBox(
       el.x + dx,
       el.y + dy,
-      el.width ?? 0,
-      el.height ?? 0,
+      size.width,
+      size.height,
     );
     final nx = box.x;
     final ny = box.y;
@@ -193,6 +194,50 @@ extension _ActionMethods on _DesignStudioScreenState {
         el.copyWith(x: nx.toDouble(), y: ny.toDouble()),
       ),
     );
+  }
+
+  /// One step of a held arrow button: moves the selected element without an undo entry per step.
+  /// [_commitElementChange] records one undo entry when the button is released.
+  void _nudgeHeld(double dx, double dy) {
+    final el = _selectedElement;
+    if (el == null) return;
+    final size = _elementSize(el);
+    final box = DesignStudioConstants.clampBox(
+      el.x + dx,
+      el.y + dy,
+      size.width,
+      size.height,
+    );
+    _previewElement(el.copyWith(x: box.x, y: box.y));
+  }
+
+  /// One step of a held smaller / bigger button: scales the selected element about its centre, within the size
+  /// limits and the print area.
+  void _resizeHeld(double factor) {
+    final el = _selectedElement;
+    if (el == null) return;
+    const min = DesignStudioConstants.minElementSize;
+    const max = DesignStudioConstants.maxElementSize;
+    if (el.type == DesignElementType.text ||
+        el.type == DesignElementType.sticker) {
+      _previewElement(el.copyWith(size: (el.size * factor).clamp(min, max)));
+      return;
+    }
+    final w = el.width ?? DesignStudioConstants.defaultImageSize;
+    final h = el.height ?? DesignStudioConstants.defaultImageSize;
+    // The same factor for both sides keeps the shape; it is limited so neither side leaves the allowed range.
+    final f = factor
+        .clamp(min / (w < h ? w : h), max / (w > h ? w : h))
+        .toDouble();
+    final nw = w * f;
+    final nh = h * f;
+    final box = DesignStudioConstants.clampBox(
+      el.x - (nw - w) / 2,
+      el.y - (nh - h) / 2,
+      nw,
+      nh,
+    );
+    _previewElement(el.copyWith(x: box.x, y: box.y, width: nw, height: nh));
   }
 
   /// Rendered size of an element, for centring. Image and shape layers carry

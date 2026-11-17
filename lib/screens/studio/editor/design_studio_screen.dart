@@ -23,6 +23,7 @@ import 'package:designwear/screens/studio/editor/design_studio.dart';
 import 'package:designwear/screens/studio/editor/canvas/garment_registry.dart';
 import 'package:designwear/screens/studio/editor/widgets/widgets.dart';
 import 'package:designwear/screens/studio/editor/widgets/elements/canvas_scale.dart';
+import 'package:designwear/screens/studio/editor/widgets/elements/hold_button.dart';
 import 'package:designwear/screens/studio/editor/widgets/dialogs/layers_sheet.dart';
 import 'package:designwear/screens/studio/editor/widgets/dialogs/size_sheet.dart';
 import 'package:designwear/screens/studio/editor/support/protected_names.dart';
@@ -79,6 +80,8 @@ class _DesignStudioScreenState extends State<DesignStudioScreen> {
   bool _capturingViews = false;
 
   String? _selectedElementId;
+  // How far an arrow button moves the selected element each step (canvas units): 1 for exact, 10 for quick.
+  double _nudgeStep = 1;
   bool _showTemplates = false;
   String _selectedGarmentType = 'tshirt';
 

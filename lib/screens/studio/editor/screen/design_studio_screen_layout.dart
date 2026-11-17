@@ -751,6 +751,7 @@ extension _LayoutMethods on _DesignStudioScreenState {
                 ],
               ),
               _buildElementAdjustRow(selected, cs),
+              _buildPlacementRow(cs),
             ],
           ),
         ),
@@ -815,6 +816,78 @@ extension _LayoutMethods on _DesignStudioScreenState {
             tooltip: 'Flip vertical',
             onTap: () => _toggleFlip('flipV'),
             active: flipV,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Exact placement: arrow buttons (hold to repeat) and smaller / bigger ─────
+
+  Widget _buildPlacementRow(ColorScheme cs) {
+    final muted = cs.onSurface.withValues(alpha: 0.6);
+    final step = _nudgeStep;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        children: [
+          Icon(Icons.open_with, size: 15, color: muted),
+          const SizedBox(width: 4),
+          HoldButton(
+            icon: Icons.arrow_back,
+            tooltip: 'Move left',
+            onStep: () => _nudgeHeld(-step, 0),
+            onEnd: _commitElementChange,
+          ),
+          HoldButton(
+            icon: Icons.arrow_upward,
+            tooltip: 'Move up',
+            onStep: () => _nudgeHeld(0, -step),
+            onEnd: _commitElementChange,
+          ),
+          HoldButton(
+            icon: Icons.arrow_downward,
+            tooltip: 'Move down',
+            onStep: () => _nudgeHeld(0, step),
+            onEnd: _commitElementChange,
+          ),
+          HoldButton(
+            icon: Icons.arrow_forward,
+            tooltip: 'Move right',
+            onStep: () => _nudgeHeld(step, 0),
+            onEnd: _commitElementChange,
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: () => setState(() => _nudgeStep = step == 1 ? 10 : 1),
+            child: Tooltip(
+              message: 'How far each arrow press moves',
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: muted.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  'Step ${step.round()}',
+                  style: GoogleFonts.spaceMono(fontSize: 11, color: muted),
+                ),
+              ),
+            ),
+          ),
+          const Spacer(),
+          Icon(Icons.aspect_ratio, size: 15, color: muted),
+          HoldButton(
+            icon: Icons.remove,
+            tooltip: 'Smaller',
+            onStep: () => _resizeHeld(0.97),
+            onEnd: _commitElementChange,
+          ),
+          HoldButton(
+            icon: Icons.add,
+            tooltip: 'Bigger',
+            onStep: () => _resizeHeld(1.03),
+            onEnd: _commitElementChange,
           ),
         ],
       ),
