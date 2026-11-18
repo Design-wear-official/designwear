@@ -93,7 +93,12 @@ class _TransformableElementWidgetState
     if ((centerX - _canvasCenterX).abs() <
         DesignStudioConstants.snapThreshold) {
       final snapped = _canvasCenterX - _anchorX - el.x - size.width / 2;
-      final room = DesignStudioConstants.clampBox(el.x + snapped, el.y, size.width, size.height);
+      final room = DesignStudioConstants.clampBox(
+        el.x + snapped,
+        el.y,
+        size.width,
+        size.height,
+      );
       if ((room.x - el.x - snapped).abs() < 0.5) {
         dx = snapped;
         snapV = true;
@@ -103,7 +108,12 @@ class _TransformableElementWidgetState
     if ((centerY - _canvasCenterY).abs() <
         DesignStudioConstants.snapThreshold) {
       final snapped = _canvasCenterY - _anchorY - el.y - size.height / 2;
-      final room = DesignStudioConstants.clampBox(el.x, el.y + snapped, size.width, size.height);
+      final room = DesignStudioConstants.clampBox(
+        el.x,
+        el.y + snapped,
+        size.width,
+        size.height,
+      );
       if ((room.y - el.y - snapped).abs() < 0.5) {
         dy = snapped;
         snapH = true;
@@ -198,7 +208,8 @@ class _TransformableElementWidgetState
     // therefore made larger than the element by a margin that holds the handles, and the whole thing is shifted back
     // so the element itself stays exactly where it was.
     const padL = 18.0, padT = 44.0, padR = 18.0, padB = 18.0;
-    final shift = (_moving ? _moveDelta : Offset.zero) - const Offset(padL, padT);
+    final shift =
+        (_moving ? _moveDelta : Offset.zero) - const Offset(padL, padT);
     return Transform.translate(
       offset: shift,
       child: Stack(

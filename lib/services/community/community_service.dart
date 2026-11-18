@@ -22,9 +22,46 @@ class CommunityService {
   Future<List<CommunityDesign>> mine() async =>
       _parse(await api.get('/v1/designs', query: {'mine': '1'}));
 
-  Future<CommunityDesign> get(String id) async => CommunityDesign.fromJson(
-    ((await api.get('/v1/designs/${Uri.encodeComponent(id)}'))['design'] as Map)
-        .cast(),
+  /// Designs other people shared with me by name.
+  Future<List<CommunityDesign>> sharedWithMe() async =>
+      _parse(await api.get('/v1/designs/shared-with-me'));
+
+  /// One design; [token] is a private link's token.
+  Future<CommunityDesign> get(String id, {String? token}) async {
+    final design = CommunityDesign.fromJson(
+      ((await api.get(
+                '/v1/designs/${Uri.encodeComponent(id)}',
+                query: {'token': ?token},
+              ))['design']
+              as Map)
+          .cast(),
+    );
+    return token == null ? design : design.withAccessToken(token);
+  }
+
+  /// Who can open one of my designs.
+  Future<DesignSharing> sharing(String id) async => DesignSharing.fromJson(
+    await api.get('/v1/designs/${Uri.encodeComponent(id)}/sharing'),
+  );
+
+  /// Changes who can open one of my designs. Anything left out stays as it was.
+  Future<DesignSharing> updateSharing(
+    String id, {
+    String? visibility,
+    bool? link,
+    bool regenerateLink = false,
+    List<String> addEmails = const [],
+    List<String> removeUserIds = const [],
+    bool? allowRemix,
+  }) async => DesignSharing.fromJson(
+    await api.put('/v1/designs/${Uri.encodeComponent(id)}/sharing', {
+      'visibility': ?visibility,
+      'link': ?link,
+      if (regenerateLink) 'regenerateLink': true,
+      if (addEmails.isNotEmpty) 'addEmails': addEmails,
+      if (removeUserIds.isNotEmpty) 'removeUserIds': removeUserIds,
+      'allowRemix': ?allowRemix,
+    }),
   );
 
   /// The open challenge with the latest start, or null when none is running.
@@ -49,6 +86,7 @@ class CommunityService {
     required Map<String, Object?> designJson,
     String? serverId,
     String? remixOfId,
+    String? remixToken,
     String? challengeId,
     String? previewImage,
     String? backPreviewImage,
@@ -57,6 +95,7 @@ class CommunityService {
     final j = await api.post('/v1/designs', {
       'id': ?serverId,
       if (serverId == null && remixOfId != null) 'remixOf': remixOfId,
+      if (serverId == null && remixToken != null) 'remixToken': remixToken,
       if (serverId == null && challengeId != null) 'challengeId': challengeId,
       'name': name,
       'garment': garment,

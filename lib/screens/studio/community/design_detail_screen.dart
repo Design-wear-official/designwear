@@ -10,6 +10,8 @@ import '../../account/auth_screens.dart';
 import '../../home/home_screen.dart' show formatPrice;
 import '../shared/design_preview.dart';
 import '../editor/design_studio_screen.dart';
+import 'share_design_sheet.dart';
+import 'share_links.dart';
 
 class DesignDetailScreen extends StatefulWidget {
   const DesignDetailScreen({super.key, required this.design});
@@ -27,6 +29,18 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
     final s = widget.design.designJson?['size'];
     return s is String && CustomDesign.sizes.contains(s) ? s : 'M';
   }();
+
+  /// Public designs and my own can be liked, remixed and bought; one shared with me only when its owner allows copies.
+  bool get _canUse => _design.mine || _design.published || _design.allowRemix;
+
+  Future<void> _refresh() async {
+    final service = context.read<CommunityService?>();
+    if (service == null) return;
+    try {
+      final next = await service.get(_design.id, token: _design.accessToken);
+      if (mounted) setState(() => _design = next);
+    } catch (_) {}
+  }
 
   Future<void> _like() async {
     if (!await requireSignIn(context) || !mounted) return;
@@ -63,7 +77,27 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
     final d = _design;
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(d.name, overflow: TextOverflow.ellipsis)),
+      appBar: AppBar(
+        title: Text(d.name, overflow: TextOverflow.ellipsis),
+        actions: [
+          IconButton(
+            tooltip: 'Try it on',
+            icon: const Icon(Icons.checkroom_outlined),
+            onPressed: () => openTryOn(context, d),
+          ),
+          if (d.mine)
+            IconButton(
+              tooltip: 'Share',
+              icon: const Icon(Icons.ios_share),
+              onPressed: () => showShareDesignSheet(
+                context,
+                designId: d.id,
+                designName: d.name,
+                onChanged: _refresh,
+              ),
+            ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -115,46 +149,71 @@ class _DesignDetailScreenState extends State<DesignDetailScreen> {
                 ],
               ),
             ),
-          const SizedBox(height: 12),
-          Row(
+          const SizedBox(height: 4),
+          Wrap(
+            spacing: 8,
             children: [
-              TextButton.icon(
-                onPressed: _like,
-                icon: Icon(d.liked ? Icons.favorite : Icons.favorite_border),
-                label: Text('${d.likeCount}'),
-              ),
-              const SizedBox(width: 8),
-              Text('${d.remixCount} remixes'),
-              const Spacer(),
-              DropdownButton<String>(
-                value: _size,
-                items: [
-                  for (final s in CustomDesign.sizes)
-                    DropdownMenuItem(value: s, child: Text(s)),
-                ],
-                onChanged: (v) => setState(() => _size = v ?? _size),
+              Chip(
+                avatar: Icon(switch (d.visibility) {
+                  'public' => Icons.public,
+                  'shared' => Icons.group_outlined,
+                  _ => Icons.lock_outline,
+                }, size: 16),
+                label: Text(switch (d.visibility) {
+                  'public' => 'Public',
+                  'shared' => d.mine ? 'Shared' : 'Shared with you',
+                  _ => 'Private',
+                }),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          FilledButton.icon(
-            onPressed: _buy,
-            icon: const Icon(Icons.add_shopping_cart),
-            label: Text('Add to cart · ${formatPrice(d.price)}'),
+          Row(
+            children: [
+              if (d.published)
+                TextButton.icon(
+                  onPressed: _like,
+                  icon: Icon(d.liked ? Icons.favorite : Icons.favorite_border),
+                  label: Text('${d.likeCount}'),
+                ),
+              const SizedBox(width: 8),
+              if (d.published) Text('${d.remixCount} remixes'),
+              const Spacer(),
+              if (_canUse)
+                DropdownButton<String>(
+                  value: _size,
+                  items: [
+                    for (final s in CustomDesign.sizes)
+                      DropdownMenuItem(value: s, child: Text(s)),
+                  ],
+                  onChanged: (v) => setState(() => _size = v ?? _size),
+                ),
+            ],
           ),
           const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => DesignStudioScreen(
-                  initialDesign: d.toStudioDesign(),
-                  remixSource: d,
+          if (_canUse) ...[
+            FilledButton.icon(
+              onPressed: _buy,
+              icon: const Icon(Icons.add_shopping_cart),
+              label: Text('Add to cart · ${formatPrice(d.price)}'),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => DesignStudioScreen(
+                    initialDesign: d.toStudioDesign(),
+                    remixSource: d,
+                  ),
                 ),
               ),
+              icon: const Icon(Icons.auto_fix_high),
+              label: const Text('Remix this design'),
             ),
-            icon: const Icon(Icons.auto_fix_high),
-            label: const Text('Remix this design'),
-          ),
+          ] else
+            const Text(
+              'Shared with you to look at and try on. Its owner has not allowed copies or orders.',
+            ),
         ],
       ),
     );

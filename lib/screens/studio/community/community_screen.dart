@@ -5,6 +5,7 @@ import '../../../api/api_client.dart';
 import '../../../models/design.dart';
 import '../../../services/community/community_service.dart';
 import 'design_detail_screen.dart';
+import 'share_links.dart';
 import '../library/saved_designs_screen.dart';
 import '../editor/design_studio_screen.dart';
 import '../shared/design_preview.dart';
@@ -18,6 +19,9 @@ class CommunityScreen extends StatefulWidget {
 
 class _CommunityScreenState extends State<CommunityScreen> {
   bool _popular = false;
+
+  /// 'community' (everyone's public designs), 'mine' (all of mine, private ones too) or 'shared' (shared with me).
+  String _show = 'community';
   Future<List<CommunityDesign>>? _feed;
 
   @override
@@ -28,7 +32,48 @@ class _CommunityScreenState extends State<CommunityScreen> {
 
   void _load() {
     final service = context.read<CommunityService?>();
-    _feed = service?.feed(popular: _popular);
+    _feed = switch (_show) {
+      'mine' => service?.mine(),
+      'shared' => service?.sharedWithMe(),
+      _ => service?.feed(popular: _popular),
+    };
+  }
+
+  /// Opens a design from a pasted link or code (its details, or the try-on when the link says so).
+  Future<void> _openLink() async {
+    final controller = TextEditingController();
+    final text = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Open a shared link'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: const InputDecoration(hintText: 'Paste the link or code'),
+          onSubmitted: (v) => Navigator.pop(ctx, v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: const Text('Open'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (text == null || text.trim().isEmpty || !mounted) return;
+    final request = parseShareRequest(text);
+    if (request == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("That isn't a DesignWear share link.")),
+      );
+      return;
+    }
+    await openShareRequest(context, request);
   }
 
   void _openStudio() =>
@@ -42,6 +87,11 @@ class _CommunityScreenState extends State<CommunityScreen> {
       appBar: AppBar(
         title: const Text('Studio'),
         actions: [
+          IconButton(
+            tooltip: 'Open a shared link',
+            icon: const Icon(Icons.link),
+            onPressed: _openLink,
+          ),
           IconButton(
             tooltip: 'My designs',
             icon: const Icon(Icons.folder_open_outlined),
@@ -61,19 +111,41 @@ class _CommunityScreenState extends State<CommunityScreen> {
           : Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SegmentedButton<bool>(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+                  child: SegmentedButton<String>(
                     segments: const [
-                      ButtonSegment(value: false, label: Text('Recent')),
-                      ButtonSegment(value: true, label: Text('Popular')),
+                      ButtonSegment(
+                        value: 'community',
+                        label: Text('Community'),
+                      ),
+                      ButtonSegment(value: 'mine', label: Text('Mine')),
+                      ButtonSegment(
+                        value: 'shared',
+                        label: Text('Shared with me'),
+                      ),
                     ],
-                    selected: {_popular},
+                    selected: {_show},
                     onSelectionChanged: (s) => setState(() {
-                      _popular = s.first;
+                      _show = s.first;
                       _load();
                     }),
                   ),
                 ),
+                if (_show == 'community')
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+                    child: SegmentedButton<bool>(
+                      segments: const [
+                        ButtonSegment(value: false, label: Text('Recent')),
+                        ButtonSegment(value: true, label: Text('Popular')),
+                      ],
+                      selected: {_popular},
+                      onSelectionChanged: (s) => setState(() {
+                        _popular = s.first;
+                        _load();
+                      }),
+                    ),
+                  ),
                 Expanded(
                   child: FutureBuilder<List<CommunityDesign>>(
                     future: _feed,
@@ -100,10 +172,13 @@ class _CommunityScreenState extends State<CommunityScreen> {
                       }
                       final designs = snap.data!;
                       if (designs.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            'No community designs yet. Publish the first one!',
-                          ),
+                        return Center(
+                          child: Text(switch (_show) {
+                            'mine' => 'You have no designs on the server yet.',
+                            'shared' =>
+                              'Nobody has shared a design with you yet.',
+                            _ => 'No community designs yet. Publish the first one!',
+                          }),
                         );
                       }
                       return RefreshIndicator(
